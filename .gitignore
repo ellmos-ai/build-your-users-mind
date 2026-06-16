@@ -1,16 +1,22 @@
-# --- NIEMALS committen: private Nutzer-Daten / Korpus ---
+# --- NIEMALS committen: private Nutzer-Daten / generierter Korpus ---
 STUDIE/
 **/00_corpus.jsonl
 **/_chunks/
 **/_synthesis/
 **/cat_*.jsonl
-PROMPT-LOG*.txt
-MY-ACTIONS.txt
-# Ausgefüllte Avatar-Dateien (enthalten personenbezogene Entscheidungen):
-WHAT-*-SAID*.md
-WHAT-WOULD-*-SAY.md
-WHAT-I-DID-*.md
-# (Die generischen Vorlagen unter templates/ sind erlaubt.)
+
+# Ausgefüllte (generierte) Avatar-Dateien — enthalten personenbezogene Entscheidungen.
+# NUR im Output, NICHT die generischen Vorlagen unter templates/ (siehe Negation unten).
+/PROMPT-LOG*.txt
+/MY-ACTIONS.txt
+/WHAT-*-SAID*.md
+/WHAT-WOULD-*-SAY.md
+/WHAT-I-DID-*.md
+avatar/
+out/
+# Die generischen Vorlagen explizit behalten:
+!templates/
+!templates/**
 
 # Python / Env
 __pycache__/
@@ -19,6 +25,12 @@ __pycache__/
 venv/
 .env
 *.log
+*.db
+data/
+
+# IDE
+.idea/
+.vscode/
 
 # OS
 .DS_Store
