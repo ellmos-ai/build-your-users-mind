@@ -1,0 +1,26 @@
+# --- NIEMALS committen: private Nutzer-Daten / Korpus ---
+STUDIE/
+**/00_corpus.jsonl
+**/_chunks/
+**/_synthesis/
+**/cat_*.jsonl
+PROMPT-LOG*.txt
+MY-ACTIONS.txt
+# Ausgefüllte Avatar-Dateien (enthalten personenbezogene Entscheidungen):
+WHAT-*-SAID*.md
+WHAT-WOULD-*-SAY.md
+WHAT-I-DID-*.md
+# (Die generischen Vorlagen unter templates/ sind erlaubt.)
+
+# Python / Env
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
