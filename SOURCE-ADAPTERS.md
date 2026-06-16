@@ -17,9 +17,10 @@
 - **Raus:** `<environment_context>`, `<user_instructions>`, Tool-Outputs.
 - Von Codex selbst geschrieben (Auftrag: `_prompts/adapter-codex.md`), Smoke-getestet (946 Prompts, Schema-konform).
 
-## Gemini / agy (antigravity)  ⏳ Adapter-Skizze
+## Gemini / agy (antigravity)  ✅ implementiert → `scripts/adapters/gemini_adapter.py`
 - **Pfad:** `~/.gemini/antigravity/conversations/<uuid>.db` (SQLite).
-- **Filter:** Tabelle `steps` → User-Turns (Spalten beim Bau mappen). WAL beachten.
+- **Befund:** `steps`-Tabelle speichert `metadata` + `step_payload` als **Protobuf-Blobs**; User-Turns = `step_type==14`, Text = payload-Feld 19→2, Timestamp aus metadata-Feld 1. Eigener Varint-Parser im Adapter.
+- Von agy/Gemini selbst geschrieben (Auftrag: `_prompts/adapter-gemini.md`), Smoke-getestet (188 Prompts, sauberer Text).
 
 ## Kimi Code CLI  ⏳ offen
 - Log-Format beim ersten Einsatz bestimmen; Adapter nach gleichem Vertrag ergänzen.
