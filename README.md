@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/banner.svg" alt="build-your-users-mind — what you mind is what you get" width="100%"></p>
+
 # build-your-users-mind
 
 > **What you mind is what you get.**

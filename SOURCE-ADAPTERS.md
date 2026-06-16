@@ -22,8 +22,10 @@
 - **Befund:** `steps`-Tabelle speichert `metadata` + `step_payload` als **Protobuf-Blobs**; User-Turns = `step_type==14`, Text = payload-Feld 19→2, Timestamp aus metadata-Feld 1. Eigener Varint-Parser im Adapter.
 - Von agy/Gemini selbst geschrieben (Auftrag: `_prompts/adapter-gemini.md`), Smoke-getestet (188 Prompts, sauberer Text).
 
-## Kimi Code CLI  ⏳ offen
-- Log-Format beim ersten Einsatz bestimmen; Adapter nach gleichem Vertrag ergänzen.
+## Kimi Code CLI  ✅ implementiert → `scripts/adapters/kimi_adapter.py`
+- **Pfad:** `~/.kimi-code/sessions/.../<sessionDir>/agents/main/wire.jsonl` (JSONL); Index `~/.kimi-code/session_index.jsonl` (sessionId/sessionDir/workDir).
+- **Filter:** `type=="turn.prompt"` & `origin.kind=="user"`; Text aus `input` (Text-Blöcke/String); `time` = Unix-ms.
+- Von Kimi (kimi-code) selbst geschrieben (Auftrag: `_prompts/adapter-kimi.md`), Smoke-getestet (18 Prompts).
 
 ## Adapter-Vertrag
 1. Nur **menschlich getippte** Prompts. 2. Zeitfenster filterbar (`--since`). 3. UTF-8, echte Umlaute
