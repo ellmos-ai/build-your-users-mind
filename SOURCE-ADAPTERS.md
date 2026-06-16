@@ -11,10 +11,11 @@
   Hook-Injektionen, Kontext-Kompaktierungs-Summaries („This session is being continued…").
 - **Slash-Commands:** `<command-name>` + `<command-args>` extrahieren, als `slash` taggen.
 
-## Codex CLI (GPT)  ⏳ Adapter-Skizze
+## Codex CLI (GPT)  ✅ implementiert → `scripts/adapters/codex_adapter.py`
 - **Pfad:** `~/.codex/sessions/<YYYY>/<MM>/<DD>/rollout-*.jsonl` (+ `~/.codex/archived_sessions/`).
 - **Filter:** `type=="response_item"` & `payload.role=="user"` & `payload.content[].type=="input_text"`.
 - **Raus:** `<environment_context>`, `<user_instructions>`, Tool-Outputs.
+- Von Codex selbst geschrieben (Auftrag: `_prompts/adapter-codex.md`), Smoke-getestet (946 Prompts, Schema-konform).
 
 ## Gemini / agy (antigravity)  ⏳ Adapter-Skizze
 - **Pfad:** `~/.gemini/antigravity/conversations/<uuid>.db` (SQLite).
