@@ -1,21 +1,21 @@
-# METHODIK — wie dieser Avatar entstand & wie er zu lesen ist
+# METHODOLOGY — how this avatar was built & how to read it
 
-## Datenbasis
-- Quelle(n): <Agent-Logs, z.B. ~/.claude/projects> · Zeitfenster: <seit …> · N eindeutige Prompts: <…>
+## Data basis
+- Source(s): <agent logs, e.g. ~/.claude/projects> · time window: <since …> · N unique prompts: <…>
 
 ## Pipeline
-0/1 deterministisch (`scripts/corpus_extract.py`) → Chunking (`chunk_corpus.py`) → Stufe-2-Schwarm
-(Klassifikation, 8-Typen `TAXONOMY.md`) → Stufe 3/4 (`aggregate_stats.py`) → Avatar-Dateien.
+0/1 deterministic (`scripts/corpus_extract.py`) → chunking (`chunk_corpus.py`) → stage-2 swarm
+(classification, 8-type `TAXONOMY.md`) → stage 3/4 (`aggregate_stats.py`) → avatar files.
 
-## Kennzahlen
-- Typ-Verteilung · B:K · Proaktiv:Reaktiv · Wendepunkte · decision_kind — siehe `STUDIE/04_statistik.md`.
+## Metrics
+- Type distribution · B:K · proactive:reactive · turning points · decision_kind — see `STUDIE/04_statistik.md`.
 
-## Bias & Grenzen (immer mitnennen)
-- **Stille Zustimmung unsichtbar** → Korrekturen überrepräsentiert, Avatar skemmt „kritisch".
-- **Präkognitions-Fragilität:** robust bei wiederkehrenden, fragil bei neuartigen Situationen → Konfidenz-Stufen, 🔴 = eskalieren.
-- **LLM-Klassifikator-Bias:** ohne Spotcheck/Kappa grobkörniger; Beleg-IDs aus Synthese → gegenlesen.
-- **Redaction:** Secrets/Mails/IP maskiert; nutzerspezifisch Gesundheit/Steuer **vor jedem Teilen** schließen.
+## Bias & limits (always mention)
+- **Silent approval is invisible** → corrections overrepresented, the avatar skews "critical".
+- **Precognition fragility:** robust on recurring, fragile on novel situations → confidence tiers, 🔴 = escalate.
+- **LLM-classifier bias:** without spot-check/Kappa it is coarser; evidence IDs come from synthesis → crosscheck.
+- **Redaction:** secrets/emails/IP masked; user-specific health/tax data **must be closed before any sharing**.
 
-## Aktualisieren
-Skripte periodisch neu laufen (Logs persistieren ohnehin) — **kein Per-Prompt-Hook**. Laufzeit-Lessons
-(Datei 4) in `WHAT-<USER>-SAID.md` einarbeiten.
+## Updating
+Rerun the scripts periodically (logs persist anyway) — **no per-prompt hook**. Fold runtime lessons
+(file 4) back into `WHAT-<USER>-SAID.md`.

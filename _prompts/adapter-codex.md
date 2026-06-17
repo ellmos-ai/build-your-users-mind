@@ -1,33 +1,33 @@
-# Auftrag — Source-Adapter für **Codex** (build-your-users-mind)
+# Task — Source adapter for **Codex** (build-your-users-mind)
 
-**Für:** Codex/GPT (kennt sein eigenes Log-Format am besten)
-**Repo-Root:** `C:\Users\User\OneDrive\.TOPICS\.AI\.MODULES\build-your-users-mind`
-**Output-Datei:** `scripts/adapters/codex_adapter.py` (neu)
-**Referenz:** `scripts/corpus_extract.py` (Claude-Adapter) + `SOURCE-ADAPTERS.md` (Vertrag)
+**For:** Codex/GPT (knows its own log format best)
+**Repo root:** `<repo-root>` (this repository)
+**Output file:** `scripts/adapters/codex_adapter.py` (new)
+**Reference:** `scripts/corpus_extract.py` (Claude adapter) + `SOURCE-ADAPTERS.md` (contract)
 
-## Aufgabe
-Schreibe einen Stufe-0/1-Extraktor für **Codex-CLI-Logs**, der dieselbe normalisierte JSONL-Zeile
-erzeugt wie `corpus_extract.py`, sodass `chunk_corpus.py` / `aggregate_stats.py` unverändert darauf laufen.
+## Task
+Write a stage-0/1 extractor for **Codex CLI logs** that produces the same normalized JSONL row as
+`corpus_extract.py`, so `chunk_corpus.py` / `aggregate_stats.py` run on it unchanged.
 
-## Quelle (Codex)
-- Pfad: `~/.codex/sessions/<YYYY>/<MM>/<DD>/rollout-*.jsonl` (+ `~/.codex/archived_sessions/`).
-- Menschlich getippte Prompts: `type=="response_item"` & `payload.role=="user"` & `payload.content[].type=="input_text"`.
-- **Ausschließen:** `<environment_context>`, `<user_instructions>`, Tool-Outputs, reine System-Einschübe.
+## Source (Codex)
+- Path: `~/.codex/sessions/<YYYY>/<MM>/<DD>/rollout-*.jsonl` (+ `~/.codex/archived_sessions/`).
+- Human-typed prompts: `type=="response_item"` & `payload.role=="user"` & `payload.content[].type=="input_text"`.
+- **Exclude:** `<environment_context>`, `<user_instructions>`, tool outputs, pure system inserts.
 
-## Vertrag (PFLICHT — identisch zu corpus_extract)
-Pro getipptem Human-Prompt eine JSON-Zeile mit Feldern:
+## Contract (MANDATORY — identical to corpus_extract)
+One JSON line per human prompt with fields:
 `id, ts, source("codex"), project, branch, session, sender("human"), ptype(slash|ack|frei),
 command, text, text_short, word_count, decision_score, followup_short, outcome_signal`.
-- **Redaction vor dem Schreiben** (Secrets/Mails/IP/lange Ziffern) — Logik aus `corpus_extract.py` wiederverwenden (importieren oder spiegeln).
-- **decision_score** über dasselbe Lexikon; **outcome_signal** aus dem nächsten Human-Turn derselben Session.
-- IDs chronologisch `H{n:05d}` global nach (ts, session).
-- `--root` (Default `~/.codex/sessions`), `--since`, `--out ./STUDIE`. `PYTHONIOENCODING=utf-8`.
+- **Redaction before writing** (secrets/emails/IP/long digit runs) — reuse the logic from `corpus_extract.py` (import or mirror).
+- **decision_score** via the same lexicon; **outcome_signal** from the next human turn in the same session.
+- IDs chronological `H{n:05d}` globally by (ts, session).
+- `--root` (default `~/.codex/sessions`), `--since`, `--out ./STUDIE`. `PYTHONIOENCODING=utf-8`.
 
-## Akzeptanzkriterien (werden geprüft)
-1. Läuft mit `--root <codex-logs> --dry-run`-artig durch, schreibt valides `00_corpus.jsonl`.
-2. Jede Zeile hat alle Vertragsfelder; `source=="codex"`.
-3. Keine `<environment_context>`/Tool-Outputs im `text`.
-4. Redaction greift (kein `sk-…`, keine Klartext-Mail/IP).
-5. Keine hardcodierten Privatpfade; argparse-Defaults generisch.
+## Acceptance criteria (will be checked)
+1. Runs against `--root <codex-logs>`, writes valid `00_corpus.jsonl`.
+2. Every line has all contract fields; `source=="codex"`.
+3. No `<environment_context>`/tool outputs in `text`.
+4. Redaction works (no `sk-…`, no plaintext email/IP).
+5. No hardcoded personal paths; generic argparse defaults.
 
-Danach: kurze Meldung (Pfad der Datei + Beispielzeile + Anzahl extrahierter Prompts auf einem Testlauf).
+Afterwards: short report (file path + sample line + number of prompts extracted on a test run).

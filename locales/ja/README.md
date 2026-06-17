@@ -4,7 +4,7 @@
 
 > **What you mind is what you get.**
 
-**🌐 [EN](README.md) · [DE](README_de.md) · [ES](README_es.md) · [JA](README_ja.md) · [RU](README_ru.md) · [ZH](README_zh.md)** — 英語が公式であり、翻訳が遅れる場合があります。
+**🌐 [EN](../../README.md) · [DE](../de/README.md) · [ES](../es/README.md) · [JA](README.md) · [RU](../ru/README.md) · [ZH](../zh/README.md)** — 英語が公式であり、翻訳が遅れる場合があります。
 
 AIエージェント（Claude、Codex、Gemini/agy、Kimiなど）が、自身の対話ログから、経験的かつ自己改善的な**theory-of-mind model of its own user**（ユーザー自身の心の理論モデル）を構築し、ユーザーの不在時にもその意図に沿って行動するためのレシピ。
 

@@ -1,75 +1,75 @@
 ---
 name: build-your-users-mind
-description: Anleitung an ein beliebiges Agenten-Modell (Claude, Codex, agy/Gemini, Kimi), ein empirisches Theory-of-Mind-Modell SEINES Users aus den eigenen Interaktionslogs zu bauen, zu pflegen und an Memory/Regeldateien/System-Prompt anzubinden. Aktiviert sich bei "baue ein ToM/Entscheidungs-Avatar für meinen User", "Theory of Mind System Nutzer-Modell", "WHAT-WOULD-USER-SAY", "feedback precognition".
+description: Instructions for any agent model (Claude, Codex, agy/Gemini, Kimi) to build, maintain, and connect an empirical Theory-of-Mind model of ITS user from its own interaction logs to memory/rule files/system prompt. Activates when "build a ToM/decision avatar for my user", "Theory of Mind system user model", "WHAT-WOULD-USER-SAY", "feedback precognition".
 ---
 
-# build-your-users-mind — Agnostisches ToM-Modul (Feedback-Präkognition)
+# build-your-users-mind — Agnostic ToM Module (Feedback Precognition)
 
-> **What you mind is what you get.** Ein **Rezept**, kein Framework. Jedes Agenten-Modell baut daraus ein
-> ToM-Modell *seines* Users: eigene Daten auswerten → Entscheidungsmuster destillieren →
-> Avatar-Dateien pflegen → an die eigene Memory/Regeldatei/System-Prompt anbinden.
+> **What you mind is what you get.** A **recipe**, not a framework. Every agent model uses this to build a
+> ToM model of *its* user: evaluate own data → distill decision patterns → maintain
+> avatar files → bind to own memory/rules file/system prompt.
 >
-> **Kern = Feedback-Präkognition (feedforward):** Sage das User-Feedback voraus, BEVOR es kommt; nutze es
-> als Steuersignal in dessen Abwesenheit; evaluiere die Vorhersage hinterher gegen die Realität.
+> **Core = feedback precognition (feedforward):** Predict user feedback BEFORE it comes; use it as a
+> control signal in their absence; evaluate the prediction against reality afterwards to improve.
 >
-> **Vorlagen:** `templates/` (Avatar-Dateien), `scripts/` (Pipeline), `TAXONOMY.md` (8 Typen),
-> `skills/swarm-operations/` (Klassifikations-Schwarm). Eine **private Referenz-Implementierung**
-> (auf den Logs des Autors) existiert, wird aber nicht mitgeliefert.
+> **Templates:** `templates/` (avatar files), `scripts/` (pipeline), `TAXONOMY.md` (8 types),
+> `skills/swarm-operations/` (classification swarm). A **private reference implementation**
+> (based on the author's own logs) exists but is not shipped.
 >
-> **Theoretische Basis:** *Prompt-Archaeology* (Methode, Taxonomie in `TAXONOMY.md`)
-> + ToM-Forschung (ToM-SWE arXiv 2510.21903; Persistent Memory & User Profiles 2510.07925).
+> **Theoretical Basis:** *Prompt-Archaeology* (method, taxonomy in `TAXONOMY.md`)
+> + ToM research (ToM-SWE arXiv 2510.21903; Persistent Memory & User Profiles 2510.07925).
 
-## Grundprinzip
+## Core Principle
 
-LLMs sehen nie die Roh-Gigabytes. **Deterministische Skripte reduzieren zuerst** auf ein sauberes
-Korpus der getippten User-Sätze; erst dann arbeitet ein **Klassifikations-Schwarm** semantisch.
-Kern ist nicht „welche Prompts", sondern **„welche Entscheidung → welches Ergebnis → war der User zufrieden".**
+LLMs never see raw gigabytes. **Deterministic scripts first reduce** data to a clean corpus of human-typed
+user prompts; only then does a **classification swarm** work semantically.
+The core is not "which prompts", but **"which decision → which outcome → was the user satisfied".**
 
-## Die 6 Schritte
+## The 6 Steps
 
-### 1. Quelle erschließen (Source-Adapter)
-Finde die eigenen Interaktionslogs. Pro Modell unterschiedlich → siehe `SOURCE-ADAPTERS.md`.
-Extrahiere **nur echte, vom Menschen getippte Prompts** (keine Tool-Results, System-Reminder,
-Hook-Injektionen, Kontext-Kompaktierungs-Summaries). Felder: `ts, project, session, text`.
+### 1. Identify the Source (Source Adapter)
+Find your own interaction logs. Differs per model → see `SOURCE-ADAPTERS.md`.
+Extract **only genuine, human-typed prompts** (no tool results, system reminders, hook injections,
+context compacting summaries). Fields: `ts, project, session, text`.
 
-### 2. Reduzieren (deterministisch, kein LLM)
-- Synthetische Turns filtern, Dedup, Boilerplate/Micro-Acks aggregieren.
-- **Followup-Verknüpfung:** je Prompt den/die nächsten User-Turn(s) als `outcome_signal`
-  (praise | reissue | correction | abandon | none) ableiten → das Zufriedenheits-Signal.
-- **`decision_score`** über ein Entscheidungs-Lexikon (Korrektur/Präferenz/Regel/Steuerung).
-- **REDACTION (Pflicht, bevor irgendetwas persistiert):** Secrets/Tokens/Keys/Mails — und je nach
-  User auch **Gesundheit/Steuer/IP-Adressen**. Sensibles des Users wird maskiert.
+### 2. Reduce (deterministic, no LLM)
+- Filter synthetic turns, deduplicate, aggregate boilerplate/micro-acks.
+- **Follow-up linking:** derive the next user turn(s) per prompt as an `outcome_signal`
+  (praise | reissue | correction | abandon | none) → the satisfaction signal.
+- **`decision_score`** via a decision lexicon (correction/preference/rule/control).
+- **REDACTION (mandatory before any persistence):** redact secrets/tokens/keys/emails — and depending
+  on the user, also **health/tax/IP addresses**. User's sensitive data is masked.
 
-### 3. Klassifizieren (Schwarm, hierarchisch + Stigmergy)
-8-Typen-Taxonomie **SP/NT/NM/NS/KO/BE/RA/MP** (Definitionen in der PA-`GLOSSAR.md`) + `decision_kind`
+### 3. Classify (swarm, hierarchical + stigmergy)
+8-type taxonomy **SP/NT/NM/NS/KO/BE/RA/MP** (definitions in `TAXONOMY.md`) + `decision_kind`
 (preference/correction/rule/direction_change/approval/rejection/process/none) + `formulation_pattern`
-(charakteristische Wendung des Users). Bei großem Korpus: Domänen-Leads (Sonnet) dirigieren Chunk-Worker (Haiku).
+(user's characteristic phrasing). For large corpora: domain leads (Sonnet) direct chunk workers (Haiku).
 
-### 4. Avatar-Dateien erzeugen
-Struktur 1:1 wie in `templates/` (dort die Vorlagen kopieren, `<USER>`/`<AGENT>` ersetzen):
-`WHAT-<USER>-SAID.md` (belegt) · `WHAT-WOULD-<USER>-SAY.md` (Vorhersage + Konfidenz) ·
-`WHAT-I-DID-…md` + `MY-ACTIONS.txt` (Handlungs-Log) · `WHAT-<USER>-SAID-ABOUT-…md` (Lessons) ·
-`PROMPT-LOG` (Cut-and-Clue) · `METHODIK.md` (inkl. Bias-Hinweis) · `START.md` (0→4-Loop).
+### 4. Generate Avatar Files
+Structure 1:1 as in `templates/` (copy templates, replace `<USER>`/`<AGENT>`):
+`WHAT-<USER>-SAID.md` (evidenced) · `WHAT-WOULD-<USER>-SAY.md` (prediction + confidence) ·
+`WHAT-I-DID-…md` + `MY-ACTIONS.txt` (action log) · `WHAT-<USER>-SAID-ABOUT-…md` (lessons learned) ·
+`PROMPT-LOG` (cut-and-clue) · `METHODIK.md` (incl. bias warning) · `START.md` (0→4 loop).
 
-### 5. Anbinden (entscheidend!)
-Das ToM-Modell muss **tatsächlich genutzt** werden, nicht nur existieren:
-- Kurze Regel/Pointer in die **eigene Memory/Regeldatei/System-Prompt** des Agenten
+### 5. Bind (crucial!)
+The ToM model must **actually be used**, not just exist:
+- Short rule/pointer in the agent's **own memory/rules file/system prompt**
   (Claude: `CLAUDE.md`; Codex: `GPT.md`/`AGENTS.md`; agy: `GEMINI.md`; Kimi: `KIMI.md`)
-  → zeigt auf den `START.md`-Loop. **Kurz halten** (Pointer, kein Volltext).
-- **Vorrang-Regel:** projektbezogene `DECISIONS.md` gehen vor dem quer-liegenden Avatar.
+  → points to the `START.md` loop. **Keep it short** (pointer, no full text).
+- **Precedence rule:** project-specific `DECISIONS.md` take precedence over the cross-cutting avatar.
 
-### 6. Pflegen (selbstverbessernd)
-- **Empirische Basis:** Skripte periodisch neu laufen (Logs persistieren ohnehin) — **kein Per-Prompt-Hook**
-  (Idempotenz-/Mehrfachregistrierungs-Falle vermeiden; Batch ist robuster).
-- **Laufzeit (hingelotst):** im Namen des Users getroffene Annahmen → Datei (3) loggen;
-  bei Feedback → Datei (4) → Regel in (1) nachziehen, Konfidenz in (2) anpassen.
+### 6. Maintain (self-improving)
+- **Empirical basis:** rerun scripts periodically (logs persist anyway) — **no per-prompt hook**
+  (avoid idempotency/multiple registration trap; batch is more robust).
+- **Runtime (guided):** log assumptions made on behalf of the user → file (3);
+  on feedback → file (4) → update rules in (1), adjust confidence in (2).
 
-## Bias & Grenzen (immer mitnennen)
-- **Stille Zustimmung ist unsichtbar** → Korrekturen überrepräsentiert, Avatar skemmt „kritisch".
-- **ToM-Fragilität:** robust bei wiederkehrenden, fragil bei neuartigen Situationen → Konfidenz-Stufen,
-  bei 🔴 **eskalieren statt raten**.
-- Beleg-IDs stammen aus LLM-Synthese → bei kritischer Nutzung gegen das Roh-Korpus gegenlesen.
+## Bias & Limits (always mention)
+- **Silent approval is invisible** → corrections are overrepresented, making the avatar appear "critical".
+- **ToM fragility:** robust on recurring situations, fragile under novel/adversarial variations → confidence tiers,
+  at 🔴 **escalate instead of guessing**.
+- Evidence IDs stem from LLM synthesis → crosscheck key ones against the raw corpus for critical decisions.
 
-## Schlankheits-Regel
-Das einzig Modell-Spezifische ist der **Source-Adapter** (Schritt 1). Rezept, Taxonomie,
-Avatar-Struktur und Anbindung sind universell. Nicht überbauen.
+## Lean Principle
+The only model-specific part is the **source adapter** (Step 1). Recipe, taxonomy,
+avatar structure, and binding are universal. Do not over-engineer.

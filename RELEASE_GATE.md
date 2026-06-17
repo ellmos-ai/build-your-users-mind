@@ -1,31 +1,31 @@
 # RELEASE_GATE — build-your-users-mind
 
-**Datum:** 2026-06-17
-**Skript:** `.MODULES/_scripts/final_gate_check.py`
-**Ergebnis:** **10 PASS / 0 FAIL / 0 WARN → READY FOR PUBLIC RELEASE**
-**Zielrepo:** `ellmos-ai/build-your-users-mind` (zuerst **privat**)
-**Commit:** lokal initialisiert, kein Push (wartet auf explizites Go).
+**Date:** 2026-06-17
+**Script:** `.MODULES/_scripts/final_gate_check.py`
+**Result:** **10 PASS / 0 FAIL / 0 WARN → READY FOR PUBLIC RELEASE**
+**Target Repo:** `ellmos-ai/build-your-users-mind` (initially **private**)
+**Commit:** Locally initialized, no push (waiting for explicit approval).
 
-| # | Check | Ergebnis |
+| # | Check | Result |
 |---|---|---|
-| 1 | .gitignore Mindesteinträge | PASS |
-| 2 | README.md (englisch) | PASS |
+| 1 | .gitignore minimum entries | PASS |
+| 2 | README.md (English) | PASS |
 | 3 | LICENSE | PASS |
-| 4 | keine .db getrackt | PASS |
-| 5 | keine .env getrackt | PASS |
-| 6 | keine Secrets | PASS |
-| 7 | keine hardcoded Privatpfade | PASS |
-| 8 | keine PII-Muster | PASS |
-| 9 | keine BACH-internen Dokumente | PASS |
-| 10 | TODO.md mit STATUS-Tabelle | PASS |
+| 4 | No .db tracked | PASS |
+| 5 | No .env tracked | PASS |
+| 6 | No secrets | PASS |
+| 7 | No hardcoded private paths | PASS |
+| 8 | No PII patterns | PASS |
+| 9 | No internal BACH documents | PASS |
+| 10 | TODO.md with STATUS table | PASS |
 
-## Bewusst akzeptierte Offenheiten (kein Gate-Blocker)
-- Source-Adapter Codex/Gemini/Kimi sind Skizzen (Claude-Pfad vollständig) — in `TODO.md` als HIGH dokumentiert.
-- Kein automatisierter Klassifikations-Spotcheck/Kappa (optionaler Qualitätsschritt, in `TODO.md`).
-- Kein privater Korpus / keine ausgefüllten Avatar-Dateien im Repo (per `.gitignore`).
+## Intentionally Accepted Open Items (Not Gate Blockers)
+- Source adapters for Codex/Gemini/Kimi are currently sketches (Claude path is complete) — documented in `TODO.md` as HIGH priority.
+- No automated classification spot check or inter-rater Kappa (optional quality step, in `TODO.md`).
+- No private corpus or filled avatar files in the repo (enforced by `.gitignore`).
 
-## Vor dem tatsächlichen Push (Operator-Schritte)
-1. GitHub-Repo `ellmos-ai/build-your-users-mind` **privat** anlegen.
-2. Remote setzen, pushen.
-3. Topics setzen: theory-of-mind, llm, user-modeling, personalization, ai-agents, prompt-analysis.
-4. Public erst nach bewusster Freigabe (Gate ist grün, inhaltlich genügt der Claude-Pfad).
+## Before the Actual Push (Operator Steps)
+1. Create GitHub repository `ellmos-ai/build-your-users-mind` as **private**.
+2. Set remote and push.
+3. Configure topics: theory-of-mind, llm, user-modeling, personalization, ai-agents, prompt-analysis.
+4. Set public only after conscious release (Gate is green, Claude path is sufficient content-wise).

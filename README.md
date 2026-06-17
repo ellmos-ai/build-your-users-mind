@@ -4,7 +4,7 @@
 
 > **What you mind is what you get.**
 
-**🌐 [EN](README.md) · [DE](README_de.md) · [ES](README_es.md) · [JA](README_ja.md) · [RU](README_ru.md) · [ZH](README_zh.md)** — English is authoritative; translations may lag.
+**🌐 [EN](README.md) · [DE](locales/de/README.md) · [ES](locales/es/README.md) · [JA](locales/ja/README.md) · [RU](locales/ru/README.md) · [ZH](locales/zh/README.md)** — English is authoritative; translations may lag.
 
 A recipe for any AI agent (Claude, Codex, Gemini/agy, Kimi, …) to build an empirical,
 self-improving **theory-of-mind model of its own user** from its own interaction logs —

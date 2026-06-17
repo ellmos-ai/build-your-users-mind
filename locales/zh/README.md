@@ -4,7 +4,7 @@
 
 > **What you mind is what you get.**
 
-**🌐 [EN](README.md) · [DE](README_de.md) · [ES](README_es.md) · [JA](README_ja.md) · [RU](README_ru.md) · [ZH](README_zh.md)** — 英文版为准；翻译版可能会有滞后。
+**🌐 [EN](../../README.md) · [DE](../de/README.md) · [ES](../es/README.md) · [JA](../ja/README.md) · [RU](../ru/README.md) · [ZH](README.md)** — 英文版为准；翻译版可能会有滞后。
 
 一份适用于任何 AI 智能体（Claude、Codex、Gemini/agy、Kimi 等）的配方，用于从自身的交互日志中构建一个经验性的、自完善的**关于其用户的心理理论模型（theory-of-mind model of its own user）**，并在用户不在时遵循用户的精神行事。
 

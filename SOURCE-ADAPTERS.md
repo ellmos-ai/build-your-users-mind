@@ -1,33 +1,33 @@
-# SOURCE-ADAPTERS — woher jedes Modell seine User-Prompts liest
+# SOURCE-ADAPTERS — Where each model reads its user prompts from
 
-> Der **einzig modellspezifische Teil** des Moduls (Schritt 1 in `SKILL.md`). Jeder Adapter liefert
-> dieselbe normalisierte Zeile: `{ts, source, project, session, sender:"human", text}`.
-> Referenz-Extraktor (Claude): `scripts/corpus_extract.py` (in diesem Repo).
+> The **only model-specific part** of the module (Step 1 in `SKILL.md`). Each adapter delivers
+> the same normalized row: `{ts, source, project, session, sender:"human", text}`.
+> Reference extractor (Claude): `scripts/corpus_extract.py` (in this repo).
 
-## Claude Code  ✅ implementiert
-- **Pfad:** `~/.claude/projects/<slug>/<session>.jsonl`
-- **Filter:** `type=="user"` & `message.role=="user"`; Text aus String oder `content[].type=="text"`.
-- **Raus:** tool_result-Blöcke, `<system-reminder>`, `<task-notification>`, `<local-command-stdout>`,
-  Hook-Injektionen, Kontext-Kompaktierungs-Summaries („This session is being continued…").
-- **Slash-Commands:** `<command-name>` + `<command-args>` extrahieren, als `slash` taggen.
+## Claude Code  ✅ Implemented
+- **Path:** `~/.claude/projects/<slug>/<session>.jsonl`
+- **Filter:** `type=="user"` & `message.role=="user"`; text from string or `content[].type=="text"`.
+- **Exclude:** tool_result blocks, `<system-reminder>`, `<task-notification>`, `<local-command-stdout>`,
+  hook injections, context compacting summaries ("This session is being continued…").
+- **Slash Commands:** extract `<command-name>` + `<command-args>`, tag as `slash`.
 
-## Codex CLI (GPT)  ✅ implementiert → `scripts/adapters/codex_adapter.py`
-- **Pfad:** `~/.codex/sessions/<YYYY>/<MM>/<DD>/rollout-*.jsonl` (+ `~/.codex/archived_sessions/`).
+## Codex CLI (GPT)  ✅ Implemented → `scripts/adapters/codex_adapter.py`
+- **Path:** `~/.codex/sessions/<YYYY>/<MM>/<DD>/rollout-*.jsonl` (+ `~/.codex/archived_sessions/`).
 - **Filter:** `type=="response_item"` & `payload.role=="user"` & `payload.content[].type=="input_text"`.
-- **Raus:** `<environment_context>`, `<user_instructions>`, Tool-Outputs.
-- Von Codex selbst geschrieben (Auftrag: `_prompts/adapter-codex.md`), Smoke-getestet (946 Prompts, Schema-konform).
+- **Exclude:** `<environment_context>`, `<user_instructions>`, tool outputs.
+- Written by Codex itself (prompt: `_prompts/adapter-codex.md`), smoke-tested (946 prompts, schema-compliant).
 
-## Gemini / agy (antigravity)  ✅ implementiert → `scripts/adapters/gemini_adapter.py`
-- **Pfad:** `~/.gemini/antigravity/conversations/<uuid>.db` (SQLite).
-- **Befund:** `steps`-Tabelle speichert `metadata` + `step_payload` als **Protobuf-Blobs**; User-Turns = `step_type==14`, Text = payload-Feld 19→2, Timestamp aus metadata-Feld 1. Eigener Varint-Parser im Adapter.
-- Von agy/Gemini selbst geschrieben (Auftrag: `_prompts/adapter-gemini.md`), Smoke-getestet (188 Prompts, sauberer Text).
+## Gemini / agy (antigravity)  ✅ Implemented → `scripts/adapters/gemini_adapter.py`
+- **Path:** `~/.gemini/antigravity/conversations/<uuid>.db` (SQLite).
+- **Findings:** `steps` table stores `metadata` + `step_payload` as **Protobuf blobs**; user turns = `step_type==14`, text = payload field 19→2, timestamp from metadata field 1. Custom varint parser in the adapter.
+- Written by agy/Gemini itself (prompt: `_prompts/adapter-gemini.md`), smoke-tested (188 prompts, clean text).
 
-## Kimi Code CLI  ✅ implementiert → `scripts/adapters/kimi_adapter.py`
-- **Pfad:** `~/.kimi-code/sessions/.../<sessionDir>/agents/main/wire.jsonl` (JSONL); Index `~/.kimi-code/session_index.jsonl` (sessionId/sessionDir/workDir).
-- **Filter:** `type=="turn.prompt"` & `origin.kind=="user"`; Text aus `input` (Text-Blöcke/String); `time` = Unix-ms.
-- Von Kimi (kimi-code) selbst geschrieben (Auftrag: `_prompts/adapter-kimi.md`), Smoke-getestet (18 Prompts).
+## Kimi Code CLI  ✅ Implemented → `scripts/adapters/kimi_adapter.py`
+- **Path:** `~/.kimi-code/sessions/.../<sessionDir>/agents/main/wire.jsonl` (JSONL); index `~/.kimi-code/session_index.jsonl` (sessionId/sessionDir/workDir).
+- **Filter:** `type=="turn.prompt"` & `origin.kind=="user"`; text from `input` (text blocks/string); `time` = Unix ms.
+- Written by Kimi (kimi-code) itself (prompt: `_prompts/adapter-kimi.md`), smoke-tested (18 prompts).
 
-## Adapter-Vertrag
-1. Nur **menschlich getippte** Prompts. 2. Zeitfenster filterbar (`--since`). 3. UTF-8, echte Umlaute
-(`PYTHONIOENCODING=utf-8`; Logs sind valides UTF-8 — **nicht** „reparieren", nur Konsolen-Encoding setzen).
-4. Output = JSONL, eine normalisierte Zeile je Prompt. Danach greift die universelle Pipeline (Schritt 2–6).
+## Adapter Contract
+1. Only **human-typed** prompts. 2. Filterable time window (`--since`). 3. UTF-8, genuine characters
+(`PYTHONIOENCODING=utf-8`; logs are valid UTF-8 — do **not** "repair", only set console encoding).
+4. Output = JSONL, one normalized line per prompt. Afterwards, the universal pipeline takes over (Steps 2–6).

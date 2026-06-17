@@ -1,4 +1,4 @@
-# MY-ACTIONS.txt — append-only Aktions-Log (maschinenlesbar)
-# Format: <ISO-ts>\t<konfidenz 🟢|🟡|🔴>\t<reversibel j|n>\t<status offen|bestätigt|korrigiert>\t<titel>\t<angenommener-wille-kurz>
-# Eine Zeile je im Namen von <USER> getroffener Handlung. Voller Kontext in WHAT-I-DID-…md.
+# MY-ACTIONS.txt — append-only action log (machine-readable)
+# Format: <ISO-ts>\t<confidence 🟢|🟡|🔴>\t<reversible y|n>\t<status open|confirmed|corrected>\t<title>\t<assumed-will-short>
+# One line per action taken on behalf of <USER>. Full context in WHAT-I-DID-…md.
 # ---

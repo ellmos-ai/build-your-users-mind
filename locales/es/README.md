@@ -4,7 +4,7 @@
 
 > **What you mind is what you get.**
 
-**🌐 [EN](README.md) · [DE](README_de.md) · [ES](README_es.md) · [JA](README_ja.md) · [RU](README_ru.md) · [ZH](README_zh.md)** — El inglés es autoritativo; las traducciones pueden estar desactualizadas.
+**🌐 [EN](../../README.md) · [DE](../de/README.md) · [ES](README.md) · [JA](../ja/README.md) · [RU](../ru/README.md) · [ZH](../zh/README.md)** — El inglés es autoritativo; las traducciones pueden estar desactualizadas.
 
 Una receta para que cualquier agente de IA (Claude, Codex, Gemini/agy, Kimi, …) construya un **theory-of-mind model of its own user** (modelo de teoría de la mente de su propio usuario) empírico y auto-mejorable a partir de sus propios registros de interacción, y actúe según el espíritu del usuario cuando este no esté presente.
 
@@ -37,7 +37,7 @@ En caso de 🔴 (nuevo/sin patrón), la regla es **escalar, no adivinar.**
 2. **Chunk** (`scripts/chunk_corpus.py`) — eliminar duplicados, dominios opcionales, fragmentar por tamaño para el enjambre.
 3. **Clasificar** (enjambre) — taxonomía de 8 tipos (`TAXONOMY.md`) + decision_kind + patrón de formulación. Enjambre jerárquico (líderes de dominio × trabajadores de fragmentos); ver el skill integrado `skills/swarm-operations/`.
 4. **Agregar** (`scripts/aggregate_stats.py`) — distribución de tipos, relación B:K, puntos de inflexión.
-5. **Crear** (Author) los archivos de avatar desde `templates/` y **vincular** (bind) un puntero corto en el archivo de memoria/reglas del propio agente (Claude `CLAUDE.md`, Codex `GPT.md`/`AGENTS.md`, Gemini `GEMINI.md`, …).
+5. **Crear** (Author) los archivos de avatar desde `templates/` and **vincular** (bind) un puntero corto en el archivo de memoria/reglas del propio agente (Claude `CLAUDE.md`, Codex `GPT.md`/`AGENTS.md`, Gemini `GEMINI.md`, …).
 
 Ver `SKILL.md` para la receta completa y `SOURCE-ADAPTERS.md` para las ubicaciones de los registros de cada agente.
 

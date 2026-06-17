@@ -1,40 +1,40 @@
-# TAXONOMY — 8 Prompt-Typen + Klassifikationsfelder
+# TAXONOMY — 8 Prompt Types + Classification Fields
 
-> Eigenständige Fassung (Modul ist self-contained). **Methodische Basis:** *Prompt-Archaeology*
-> (L. Geiger) — die Methode, ein vollständiges Mensch-KI-Interaktionsprotokoll zu klassifizieren.
+> Standalone version (module is self-contained). **Methodological basis:** *Prompt-Archaeology*
+> (L. Geiger) — the method of classifying a complete human-AI interaction protocol.
 
-## Die 8 Prompt-Typen
+## The 8 Prompt Types
 
-| Typ | Code | Definition | Indikator |
+| Type | Code | Definition | Indicator |
 |---|---|---|---|
-| Startprompt | **SP** | Initiiert neue Analyse/Phase | kein Bezug auf Vorkontext |
-| Nachfrage-Thema | **NT** | Vertieft Bestehendes | „und was ist mit …?" |
-| Nachfrage-Methode | **NM** | Löst Methode/Tool/Review/Suche/Agent aus | Aufforderungsverb |
-| Nachfrage-Steuerung | **NS** | Lenkt Reihenfolge/Priorität | „warte", „zuerst", „stopp" |
-| Korrektur | **KO** | Berichtigt Fehler/Annahme | Negation, Gegenbeispiel |
-| Bestätigung | **BE** | Validiert Zwischenstand | kurze Zustimmung |
-| Richtungsänderung | **RA** | Fundamentaler Kurswechsel | stellt den Rahmen infrage |
-| Meta-Prompt | **MP** | Über den Prozess/Dialog selbst | Prozessbegriff |
+| Start Prompt | **SP** | Initiates a new analysis or phase | No reference to prior context |
+| Follow-up Topic | **NT** | Deepens existing topic | "And what about...?" |
+| Follow-up Method | **NM** | Triggers method/tool/review/search/agent | Action verb |
+| Follow-up Control | **NS** | Manages sequence or priority | "Wait", "first", "stop" |
+| Correction | **KO** | Corrects an error or assumption | Negation, counterexample |
+| Confirmation | **BE** | Validates intermediate status | Short agreement/acknowledgment |
+| Course Change | **RA** | Fundamental change of direction | Questions the entire framework |
+| Meta-Prompt | **MP** | About the process or dialogue itself | Process terminology |
 
-**Grenzfälle:** SP vs. NT (neu vs. anknüpfend) · NM vs. NS (Methode auslösen vs. nur umsortieren) ·
-BE vs. KO („ja, aber …" ist meist KO) · RA seltener als KO, betrifft den ganzen Rahmen.
+**Borderline Cases:** SP vs. NT (new vs. connected) · NM vs. NS (trigger method vs. re-order only) ·
+BE vs. KO ("yes, but..." is usually KO) · RA is rarer than KO, concerns the entire framework.
 
-## Klassifikationsfelder (pro Prompt)
+## Classification Fields (per Prompt)
 
-| Feld | Werte |
+| Field | Values |
 |---|---|
 | `type_code` | SP/NT/NM/NS/KO/BE/RA/MP |
-| `topic` | kurzes Thema (projektbezogen) |
-| `is_decision` | true, wenn Entscheidung/Präferenz/Regel/Korrektur/Richtungswechsel |
+| `topic` | Short topic (project-related) |
+| `is_decision` | true if decision, preference, rule, correction, or course change |
 | `decision_kind` | preference / correction / rule / direction_change / approval / rejection / process / none |
-| `formulation_pattern` | charakteristische Formulierung des Users (Originalwendung, kurz) |
+| `formulation_pattern` | Characterizing phrasing of the user (original phrasing, short) |
 | `method_triggered` | WebSearch / WebFetch / Multi-Agent / Review / Cross-Model / Script / LaTeX / -- |
 | `is_turning_point` | true/false |
-| `outcome_signal` *(deterministisch, Stufe 0/1)* | praise / correction / reissue / none (aus dem nächsten User-Turn) |
+| `outcome_signal` *(deterministic, Stage 0/1)* | praise / correction / reissue / none (derived from the next user turn) |
 
-## Bias-Indikatoren (Stufe 4)
-- **Bestätigung:Korrektur (B:K)** — Disparität deutet Zustimmungs-Bias an; **stille Zustimmung ist
-  unsichtbar** (wird nicht getippt) → Korrekturen überrepräsentiert.
-- **Korrekturrate je Thema** — fehleranfällige Gegenstände.
-- **Proaktiv:Reaktiv** — führt der User oder ist er KI-getrieben?
-- **Richtungsänderungs-Rate** — epistemische Flexibilität.
+## Bias Indicators (Stage 4)
+- **Confirmation:Correction (B:K)** — Disparity suggests approval bias; **silent approval is
+  invisible** (not typed) → corrections are overrepresented.
+- **Correction Rate per Topic** — Error-prone topics.
+- **Proactive:Reactive** — Does the user lead or are they AI-driven?
+- **Course Change Rate** — Epistemic flexibility.

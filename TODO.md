@@ -1,42 +1,42 @@
 # Pre-Release TODO: build-your-users-mind
 
 **Audit Date:** 2026-06-17
-**Auditor:** Claude (für Lukas Geiger)
-**Target Repo:** `ellmos-ai/build-your-users-mind` (zuerst privat)
-**Status:** `development` — Claude-Pfad vollständig; Referenz-Implementierung privat vorhanden.
+**Auditor:** Claude (for Lukas Geiger)
+**Target Repo:** `ellmos-ai/build-your-users-mind` (initially private)
+**Status:** `development` — Claude path is complete; private reference implementation exists.
 
 ---
 
-## BLOCKER
-> Müssen vor Public-Release gelöst sein.
+## BLOCKERS
+> Must be resolved before public release.
 
-- [x] **Secrets:** keine API-Keys/Tokens/Passwörter in getrackten Dateien
-- [x] **Private Data:** keine PII/echten Pfade (Leak-Scan grün)
-- [x] **Hardcoded Paths:** generische/relative Pfade in allen Skripten
-- [x] **Database Files:** keine `.db` getrackt
-- [x] **.env Files:** keine `.env` getrackt
-- [x] **BACH Internals:** keine BACH-internen Dokumente
-- [x] **.gitignore:** Mindesteinträge vorhanden
-- [x] **LICENSE:** MIT vorhanden
-- [x] **README.md:** englisch, vollständig
+- [x] **Secrets:** No API keys/tokens/passwords in tracked files.
+- [x] **Private Data:** No PII/real paths (leak scan is green).
+- [x] **Hardcoded Paths:** Generic/relative paths in all scripts.
+- [x] **Database Files:** No `.db` files tracked.
+- [x] **.env Files:** No `.env` files tracked.
+- [x] **BACH Internals:** No BACH-internal documents.
+- [x] **.gitignore:** Minimum entries present.
+- [x] **LICENSE:** MIT license present.
+- [x] **README.md:** English, complete.
 
 ## HIGH PRIORITY
-- [ ] Source-Adapter Codex (rollout) + Gemini (SQLite) ausimplementieren (derzeit Skizze)
-- [ ] Klassifikations-Spotcheck / Inter-Rater-Kappa als optionaler Qualitäts-Schritt
-- [ ] `domains.json`-Beispiel beilegen
+- [ ] Implement source adapters for Codex (rollout) + Gemini (SQLite) (currently sketches).
+- [ ] Add classification spot check / inter-rater Kappa as an optional quality step.
+- [ ] Add `domains.json` example.
 
 ## MEDIUM PRIORITY
-- [x] `SECURITY.md` hinzugefügt
-- [ ] `CHANGELOG.md` ab v1.0.0
-- [ ] `CONTRIBUTING.md`
-- [ ] Kimi-Adapter (Log-Format beim ersten Einsatz)
+- [x] Added `SECURITY.md`.
+- [ ] Create `CHANGELOG.md` starting from v1.0.0.
+- [ ] Create `CONTRIBUTING.md`.
+- [ ] Kimi adapter (log format during first usage).
 
 ## LOW PRIORITY
-- [ ] Test-/Smoke-Suite, GitHub Actions CI, Badges
+- [ ] Test/smoke suite, GitHub Actions CI, badges.
 
-## Bewusst NICHT enthalten
-- Kein privater Korpus, keine ausgefüllten Avatar-Dateien (siehe `.gitignore`)
-- Kein Per-Prompt-Hook (Batch + Logbuch bewusst gewählt)
+## Intentionally Excluded
+- No private corpus, no filled avatar files (enforced by `.gitignore`).
+- No per-prompt hook (batch + logbook chosen intentionally).
 
 ---
 
@@ -44,15 +44,15 @@
 
 | Category | Status | Notes |
 |----------|--------|-------|
-| Secrets | :green_circle: | Leak-Scan grün |
-| Private Data (PII) | :green_circle: | keine PII/Pfade |
-| .gitignore | :green_circle: | Mindesteinträge + Korpus/Avatar-Ausschluss |
-| Language (English) | :green_circle: | README englisch |
-| BACH Internals | :green_circle: | keine |
-| Database Files | :green_circle: | keine getrackt |
-| README.md | :green_circle: | vollständig |
+| Secrets | :green_circle: | Leak scan green |
+| Private Data (PII) | :green_circle: | No PII/paths |
+| .gitignore | :green_circle: | Minimum entries + corpus/avatar exclusion |
+| Language (English) | :green_circle: | README in English |
+| BACH Internals | :green_circle: | None |
+| Database Files | :green_circle: | None tracked |
+| README.md | :green_circle: | Complete |
 | LICENSE | :green_circle: | MIT |
-| **Overall** | **READY** | privat; Adapter Codex/Gemini noch Skizze |
+| **Overall** | **READY** | Private; Codex/Gemini adapters still sketch |
 
 **Audit Date:** 2026-06-17
 **Gate Check Exit Code:** `pending`

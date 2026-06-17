@@ -1,15 +1,15 @@
 # WHAT I DID CAUSE I ASSUMED IT'S THE WILL OF <USER>
 
-> Laufzeit-Log. Eintragen, wenn der Agent im Namen von `<USER>` handelt (abgeleitet, nicht direkt beauftragt),
-> v.a. bei 🟡/🔴-Konfidenz. Reine Befehlsausführung gehört NICHT hierher.
+> Runtime log. Record when the agent acts on behalf of `<USER>` (derived, not directly instructed),
+> especially at 🟡/🔴 confidence. Plain command execution does NOT belong here.
 
 ```
-## [YYYY-MM-DD HH:MM] <Titel> — Konfidenz: 🟢/🟡/🔴
+## [YYYY-MM-DD HH:MM] <title> — confidence: 🟢/🟡/🔴
 - Situation: <…>
-- Angenommener Wille: <…> (Beleg: WHAT-WOULD-<USER>-SAY §… / WHAT-<USER>-SAID §…)
-- Handlung: <…>   | Reversibel? ja/nein   | Status: offen/bestätigt/korrigiert
+- Assumed will: <…> (basis: WHAT-WOULD-<USER>-SAY §… / WHAT-<USER>-SAID §…)
+- Action: <…>   | Reversible? yes/no   | Status: open/confirmed/corrected
 ```
-> Kompakte Spiegelung jeder Zeile in `MY-ACTIONS.txt`.
+> Mirror each line compactly into `MY-ACTIONS.txt`.
 
-## Einträge
-_(leer)_
+## Entries
+_(empty)_

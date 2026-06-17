@@ -1,20 +1,20 @@
-# WHAT WOULD <USER> SAY — Vorhersage-Playbook (Feedback-Präkognition)
+# WHAT WOULD <USER> SAY — Prediction playbook (feedback precognition)
 
-> **Inferentiell** (Modell-Vorhersage aus Mustern). Das *antizipierte Feedback* von `<USER>`, das den
-> Agenten in dessen Abwesenheit steuert. Wird in `WHAT-<USER>-SAID-ABOUT-…` gegen echtes Feedback evaluiert.
+> **Inferential** (model prediction from patterns). The *anticipated feedback* of `<USER>` that steers the
+> agent in their absence. Evaluated in `WHAT-<USER>-SAID-ABOUT-…` against real feedback.
 
-## Konfidenz-Legende
-- 🟢 **hoch** — konsistentes Muster → handeln.
-- 🟡 **mittel** — kontextabhängig → handeln + loggen + Feedback einholen.
-- 🔴 **niedrig/neuartig** — kein Muster → **eskalieren statt raten**.
+## Confidence legend
+- 🟢 **high** — consistent pattern → act.
+- 🟡 **medium** — context-dependent → act + log + collect feedback.
+- 🔴 **low/novel** — no pattern → **escalate, don't guess**.
 
-## Situations-Playbook
-| Situation | Vorhersage: was <USER> will | Konfidenz |
+## Situation playbook
+| Situation | Prediction: what <USER> wants | Confidence |
 |---|---|---|
-| <Situation 1> | <vorhergesagtes Verhalten/Entscheidung> | 🟢/🟡/🔴 |
+| <situation 1> | <predicted behavior/decision> | 🟢/🟡/🔴 |
 
-*(Aus den Domänen-Clustern füllen: je Cluster → Situation + typische Entscheidung + Konfidenz aus Cluster-Konsistenz.)*
+*(Fill from the domain clusters: per cluster → situation + typical decision + confidence from cluster consistency.)*
 
-## Default-Heuristik bei Unsicherheit
-1. Reversibel + im Muster → handeln (loggen). 2. Irreversibel/extern → nicht ohne Bestätigung.
-3. Konflikt mit Kern-Werten → vorsichtigere Variante. 4. Kein Muster (🔴) → eskalieren.
+## Default heuristic under uncertainty
+1. Reversible + within pattern → act (log it). 2. Irreversible/external → not without confirmation.
+3. Conflicts with core values → the more cautious option. 4. No pattern (🔴) → escalate.

@@ -4,7 +4,7 @@
 
 > **What you mind is what you get.**
 
-**🌐 [EN](README.md) · [DE](README_de.md) · [ES](README_es.md) · [JA](README_ja.md) · [RU](README_ru.md) · [ZH](README_zh.md)** — Englisch ist maßgeblich; Übersetzungen können veraltet sein.
+**🌐 [EN](../../README.md) · [DE](README.md) · [ES](../es/README.md) · [JA](../ja/README.md) · [RU](../ru/README.md) · [ZH](../zh/README.md)** — Englisch ist maßgeblich; Übersetzungen können veraltet sein.
 
 Ein Rezept für jeden KI-Agenten (Claude, Codex, Gemini/agy, Kimi, …), um aus seinen eigenen Interaktionsprotokollen ein empirisches, sich selbst verbesserndes **theory-of-mind-Modell seines eigenen Nutzers** aufzubauen – und im Sinne des Nutzers zu handeln, wenn dieser abwesend ist.
 

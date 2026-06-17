@@ -1,31 +1,31 @@
-# Auftrag — Source-Adapter für **Gemini / agy (antigravity)** (build-your-users-mind)
+# Task — Source adapter for **Gemini / agy (antigravity)** (build-your-users-mind)
 
-**Für:** agy/Gemini (kennt sein eigenes Log-Format am besten)
-**Repo-Root:** `C:\Users\User\OneDrive\.TOPICS\.AI\.MODULES\build-your-users-mind`
-**Output-Datei (direkt schreiben, --add-dir):** `scripts/adapters/gemini_adapter.py` (neu)
-**Referenz:** `scripts/corpus_extract.py` (Claude-Adapter) + `SOURCE-ADAPTERS.md` (Vertrag)
+**For:** agy/Gemini (knows its own log format best)
+**Repo root:** `<repo-root>` (write files directly, e.g. via `--add-dir`)
+**Output file:** `scripts/adapters/gemini_adapter.py` (new)
+**Reference:** `scripts/corpus_extract.py` (Claude adapter) + `SOURCE-ADAPTERS.md` (contract)
 
-## Aufgabe
-Schreibe einen Stufe-0/1-Extraktor für **antigravity/Gemini-Logs**, der dieselbe normalisierte
-JSONL-Zeile erzeugt wie `corpus_extract.py`.
+## Task
+Write a stage-0/1 extractor for **antigravity/Gemini logs** that produces the same normalized JSONL row
+as `corpus_extract.py`.
 
-## Quelle (Gemini/antigravity)
-- Pfad: `~/.gemini/antigravity/conversations/<uuid>.db` (SQLite; WAL beachten → ggf. `PRAGMA wal_checkpoint`).
-- Tabelle `steps` enthält den Verlauf — **Spalten beim Bau inspizieren** (`SELECT name FROM pragma_table_info('steps')`)
-  und die User-Turns identifizieren (menschlich getippte Eingaben, keine Modell-/Tool-Schritte).
+## Source (Gemini/antigravity)
+- Path: `~/.gemini/antigravity/conversations/<uuid>.db` (SQLite; mind WAL → optionally `PRAGMA wal_checkpoint`).
+- Inspect the schema of a sample DB (table `steps` and others) and find where human-typed user input is stored
+  (human turns only, not model/tool steps).
 
-## Vertrag (PFLICHT — identisch zu corpus_extract)
-Pro getipptem Human-Prompt eine JSON-Zeile mit Feldern:
+## Contract (MANDATORY — identical to corpus_extract)
+One JSON line per human prompt with fields:
 `id, ts, source("gemini"), project, branch(""), session(<uuid>), sender("human"), ptype, command,
 text, text_short, word_count, decision_score, followup_short, outcome_signal`.
-- **Redaction vor dem Schreiben** (Secrets/Mails/IP/Ziffern) — Logik aus `corpus_extract.py` wiederverwenden.
-- decision_score / outcome_signal wie im Referenz-Adapter.
-- IDs chronologisch `H{n:05d}`. `--root` (Default conversations-Ordner), `--since`, `--out ./STUDIE`. UTF-8/CJK sauber.
+- **Redaction before writing** — reuse the logic from `corpus_extract.py`.
+- decision_score / outcome_signal as in the reference adapter.
+- IDs chronological `H{n:05d}`. `--root` (default conversations folder), `--since`, `--out ./STUDIE`. UTF-8/CJK clean.
 
-## Akzeptanzkriterien (werden geprüft)
-1. Liest die SQLite-DBs, schreibt valides `00_corpus.jsonl`, `source=="gemini"`.
-2. Alle Vertragsfelder vorhanden; nur menschliche Turns, keine Modell-/Tool-Schritte.
-3. Redaction greift; echte Umlaute/CJK erhalten.
-4. Keine hardcodierten Privatpfade; generische argparse-Defaults.
+## Acceptance criteria (will be checked)
+1. Reads the SQLite DBs, writes valid `00_corpus.jsonl`, `source=="gemini"`.
+2. All contract fields present; human turns only, no model/tool steps.
+3. Redaction works; genuine umlauts/CJK preserved.
+4. No hardcoded personal paths; generic argparse defaults.
 
-Danach: kurze Meldung (Dateipfad + Tabellen-/Spalten-Mapping das du gefunden hast + Beispielzeile + Anzahl).
+Afterwards: short report (file path + the table/column mapping you found + sample line + count).
