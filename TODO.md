@@ -3,7 +3,7 @@
 **Audit Date:** 2026-06-17
 **Auditor:** Claude (for Lukas Geiger)
 **Target Repo:** `ellmos-ai/build-your-users-mind` (initially private)
-**Status:** `development` — Claude path is complete; private reference implementation exists.
+**Status:** `development` — Claude/Codex/Gemini/Kimi source adapters are implemented; private reference implementation exists.
 
 ---
 
@@ -21,7 +21,7 @@
 - [x] **README.md:** English, complete.
 
 ## HIGH PRIORITY
-- [ ] Implement source adapters for Codex (rollout) + Gemini (SQLite) (currently sketches).
+- [x] Implement source adapters for Codex rollout, Gemini SQLite, and Kimi wire JSONL.
 - [ ] Add classification spot check / inter-rater Kappa as an optional quality step.
 - [ ] Add `domains.json` example.
 
@@ -29,7 +29,7 @@
 - [x] Added `SECURITY.md`.
 - [ ] Create `CHANGELOG.md` starting from v1.0.0.
 - [ ] Create `CONTRIBUTING.md`.
-- [ ] Kimi adapter (log format during first usage).
+- [ ] Keep localized documentation in sync after the next content change.
 
 ## LOW PRIORITY
 - [ ] Test/smoke suite, GitHub Actions CI, badges.
@@ -52,10 +52,10 @@
 | Database Files | :green_circle: | None tracked |
 | README.md | :green_circle: | Complete |
 | LICENSE | :green_circle: | MIT |
-| **Overall** | **READY** | Private; Codex/Gemini adapters still sketch |
+| **Overall** | **READY** | Private; adapters implemented and smoke-tested |
 
 **Audit Date:** 2026-06-17
-**Gate Check Exit Code:** `pending`
+**Gate Check Exit Code:** `0`
 
 ---
 

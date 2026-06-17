@@ -20,7 +20,7 @@
 | 10 | TODO.md with STATUS table | PASS |
 
 ## Intentionally Accepted Open Items (Not Gate Blockers)
-- Source adapters for Codex/Gemini/Kimi are currently sketches (Claude path is complete) — documented in `TODO.md` as HIGH priority.
+- Source adapters for Claude, Codex, Gemini, and Kimi are implemented and smoke-tested; future work is quality calibration, not adapter completion.
 - No automated classification spot check or inter-rater Kappa (optional quality step, in `TODO.md`).
 - No private corpus or filled avatar files in the repo (enforced by `.gitignore`).
 

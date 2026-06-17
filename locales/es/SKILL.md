@@ -41,6 +41,13 @@ Estructura 1:1 como en `templates/` (copiar plantillas, reemplazar `<USER>`/`<AG
 El modelo de ToM debe **usarse realmente**, no solo existir:
 - Regla corta/puntero en el **propio archivo de memoria/reglas/system prompt** del agente (Claude: `CLAUDE.md`; Codex: `GPT.md`/`AGENTS.md`; agy: `GEMINI.md`; Kimi: `KIMI.md`) → apunta al bucle `START.md`. **Mantenerlo corto** (puntero, sin texto completo).
 - **Regla de precedencia:** las decisiones específicas del proyecto en `DECISIONS.md` tienen prioridad sobre el avatar transversal.
+- **Puntos de entrada de comandos opcionales (matices):** exponer el bucle en tres profundidades más un orquestador —
+  `read-my-mind` (predecir, 0→2, sin acción), `decide-like-me` (una decisión, 0→2, componente de flujo de trabajo),
+  `be-my-avatar` (actuar, completo 0→4, solo reversible, registros), `avatar-orchestrator` (encadenar sobre muchas decisiones,
+  agrupando elementos 🔴/irreversibles en una sola pregunta). Plantillas en `templates/commands/`.
+- **Vinculación versionada:** mantener la copia del proyecto del bucle/skill como canónica; si el agente también incluye una
+  copia registrada, la **versión superior gana** y la copia enrutada más antigua es **reemplazada** — el proyecto
+  lidera, el registro sigue (sin deriva).
 
 ### 6. Mantener (auto-mejorable)
 - **Base empírica:** ejecutar los scripts periódicamente (los registros se persisten de todos modos) — **sin hook por instrucción** (evitar la trampa de idempotencia/registro múltiple; el procesamiento por lotes es más robusto).

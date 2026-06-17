@@ -57,6 +57,13 @@ The ToM model must **actually be used**, not just exist:
   (Claude: `CLAUDE.md`; Codex: `GPT.md`/`AGENTS.md`; agy: `GEMINI.md`; Kimi: `KIMI.md`)
   → points to the `START.md` loop. **Keep it short** (pointer, no full text).
 - **Precedence rule:** project-specific `DECISIONS.md` take precedence over the cross-cutting avatar.
+- **Optional command entry points (nuances):** expose the loop at three depths plus an orchestrator —
+  `read-my-mind` (predict, 0→2, no action), `decide-like-me` (one decision, 0→2, a workflow component),
+  `be-my-avatar` (act, full 0→4, reversible-only, logs), `avatar-orchestrator` (chain over many decisions,
+  bundling 🔴/irreversible items into one question). Templates in `templates/commands/`.
+- **Versioned binding:** keep the project copy of the loop/skill canonical; if the agent also ships a
+  registered copy, the **higher version wins** and the older routed copy is **replaced** — the project
+  leads, the registry follows (no drift).
 
 ### 6. Maintain (self-improving)
 - **Empirical basis:** rerun scripts periodically (logs persist anyway) — **no per-prompt hook**
