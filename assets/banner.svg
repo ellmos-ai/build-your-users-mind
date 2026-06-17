@@ -1,192 +1,96 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" font-family="Segoe UI, system-ui, sans-serif">
   <defs>
-    <!-- Background Gradient -->
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0a0d14" />
-      <stop offset="50%" stop-color="#0d1117" />
-      <stop offset="100%" stop-color="#161224" />
+    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a1c10"/>
+      <stop offset="1" stop-color="#120c08"/>
     </linearGradient>
-
-    <!-- Dot Grid Pattern -->
-    <pattern id="dotGrid" width="30" height="30" patternUnits="userSpaceOnUse">
-      <circle cx="15" cy="15" r="1" fill="#ffffff" fill-opacity="0.05" />
-    </pattern>
-
-    <!-- Brand Gradients -->
-    <linearGradient id="cyanVioletGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#a855f7" />
-      <stop offset="100%" stop-color="#06b6d4" />
-    </linearGradient>
-
-    <linearGradient id="feedforwardGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#a855f7" />
-      <stop offset="100%" stop-color="#06b6d4" />
-    </linearGradient>
-
-    <linearGradient id="feedbackGrad" x1="100%" y1="0%" x2="0%" y2="0%">
-      <stop offset="0%" stop-color="#06b6d4" />
-      <stop offset="100%" stop-color="#a855f7" />
-    </linearGradient>
-
-    <!-- Node Gradients -->
-    <radialGradient id="agentBg" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#241b3d" />
-      <stop offset="100%" stop-color="#0d1117" />
-    </radialGradient>
-
-    <radialGradient id="userBg" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#0c2d38" />
-      <stop offset="100%" stop-color="#0d1117" />
-    </radialGradient>
-
-    <linearGradient id="agentStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#c084fc" />
-      <stop offset="100%" stop-color="#7c3aed" />
-    </linearGradient>
-
-    <linearGradient id="userStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#22d3ee" />
-      <stop offset="100%" stop-color="#0891b2" />
-    </linearGradient>
-
-    <!-- Filters for Glow Effects -->
-    <filter id="glow-subtle" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="4" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
-
-    <filter id="glow-bright" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="6" result="blur" />
-      <feMerge>
-        <feMergeNode in="blur" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
-
-    <!-- Arrow Markers -->
-    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M 0 2 L 8 5 L 0 8 z" fill="#06b6d4" />
-    </marker>
-    <marker id="arrow-violet" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M 0 2 L 8 5 L 0 8 z" fill="#a855f7" />
-    </marker>
+    <style>
+      @keyframes fall  { 0% { transform: translateY(-120px); opacity:0 } 25% { opacity:1 } 70% { transform: translateY(0); opacity:1 } 85% { opacity:0 } 100% { opacity:0 } }
+      @keyframes spin  { to { transform: rotate(360deg) } }
+      @keyframes shake { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+      @keyframes march { from { transform: translateX(0) } to { transform: translateX(160px) } }
+      @keyframes tread { to { stroke-dashoffset: -40 } }
+      @keyframes bob   { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
+      .gear  { transform-box: fill-box; transform-origin: center; animation: spin 6s linear infinite; }
+      .mach  { animation: shake .5s ease-in-out infinite; }
+      .march { animation: march 2.2s linear infinite; }
+      .tread { animation: tread 1.2s linear infinite; }
+      .bob   { transform-box: fill-box; transform-origin: center; animation: bob 1.2s ease-in-out infinite; }
+      .f1{animation:fall 2.4s ease-in infinite}.f2{animation:fall 2.4s ease-in infinite .6s}
+      .f3{animation:fall 2.4s ease-in infinite 1.2s}.f4{animation:fall 2.4s ease-in infinite 1.8s}
+    </style>
+    <g id="mb">
+      <line x1="-9" y1="13" x2="-11" y2="30" stroke="#ec4899" stroke-width="6" stroke-linecap="round"/>
+      <line x1="9" y1="13" x2="11" y2="30" stroke="#ec4899" stroke-width="6" stroke-linecap="round"/>
+      <ellipse cx="-13" cy="32" rx="8" ry="4" fill="#be185d"/>
+      <ellipse cx="13" cy="32" rx="8" ry="4" fill="#be185d"/>
+      <path d="M-26 0 Q-31 -22 -8 -23 Q0 -33 10 -25 Q31 -26 26 0 Q28 15 8 17 L-8 17 Q-28 15 -26 0 Z" fill="#f9a8d4" stroke="#be185d" stroke-width="4"/>
+      <g fill="none" stroke="#ec4899" stroke-width="3" stroke-linecap="round">
+        <path d="M-15 -13 q8 4 0 11"/><path d="M1 -16 q8 4 0 11"/><path d="M15 -9 q6 3 0 9"/>
+      </g>
+      <circle cx="-6" cy="1" r="2.6" fill="#4a0e2e"/><circle cx="8" cy="1" r="2.6" fill="#4a0e2e"/>
+      <path d="M-5 7 q6 5 13 0" fill="none" stroke="#4a0e2e" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
   </defs>
 
-  <style>
-    .title {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      font-size: 52px;
-      font-weight: 800;
-      fill: #f0f6fc;
-      letter-spacing: -1.5px;
-    }
-    .tagline {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      font-size: 22px;
-      font-weight: 500;
-      fill: #c9d1d9;
-      letter-spacing: -0.2px;
-    }
-    .subtitle {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      font-size: 14px;
-      font-weight: 400;
-      fill: #8b949e;
-      letter-spacing: 0.2px;
-    }
-    .tech-label {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-    }
-  </style>
+  <rect width="1280" height="640" fill="url(#bg3)"/>
 
-  <!-- 1. Background -->
-  <rect width="1280" height="400" fill="url(#bgGradient)" />
-  <rect width="1280" height="400" fill="url(#dotGrid)" />
+  <!-- title block (top, clear of everything) -->
+  <text x="100" y="92" font-size="56" font-weight="800" fill="#fff7ec">build-your-users-<tspan fill="#fbbf24">mind</tspan></text>
+  <text x="102" y="130" font-size="23" font-weight="500" fill="#e8c98c">what you mind is what you get</text>
+  <text x="102" y="160" font-size="15" fill="#a9824a">letters in — happy little minds out, hand in hand</text>
 
-  <!-- 2. Decorative Outer Border -->
-  <rect x="20" y="20" width="1240" height="360" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.04" rx="12" />
-  
-  <!-- Corner Tech Accent Lines -->
-  <path d="M 25 35 L 25 25 L 35 25" fill="none" stroke="#a855f7" stroke-width="1.5" opacity="0.3" />
-  <path d="M 1255 35 L 1255 25 L 1245 25" fill="none" stroke="#06b6d4" stroke-width="1.5" opacity="0.3" />
-  <path d="M 25 365 L 25 375 L 35 375" fill="none" stroke="#a855f7" stroke-width="1.5" opacity="0.3" />
-  <path d="M 1255 365 L 1255 375 L 1245 375" fill="none" stroke="#06b6d4" stroke-width="1.5" opacity="0.3" />
+  <!-- belt supports + ground -->
+  <rect x="0" y="566" width="1280" height="74" fill="#0c0805"/>
+  <line x1="0" y1="566" x2="1280" y2="566" stroke="#3a2a14" stroke-width="4"/>
+  <g fill="#1c130a"><rect x="470" y="532" width="20" height="40"/><rect x="1010" y="532" width="20" height="40"/></g>
 
-  <!-- 3. Typography -->
+  <!-- conveyor belt -->
   <g>
-    <!-- Title -->
-    <text x="100" y="170" class="title">
-      build-your-users-<tspan fill="url(#cyanVioletGrad)">mind</tspan>
-    </text>
-    
-    <!-- Tagline -->
-    <text x="100" y="220" class="tagline">
-      what you mind is what you get
-    </text>
-    
-    <!-- Subtitle -->
-    <text x="100" y="280" class="subtitle">
-      an agent's theory-of-mind of its user — feedback precognition
-    </text>
+    <rect x="330" y="500" width="990" height="34" rx="8" fill="#3a2a14" stroke="#0c0805" stroke-width="5"/>
+    <line class="tread" x1="342" y1="517" x2="1316" y2="517" stroke="#7a5a2a" stroke-width="6" stroke-dasharray="14 26"/>
+    <circle cx="352" cy="517" r="15" fill="#9a7430" stroke="#0c0805" stroke-width="5"/>
+    <circle cx="1298" cy="517" r="15" fill="#9a7430" stroke="#0c0805" stroke-width="5"/>
   </g>
 
-  <!-- 4. Geometric Motif (Theory of Mind / Feedforward & Feedback) -->
-  <g>
-    <!-- Outer background radar circles (Faint tech details) -->
-    <circle cx="980" cy="200" r="130" fill="none" stroke="#8b949e" stroke-width="1" stroke-dasharray="4 8" opacity="0.08" />
-    <circle cx="980" cy="200" r="160" fill="none" stroke="#8b949e" stroke-width="1" stroke-dasharray="2 12" opacity="0.12" />
-    
-    <!-- Center coordinate crosshair -->
-    <path d="M 980 185 L 980 215 M 965 200 L 995 200" fill="none" stroke="#8b949e" stroke-width="1" opacity="0.15" />
-    
-    <!-- Central projection/perception line connecting the centers directly -->
-    <line x1="880" y1="200" x2="1080" y2="200" stroke="url(#cyanVioletGrad)" stroke-width="1" stroke-dasharray="3 6" opacity="0.3" />
-
-    <!-- FEEDFORWARD Loop (Top Curve: Agent -> User) -->
-    <path d="M 915 165 C 950 110, 1010 110, 1045 165" fill="none" stroke="url(#feedforwardGrad)" stroke-width="2.5" marker-end="url(#arrow-cyan)" filter="url(#glow-subtle)" />
-    <!-- Glowing signal packet on feedforward loop -->
-    <circle cx="980" cy="123.75" r="3.5" fill="#ffffff" filter="url(#glow-bright)" />
-
-    <!-- FEEDBACK Loop (Bottom Curve: User -> Agent) -->
-    <path d="M 1045 235 C 1010 290, 950 290, 915 235" fill="none" stroke="url(#feedbackGrad)" stroke-width="2.5" marker-end="url(#arrow-violet)" filter="url(#glow-subtle)" />
-    <!-- Glowing signal packet on feedback loop -->
-    <circle cx="980" cy="276.25" r="3.5" fill="#ffffff" filter="url(#glow-bright)" />
-
-    <!-- NODE 1: AGENT (Left) -->
-    <g>
-      <!-- Glow underlay -->
-      <circle cx="880" cy="200" r="50" fill="none" stroke="#7c3aed" stroke-width="8" opacity="0.15" filter="url(#glow-bright)" />
-      <!-- Main circle -->
-      <circle cx="880" cy="200" r="50" fill="url(#agentBg)" stroke="url(#agentStroke)" stroke-width="2" />
-      <!-- Agent Inner Simulated User (ToM) -->
-      <circle cx="880" cy="200" r="22" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.7" />
-      <circle cx="880" cy="200" r="7" fill="url(#cyanVioletGrad)" opacity="0.5" />
-      <!-- Small tech accent dot -->
-      <circle cx="837" cy="225" r="4" fill="#c084fc" filter="url(#glow-bright)" />
-      <!-- Small tech line -->
-      <line x1="800" y1="200" x2="820" y2="200" stroke="#7c3aed" stroke-width="1" opacity="0.4" />
-      <!-- Label -->
-      <text x="880" y="275" class="tech-label" fill="#a855f7" text-anchor="middle">AGENT</text>
+  <!-- hand-holding mini-brains, emerging from the machine, rolling out of frame -->
+  <g transform="translate(0 470)"><g class="march">
+    <g stroke="#ec4899" stroke-width="6" fill="none" stroke-linecap="round">
+      <path d="M244 2 Q300 22 356 2"/><path d="M404 2 Q460 22 516 2"/><path d="M564 2 Q620 22 676 2"/>
+      <path d="M724 2 Q780 22 836 2"/><path d="M884 2 Q940 22 996 2"/><path d="M1044 2 Q1100 22 1156 2"/>
     </g>
-
-    <!-- NODE 2: USER (Right) -->
-    <g>
-      <!-- Glow underlay -->
-      <circle cx="1080" cy="200" r="50" fill="none" stroke="#06b6d4" stroke-width="8" opacity="0.15" filter="url(#glow-bright)" />
-      <!-- Main circle -->
-      <circle cx="1080" cy="200" r="50" fill="url(#userBg)" stroke="url(#userStroke)" stroke-width="2" />
-      <!-- User Inner Core -->
-      <circle cx="1080" cy="200" r="22" fill="none" stroke="url(#cyanVioletGrad)" stroke-width="1.5" opacity="0.7" />
-      <circle cx="1080" cy="200" r="8" fill="#06b6d4" filter="url(#glow-bright)" />
-      <!-- Small tech accent dot -->
-      <circle cx="1123" cy="175" r="4" fill="#22d3ee" filter="url(#glow-bright)" />
-      <!-- Small tech line -->
-      <line x1="1140" y1="200" x2="1160" y2="200" stroke="#0891b2" stroke-width="1" opacity="0.4" />
-      <!-- Label -->
-      <text x="1080" y="275" class="tech-label" fill="#06b6d4" text-anchor="middle">USER</text>
+    <g fill="#f9a8d4" stroke="#be185d" stroke-width="2">
+      <circle cx="300" cy="20" r="5"/><circle cx="460" cy="20" r="5"/><circle cx="620" cy="20" r="5"/>
+      <circle cx="780" cy="20" r="5"/><circle cx="940" cy="20" r="5"/><circle cx="1100" cy="20" r="5"/>
     </g>
+    <g class="bob"><use href="#mb" x="220" y="0"/></g>
+    <g class="bob"><use href="#mb" x="380" y="0"/></g>
+    <g class="bob"><use href="#mb" x="540" y="0"/></g>
+    <g class="bob"><use href="#mb" x="700" y="0"/></g>
+    <g class="bob"><use href="#mb" x="860" y="0"/></g>
+    <g class="bob"><use href="#mb" x="1020" y="0"/></g>
+    <g class="bob"><use href="#mb" x="1180" y="0"/></g>
+  </g></g>
+
+  <!-- machine + funnel (drawn on top: brains appear to exit it) -->
+  <g stroke="#0c0805" stroke-width="6" stroke-linejoin="round">
+    <path d="M150 248 L300 248 L262 320 L188 320 Z" fill="#38bdf8"/>
+    <g class="mach">
+      <rect x="140" y="320" width="240" height="192" rx="16" fill="#f59e0b"/>
+      <rect x="352" y="468" width="42" height="46" fill="#1c130a" stroke="#0c0805" stroke-width="5"/>
+      <g class="gear">
+        <circle cx="222" cy="408" r="38" fill="#fcd34d" stroke="#0c0805" stroke-width="5"/>
+        <g fill="#0c0805"><rect x="218" y="362" width="8" height="15"/><rect x="218" y="439" width="8" height="15"/>
+          <rect x="176" y="404" width="15" height="8"/><rect x="253" y="404" width="15" height="8"/></g>
+        <circle cx="222" cy="408" r="9" fill="#0c0805"/>
+      </g>
+      <circle cx="322" cy="368" r="18" fill="#fcd34d" stroke="#0c0805" stroke-width="4"/>
+    </g>
+  </g>
+
+  <!-- letters falling into the funnel -->
+  <g font-weight="800" fill="#7dd3fc" text-anchor="middle">
+    <text class="f1" x="225" y="244" font-size="30">A</text><text class="f2" x="255" y="244" font-size="26">字</text>
+    <text class="f3" x="205" y="244" font-size="24">я</text><text class="f4" x="240" y="244" font-size="22">∑</text>
   </g>
 </svg>

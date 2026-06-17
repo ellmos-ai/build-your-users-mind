@@ -27,6 +27,7 @@ venv/
 *.log
 *.db
 data/
+_banner-concepts/
 
 # IDE
 .idea/
