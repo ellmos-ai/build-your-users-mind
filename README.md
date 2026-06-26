@@ -24,6 +24,31 @@ It is **not** a chatbot persona and **not** a heavy framework — it is a method
 + document templates. The only agent-specific part is the *source adapter* (where each agent reads its
 own logs). Everything else is universal.
 
+## Start here
+
+| If you are... | Open first | Why |
+|---|---|---|
+| An AI agent adding user-memory discipline | `SKILL.md` | End-to-end implementation recipe |
+| A maintainer wiring log sources | `SOURCE-ADAPTERS.md` | Claude, Codex, Gemini/agy and Kimi log locations |
+| A reviewer checking safety boundaries | `SECURITY.md` and `.gitignore` | Redaction, private-corpus and generated-avatar exclusions |
+| A researcher comparing concepts | `TAXONOMY.md` | Prompt-Archaeology categories and decision patterns |
+
+## Find this repository
+
+Canonical search phrase: **`ellmos-ai/build-your-users-mind`**.
+
+Useful discovery phrases:
+- `AI agent theory of mind user model`
+- `LLM user modeling from interaction logs`
+- `Codex Claude Gemini Kimi source adapters`
+- `prompt archaeology feedback precognition`
+- `local-first AI personalization templates`
+- `agent memory decision support from prompt logs`
+
+Disambiguation: this is not a SaaS personalization product, HR platform, chatbot persona pack,
+general prompt library or psychological diagnosis tool. It is a local-first documentation and script
+kit for building an evidence-backed user model from private agent interaction logs.
+
 ## How it works — feedback precognition
 
 A 0→4 runtime loop (see `templates/START.md`):

@@ -27,7 +27,8 @@
 
 ## MEDIUM PRIORITY
 - [x] Added `SECURITY.md`.
-- [ ] Create `CHANGELOG.md` starting from v1.0.0.
+- [x] Create `CHANGELOG.md` starting from v1.0.0.
+- [x] Add `llms.txt` for LLM/crawler discovery.
 - [ ] Create `CONTRIBUTING.md`.
 - [ ] Keep localized documentation in sync after the next content change.
 
