@@ -22,7 +22,11 @@
 
 ## HIGH PRIORITY
 - [x] Implement source adapters for Codex rollout, Gemini SQLite, and Kimi wire JSONL.
-- [ ] Add classification spot check / inter-rater Kappa as an optional quality step.
+- [~] Add classification spot check / inter-rater Kappa as an optional quality step.
+  `scripts/verify_ids.py` added (evidence-ID resolution + chunk-collision check); a real run
+  surfaced poor inter-rater agreement (κ ≈ 0.24) from artifact contamination — see TAXONOMY.md
+  "Known Failure Mode". Still open: an actual Kappa-computation script (not just ID/collision
+  spot check) and a hardened extractor artifact filter.
 - [ ] Add `domains.json` example.
 
 ## MEDIUM PRIORITY

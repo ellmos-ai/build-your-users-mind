@@ -1,15 +1,16 @@
-# WHAT <USER> SAID — Belegte Entscheidungen & Regeln
+# WHAT <USER> SAID — Evidenced Decisions & Rules
 
-> Empirisch belegte Entscheidungen/Regeln/Präferenzen von `<USER>`, destilliert aus den klassifizierten
-> Prompts. Jede Regel verweist auf Beleg-Prompt-IDs (in `STUDIE/00_corpus.jsonl`).
-> **Vorrang:** projektbezogene `DECISIONS.md` gehen vor. **Lesart:** deskriptiv-empirisch; Korrekturen
-> überrepräsentiert (stille Zustimmung unsichtbar). **Beleg-IDs aus LLM-Synthese → bei kritischer Nutzung gegenlesen.**
+> Empirically evidenced decisions/rules/preferences of `<USER>`, distilled from the classified
+> prompts. Each rule cites evidence prompt-IDs (in `STUDIE/00_corpus.jsonl`).
+> **Precedence:** project-specific `DECISIONS.md` take priority. **Reading:** descriptive-empirical;
+> corrections are overrepresented (silent approval is invisible). **Evidence IDs come from LLM
+> synthesis → crosscheck against the raw corpus for critical use.**
 
-## <Thema A>
-- **<Regel/Entscheidung>.** *(Beleg: <IDs>; outcome: <praise/correction/…>)*
+## <Topic A>
+- **<Rule/decision>.** *(Evidence: <IDs>; outcome: <praise/correction/…>)*
 
-## <Thema B>
+## <Topic B>
 - …
 
-## Querschnitt-Befunde
+## Cross-cutting findings
 1. …

@@ -38,3 +38,24 @@ BE vs. KO ("yes, but..." is usually KO) · RA is rarer than KO, concerns the ent
 - **Correction Rate per Topic** — Error-prone topics.
 - **Proactive:Reactive** — Does the user lead or are they AI-driven?
 - **Course Change Rate** — Epistemic flexibility.
+
+## Known Failure Mode: Artifact Contamination + Chunk Collisions
+
+Empirically observed on a real run: an inter-rater spot check (blind second LLM rater, Cohen's
+Kappa) on `type_code` came back **poor (κ ≈ 0.24, n=120)**. Root cause: despite the "human-typed
+only" filter (Step 2), the corpus still contained a meaningful share of **structural non-human
+artifacts** — context-compacting continuation summaries ("This session is being continued…"),
+stop-hook feedback, hook activations, loaded skill/tool text, and command caveats. The original
+swarm and the second rater typed these artifacts inconsistently (mostly MP↔NT confusion). A second,
+independent issue: chunk files can **collide** — the same prompt ID gets classified in more than one
+`cat_*.jsonl` chunk, silently duplicating/overwriting its label.
+
+**Consequences:**
+- Treat type-based statistics (`04_statistik.md`) as provisional until (a) the extractor's artifact
+  filter is hardened (tag or drop continuation summaries / hook text as a separate sender class) and
+  (b) chunk collisions are checked and resolved.
+- The underlying **text** of a prompt is usually still trustworthy for `WHAT-<USER>-SAID` evidence
+  citations even when its **type label** is not — don't discard a corpus over this, just don't lean on
+  the type distribution for high-stakes claims without a spot check first.
+- Run `scripts/verify_ids.py` on a random or load-bearing ID sample: it flags IDs missing from the
+  corpus and IDs classified in more than one chunk (collisions) alongside the cited type/kind.
