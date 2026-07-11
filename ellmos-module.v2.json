@@ -1,0 +1,42 @@
+{
+  "schema": "ellmos.module.v2",
+  "id": "build-your-users-mind",
+  "display_name": "build-your-users-mind",
+  "category": "memory",
+  "kind": "workflow",
+  "status": "active",
+  "visibility": "public-candidate",
+  "provides": [
+    "memory.user-model",
+    "decision.preferences"
+  ],
+  "requires": [],
+  "optional": [
+    "memory.curated",
+    "memory.organic"
+  ],
+  "conflicts": [],
+  "surfaces": [
+    "workflow",
+    "template"
+  ],
+  "state": {
+    "ownership": "external",
+    "location": "user-home"
+  },
+  "boundaries": {
+    "network": "none",
+    "data": "sensitive",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ]
+  },
+  "source_of_truth": {
+    "type": "local-directory",
+    "path": ".",
+    "repository": null
+  },
+  "adapters": []
+}
