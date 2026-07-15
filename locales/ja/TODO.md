@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # リリース前 TODO: build-your-users-mind
 
 **監査日:** 2026-06-17

@@ -3,6 +3,8 @@ name: build-your-users-mind
 description: Anleitung an ein beliebiges Agenten-Modell (Claude, Codex, agy/Gemini, Kimi), ein empirisches Theory-of-Mind-Modell SEINES Users aus den eigenen Interaktionslogs zu bauen, zu pflegen und an Memory/Regeldateien/System-Prompt anzubinden. Aktiviert sich bei "baue ein ToM/Entscheidungs-Avatar für meinen User", "Theory of Mind System Nutzer-Modell", "WHAT-WOULD-USER-SAY", "feedback precognition".
 ---
 
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # build-your-users-mind — Agnostisches ToM-Modul (Feedback-Präkognition)
 
 > **What you mind is what you get.** Ein **Rezept**, kein Framework. Jedes Agenten-Modell baut daraus ein

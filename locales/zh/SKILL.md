@@ -3,6 +3,8 @@ name: build-your-users-mind
 description: 适用于任何智能体模型（Claude、Codex、agy/Gemini, Kimi）的指南，用于从自身的交互日志中构建、维护其用户的经验性心理理论（ToM）模型，并绑定到内存/规则文件/系统提示词中。在“baue ein ToM/Entscheidungs-Avatar für meinen User”、“Theory of Mind System Nutzer-Modell”、“WHAT-WOULD-USER-SAY”、“feedback precognition”时激活。
 ---
 
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # build-your-users-mind — 智能体通用 ToM 模块（反馈预知）
 
 > **What you mind is what you get.** 一份**配方**，而非框架。每个智能体模型都以此构建*其*用户的 ToM 模型：评估自身数据 → 提炼决策模式 → 维护化身文件 → 绑定到自身内存/规则文件/系统提示词。

@@ -6,19 +6,23 @@
 
 **🌐 [EN](README.md) · [DE](locales/de/README.md) · [ES](locales/es/README.md) · [JA](locales/ja/README.md) · [RU](locales/ru/README.md) · [ZH](locales/zh/README.md)** — English is authoritative; translations may lag.
 
-A recipe for any AI agent (Claude, Codex, Gemini/agy, Kimi, …) to build an empirical,
-self-improving **theory-of-mind model of its own user** from its own interaction logs —
-and to act in the user's spirit when the user is away.
+A local-first recipe for an operator to build an empirical, inspectable **preference and
+decision-support model** from their own AI interaction logs. It can help an authorized agent
+anticipate feedback in recurring situations; it does not reveal a person's mind and must not be
+used for psychological diagnosis, covert profiling, or high-stakes autonomous decisions.
 
-It works by **feedforward**: instead of waiting for feedback that won't arrive while the user
-is absent, the agent *predicts the user's feedback before it comes* and uses that prediction as a
-guidance/reward signal — then evaluates the prediction against reality afterwards to get better.
+It works by **feedforward**: the agent makes an explicitly uncertain feedback prediction, uses it
+only inside the operator's authorization boundary, and later evaluates it against real feedback.
+Novel, external, irreversible, or high-impact actions always require confirmation.
+
+**Status:** `1.1.0-dev` — public development release. The deterministic safety and classification
+contracts are tested on Windows and Linux; semantic model quality still requires human review.
 
 ## "I know what you want."
 
-That sentence is the whole point. The agent reads the user's past prompts, distils **what the user
-decides, how they phrase it, and whether they were satisfied**, and turns it into a small set of
-living documents it can consult the moment a decision comes up and the user isn't reachable.
+The agent reads authorized logs, distils **what the user explicitly decided, how they phrased it,
+and whether later feedback offered a weak outcome signal**, and turns it into a small set of living,
+editable documents. These are hypotheses with citations, not facts about an inner mental state.
 
 It is **not** a chatbot persona and **not** a heavy framework — it is a method + a handful of scripts
 + document templates. The only agent-specific part is the *source adapter* (where each agent reads its
@@ -68,11 +72,15 @@ At 🔴 (novel/no pattern) the rule is **escalate, don't guess.**
 1. **Extract** (`scripts/corpus_extract.py`) — deterministic: pull only human-typed prompts from your
    logs, filter synthetic turns, **redact secrets**, link each prompt to the next turn's `outcome_signal`
    (praise/correction/reissue/none).
-2. **Chunk** (`scripts/chunk_corpus.py`) — dedupe, optional domains, size-chunks for the swarm.
-3. **Classify** (swarm) — 8-type taxonomy (`TAXONOMY.md`) + decision_kind + formulation pattern.
-   Hierarchical swarm (domain leads × chunk workers); see bundled `skills/swarm-operations/`.
-4. **Aggregate** (`scripts/aggregate_stats.py`) — type distribution, B:K ratio, turning points.
-5. **Author** the avatar files from `templates/` and **bind** a short pointer into the agent's own
+2. **Merge** (`scripts/merge_corpora.py`) — combine source-specific outputs without overwriting or
+   renumbering stable evidence IDs.
+3. **Chunk** (`scripts/chunk_corpus.py`) — dedupe, optional domains, and build a fresh manifest bound
+   to the exact corpus SHA-256.
+4. **Classify** — use `templates/CLASSIFY-CHUNK.md` and `schemas/classification.schema.json`, then run
+   `scripts/validate_classifications.py`. Missing rows, malformed output, stale files, and ID
+   collisions are hard failures.
+5. **Aggregate** (`scripts/aggregate_stats.py`) — type distribution, B:K ratio, turning points.
+6. **Author** the avatar files from `templates/` and **bind** a short pointer into the agent's own
    memory/rules file (Claude `CLAUDE.md`, Codex `GPT.md`/`AGENTS.md`, Gemini `GEMINI.md`, …).
 
 See `SKILL.md` for the full recipe and `SOURCE-ADAPTERS.md` for per-agent log locations.
@@ -92,14 +100,19 @@ It is grounded in:
 ## Bias & limits (read before trusting it)
 - **Silent approval is invisible** — users type corrections, not praise → the model over-represents
   corrections and skews "critical". Calibrate accordingly.
-- **Evidence IDs come from LLM synthesis** — verify load-bearing ones against the raw corpus.
+- **Evidence IDs are deterministic, but evidence claims and labels are synthesized** — resolve
+  load-bearing IDs against the raw corpus and review the inference.
 - **Classifier bias** — spot-check a sample; report inter-rater agreement for serious use.
 
 ## Privacy & redaction
-The extractor redacts API keys, tokens, emails, IP-like and long digit runs **before writing**.
-**Health/tax or other sensitive user content is the agent's responsibility to redact** for its own
-user before the corpus or any avatar file leaves a private space. Never commit a real corpus —
-see `.gitignore`.
+Use only logs the operator is authorized to process. Extractors fail closed on missing roots,
+invalid dates, unreadable/empty inputs, and missing timestamps; an empty replacement requires
+explicit `--allow-empty`, while accepting malformed partial input requires `--allow-partial`.
+Writes are atomic and private where the platform supports permissions.
+Built-in rules cover common current tokens (including modern project-scoped API tokens), credentials, asymmetric credential material,
+emails, IP-like values, and long digit runs. Domain-specific health, legal, tax, financial, or other
+sensitive content cannot be inferred reliably: provide reviewed `--redaction-rules` before writing
+or sharing. Never commit a real corpus or filled avatar file — see `.gitignore`.
 
 ## Suggested GitHub topics
 `theory-of-mind` · `llm` · `user-modeling` · `personalization` · `ai-agents` · `prompt-analysis`

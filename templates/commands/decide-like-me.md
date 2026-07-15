@@ -1,6 +1,7 @@
 # decide-like-me — Decide this one thing the way <USER> would (a fork, no side effect)
 
-Run the user's ToM model in **decision** mode. Read the avatar files in `<AVATAR_DIR>` and follow `START.md`.
+Run the preference model in **decision-support** mode. Read the avatar files in `<AVATAR_DIR>` and
+follow `START.md`. The result is a fallible hypothesis, not a fact about the user or an authority grant.
 
 **Decision to make:** $ARGUMENTS
 

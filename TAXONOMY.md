@@ -32,6 +32,19 @@ BE vs. KO ("yes, but..." is usually KO) · RA is rarer than KO, concerns the ent
 | `is_turning_point` | true/false |
 | `outcome_signal` *(deterministic, Stage 0/1)* | praise / correction / reissue / none (derived from the next user turn) |
 
+`outcome_signal` is deliberately conservative: an ordinary or unrecognized next prompt is `none`.
+It is a weak interaction signal, not a direct measure of satisfaction or intent.
+
+## Executable Stage-2 contract
+
+- `scripts/chunk_corpus.py` writes a fresh `manifest.json`; managed stale chunk/classification files
+  are removed on rerun. The manifest binds the set to the exact corpus SHA-256 and every chunk to
+  its own SHA-256 plus expected row count.
+- Each worker follows `templates/CLASSIFY-CHUNK.md` and writes the manifest-named `cat_*.jsonl` file.
+- Every object must match `schemas/classification.schema.json` and preserve its stable evidence ID.
+- `scripts/validate_classifications.py` is mandatory before aggregation. It rejects missing/malformed
+  rows, extra or stale files, unknown IDs, and collisions with a non-zero exit code.
+
 ## Bias Indicators (Stage 4)
 - **Confirmation:Correction (B:K)** — Disparity suggests approval bias; **silent approval is
   invisible** (not typed) → corrections are overrepresented.
@@ -39,7 +52,7 @@ BE vs. KO ("yes, but..." is usually KO) · RA is rarer than KO, concerns the ent
 - **Proactive:Reactive** — Does the user lead or are they AI-driven?
 - **Course Change Rate** — Epistemic flexibility.
 
-## Known Failure Mode: Artifact Contamination + Chunk Collisions
+## Historical Failure Mode: Artifact Contamination + Chunk Collisions
 
 Empirically observed on a real run: an inter-rater spot check (blind second LLM rater, Cohen's
 Kappa) on `type_code` came back **poor (κ ≈ 0.24, n=120)**. Root cause: despite the "human-typed
@@ -50,12 +63,15 @@ swarm and the second rater typed these artifacts inconsistently (mostly MP↔NT 
 independent issue: chunk files can **collide** — the same prompt ID gets classified in more than one
 `cat_*.jsonl` chunk, silently duplicating/overwriting its label.
 
+The deterministic pipeline now filters the documented artifact classes, carries Codex turn context,
+builds fresh chunks, and enforces the strict collision/completeness gate above. This prevents the
+known mechanical cause; it does **not** prove semantic classifier quality.
+
 **Consequences:**
-- Treat type-based statistics (`04_statistik.md`) as provisional until (a) the extractor's artifact
-  filter is hardened (tag or drop continuation summaries / hook text as a separate sender class) and
-  (b) chunk collisions are checked and resolved.
+- Treat type-based statistics (`04_statistik.md`) as provisional unless the current corpus has passed
+  the strict validator and a representative human/inter-rater semantic spot check.
 - The underlying **text** of a prompt is usually still trustworthy for `WHAT-<USER>-SAID` evidence
   citations even when its **type label** is not — don't discard a corpus over this, just don't lean on
   the type distribution for high-stakes claims without a spot check first.
-- Run `scripts/verify_ids.py` on a random or load-bearing ID sample: it flags IDs missing from the
-  corpus and IDs classified in more than one chunk (collisions) alongside the cited type/kind.
+- Run `scripts/verify_ids.py` on a random or load-bearing ID sample. Prompt text is hidden by default;
+  add `--show-text` only during an intentional private review.

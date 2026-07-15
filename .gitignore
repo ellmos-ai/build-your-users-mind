@@ -7,13 +7,15 @@ STUDIE/
 
 # Ausgefüllte (generierte) Avatar-Dateien — enthalten personenbezogene Entscheidungen.
 # NUR im Output, NICHT die generischen Vorlagen unter templates/ (siehe Negation unten).
-/PROMPT-LOG*.txt
-/MY-ACTIONS.txt
-/WHAT-*-SAID*.md
-/WHAT-WOULD-*-SAY.md
-/WHAT-I-DID-*.md
-avatar/
-out/
+**/PROMPT-LOG*.txt
+**/MY-ACTIONS.txt
+**/WHAT-*-SAID*.md
+**/WHAT-WOULD-*-SAY.md
+**/WHAT-I-DID-*.md
+**/METHODIK.md
+**/START.md
+**/avatar/
+**/out/
 # Die generischen Vorlagen explizit behalten:
 !templates/
 !templates/**

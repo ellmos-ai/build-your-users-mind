@@ -1,0 +1,5 @@
+{
+  "software": ["software", "repo", "src"],
+  "research": ["research", "paper", "study"],
+  "operations": ["operations", "automation", "workflow"]
+}

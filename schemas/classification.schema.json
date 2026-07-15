@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ellmos-ai/build-your-users-mind/schemas/classification.schema.json",
+  "title": "build-your-users-mind Stage-2 classification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "type_code",
+    "topic",
+    "is_decision",
+    "decision_kind",
+    "formulation_pattern",
+    "method_triggered",
+    "is_turning_point"
+  ],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "type_code": {"enum": ["SP", "NT", "NM", "NS", "KO", "BE", "RA", "MP"]},
+    "topic": {"type": "string"},
+    "is_decision": {"type": "boolean"},
+    "decision_kind": {
+      "enum": ["preference", "correction", "rule", "direction_change", "approval", "rejection", "process", "none"]
+    },
+    "formulation_pattern": {"type": "string"},
+    "method_triggered": {
+      "enum": ["WebSearch", "WebFetch", "Multi-Agent", "Review", "Cross-Model", "Script", "LaTeX", "--"]
+    },
+    "is_turning_point": {"type": "boolean"}
+  }
+}

@@ -1,73 +1,128 @@
 #!/usr/bin/env python3
-"""
-build-your-users-mind · Stufe-3/4-Aggregation: Statistik aus den Schwarm-Klassifikaten
-(cat_*.jsonl) joined mit 00_corpus.jsonl (outcome_signal). Schreibt 04_statistik.md.
+"""Aggregate statistics only from a complete, collision-free Stage-2 result."""
 
-Nutzung:
-    PYTHONIOENCODING=utf-8 python aggregate_stats.py [--chunks ./STUDIE/_chunks] [--corpus ./STUDIE/00_corpus.jsonl] [--out ./STUDIE/04_statistik.md]
-"""
-import json, glob, argparse
-from pathlib import Path
+from __future__ import annotations
+
+import argparse
+import sys
 from collections import Counter, defaultdict
+from pathlib import Path
 
-TYPES = {"SP":"Startprompt","NT":"Nachfrage-Thema","NM":"Nachfrage-Methode","NS":"Nachfrage-Steuerung",
-         "KO":"Korrektur","BE":"Bestätigung","RA":"Richtungsänderung","MP":"Meta-Prompt"}
+from classification_contract import load_classifications
+from pipeline_common import atomic_write_text, load_jsonl, validate_unique_ids
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--chunks", default="./STUDIE/_chunks")
-    ap.add_argument("--corpus", default="./STUDIE/00_corpus.jsonl")
-    ap.add_argument("--out", default="./STUDIE/04_statistik.md")
-    a = ap.parse_args()
+TYPES = {
+    "SP": "Start prompt",
+    "NT": "Follow-up topic",
+    "NM": "Follow-up method",
+    "NS": "Follow-up control",
+    "KO": "Correction",
+    "BE": "Confirmation",
+    "RA": "Course change",
+    "MP": "Meta-prompt",
+}
 
-    corpus = {}
-    for l in open(a.corpus, encoding="utf-8"):
-        if l.strip():
-            r = json.loads(l); corpus[r["id"]] = r
-    cats = []
-    for fn in glob.glob(a.chunks + "/cat_*.jsonl"):
-        dom = Path(fn).stem.split("_")[-1]
-        for l in open(fn, encoding="utf-8"):
-            l = l.strip()
-            if not l: continue
-            try: c = json.loads(l); c["_domain"] = dom; cats.append(c)
-            except: pass
-    if not cats:
-        print("Keine cat_*.jsonl gefunden — erst Stufe-2-Klassifikation (Schwarm) laufen lassen."); return
 
-    n = len(cats)
-    td = Counter(c.get("type_code","??") for c in cats)
-    kind = Counter((c.get("decision_kind") or "none") for c in cats)
-    method = Counter((c.get("method_triggered") or "--") for c in cats)
-    tp = [c for c in cats if c.get("is_turning_point")]
-    dec = [c for c in cats if c.get("is_decision")]
-    by_dom = Counter(c["_domain"] for c in cats)
-    be, ko = td.get("BE",0), td.get("KO",0)
-    bk = round(be/max(ko,1),2)
-    pro = td.get("SP",0)+td.get("NM",0)+td.get("RA",0)
-    rea = be+ko+td.get("NT",0)
-    pr = round(pro/max(rea,1),2)
-    o_dom = defaultdict(Counter)
-    for c in cats:
-        r = corpus.get(c["id"])
-        if r: o_dom[c["_domain"]][r.get("outcome_signal","none")] += 1
+def ratio(numerator: int, denominator: int) -> str:
+    if denominator == 0:
+        return "undefined (denominator 0)"
+    return f"{round(numerator / denominator, 2)}:1"
 
-    L = ["# Statistische Prompt-Aggregation (Stufe 4)\n\n", f"Basis: **{n}** klassifizierte eindeutige Human-Prompts.\n\n",
-         "## Prompt-Typ-Verteilung\n\n| Typ | Name | Anzahl | % |\n|---|---|---|---|\n"]
-    for code,c in td.most_common():
-        L.append(f"| {code} | {TYPES.get(code,code)} | {c} | {round(c/n*100,1)}% |\n")
-    L += [f"\n## Mensch-Maschine-Dynamik\n\n- **B:K (Bestätigung:Korrektur):** {bk}:1\n",
-          f"- **Proaktiv:Reaktiv:** {pr}:1\n- **Wendepunkte:** {len(tp)} ({round(len(tp)/n*100,1)}%)\n",
-          f"- **Entscheidungs-Prompts:** {len(dec)} ({round(len(dec)/n*100,1)}%)\n\n## decision_kind\n\n| Art | Anzahl |\n|---|---|\n"]
-    for k,v in kind.most_common(): L.append(f"| {k} | {v} |\n")
-    L.append("\n## Methodenauslösung\n\n| Methode | Anzahl |\n|---|---|\n")
-    for k,v in method.most_common(12): L.append(f"| {k} | {v} |\n")
-    L.append("\n## Je Domäne (outcome praise/correction/reissue/none)\n\n| Domäne | Prompts | Outcome |\n|---|---|---|\n")
-    for d,c in by_dom.most_common():
-        o = o_dom[d]; L.append(f"| {d} | {c} | {o.get('praise',0)}/{o.get('correction',0)}/{o.get('reissue',0)}/{o.get('none',0)} |\n")
-    L.append("\n> **Bias:** Stille Zustimmung wird nicht getippt → Korrekturen überrepräsentiert; B:K unterschätzt die Zufriedenheit. Avatar skemmt 'kritisch'.\n")
-    Path(a.out).write_text("".join(L), encoding="utf-8")
-    print(f"-> {a.out}  | N={n} B:K={bk} P:R={pr} TP={len(tp)} decisions={len(dec)}")
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--chunks", default="./STUDIE/_chunks")
+    parser.add_argument("--corpus", default="./STUDIE/00_corpus.jsonl")
+    parser.add_argument("--out", default="./STUDIE/04_statistik.md")
+    args = parser.parse_args(argv)
+    try:
+        corpus_path = Path(args.corpus).expanduser()
+        corpus_rows = load_jsonl(corpus_path)
+        validate_unique_ids(corpus_rows)
+        classifications, errors = load_classifications(
+            Path(args.chunks).expanduser(), corpus_path
+        )
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
+    corpus = {str(row["id"]): row for row in corpus_rows}
+    unknown = sorted(
+        str(row["id"]) for row in classifications if str(row.get("id", "")) not in corpus
+    )
+    if unknown:
+        errors.append(f"{len(unknown)} classification IDs do not exist in the corpus")
+    if errors:
+        for error in errors:
+            print(f"ERROR: {error}", file=sys.stderr)
+        print("Aggregation refused: Stage-2 contract is not complete.", file=sys.stderr)
+        return 2
+    if not classifications:
+        print("ERROR: no classifications found", file=sys.stderr)
+        return 2
+
+    count = len(classifications)
+    type_counts = Counter(str(row["type_code"]) for row in classifications)
+    decision_kinds = Counter(str(row["decision_kind"]) for row in classifications)
+    methods = Counter(str(row["method_triggered"]) for row in classifications)
+    turning_points = [row for row in classifications if row["is_turning_point"] is True]
+    decisions = [row for row in classifications if row["is_decision"] is True]
+    by_domain = Counter(str(row["_domain"]) for row in classifications)
+    confirmations, corrections = type_counts["BE"], type_counts["KO"]
+    proactive = type_counts["SP"] + type_counts["NM"] + type_counts["RA"]
+    reactive = confirmations + corrections + type_counts["NT"]
+    outcomes: dict[str, Counter[str]] = defaultdict(Counter)
+    for classification in classifications:
+        corpus_record = corpus[str(classification["id"])]
+        outcomes[str(classification["_domain"])][
+            str(corpus_record.get("outcome_signal", "none"))
+        ] += 1
+
+    lines = [
+        "# Statistical prompt aggregation (Stage 4)\n\n",
+        f"Basis: **{count}** classified unique human prompts.\n\n",
+        "## Prompt-type distribution\n\n| Type | Name | Count | % |\n|---|---|---:|---:|\n",
+    ]
+    for code, value in type_counts.most_common():
+        lines.append(
+            f"| {code} | {TYPES[code]} | {value} | {round(value / count * 100, 1)}% |\n"
+        )
+    lines.extend(
+        [
+            "\n## Human-machine dynamics\n\n",
+            f"- **Confirmation:correction:** {ratio(confirmations, corrections)}\n",
+            f"- **Proactive:reactive:** {ratio(proactive, reactive)}\n",
+            f"- **Turning points:** {len(turning_points)} ({round(len(turning_points) / count * 100, 1)}%)\n",
+            f"- **Decision prompts:** {len(decisions)} ({round(len(decisions) / count * 100, 1)}%)\n",
+            "\n## decision_kind\n\n| Kind | Count |\n|---|---:|\n",
+        ]
+    )
+    for key, value in decision_kinds.most_common():
+        lines.append(f"| {key} | {value} |\n")
+    lines.append("\n## Method trigger\n\n| Method | Count |\n|---|---:|\n")
+    for key, value in methods.most_common():
+        lines.append(f"| {key} | {value} |\n")
+    lines.append(
+        "\n## By domain (outcome praise/correction/reissue/none)\n\n"
+        "| Domain | Prompts | Outcome |\n|---|---:|---|\n"
+    )
+    for domain, value in by_domain.most_common():
+        domain_outcomes = outcomes[domain]
+        lines.append(
+            f"| {domain} | {value} | {domain_outcomes['praise']}/{domain_outcomes['correction']}/"
+            f"{domain_outcomes['reissue']}/{domain_outcomes['none']} |\n"
+        )
+    lines.append(
+        "\n> **Bias:** Silent approval is not typed, so corrections are overrepresented. "
+        "Ratios are descriptive signals, not psychological measurements.\n"
+    )
+    target = Path(args.out).expanduser()
+    atomic_write_text(target, "".join(lines))
+    print(
+        f"-> {target} | N={count} B:K={ratio(confirmations, corrections)} "
+        f"P:R={ratio(proactive, reactive)} TP={len(turning_points)} decisions={len(decisions)}"
+    )
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

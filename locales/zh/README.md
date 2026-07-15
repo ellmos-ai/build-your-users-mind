@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 > 英文版 (README.md) 为准；此翻译版可能会有滞后。
 
 # build-your-users-mind

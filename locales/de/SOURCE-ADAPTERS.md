@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # SOURCE-ADAPTERS — woher jedes Modell seine User-Prompts liest
 
 > Der **einzig modellspezifische Teil** des Moduls (Schritt 1 in `SKILL.md`). Jeder Adapter liefert

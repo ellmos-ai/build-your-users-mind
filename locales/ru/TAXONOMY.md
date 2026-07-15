@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # TAXONOMY — 8 типов запросов + классификационные поля
 
 > Автономная версия (модуль является самодостаточным). **Методологическая основа:** *Prompt-Archaeology* (L. Geiger) — метод классификации полного протокола взаимодействия человека и ИИ.

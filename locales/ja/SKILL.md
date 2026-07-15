@@ -3,6 +3,8 @@ name: build-your-users-mind
 description: 任意のAIエージェント（Claude、Codex、Gemini/agy, Kimi）が、自身の対話ログからユーザーの経験的な心の理論（ToM）モデルを構築、管理し、メモリ/ルールファイル/システムプロンプトに接続するための指示。「baue ein ToM/Entscheidungs-Avatar für meinen User」、「Theory of Mind System Nutzer-Modell」、「WHAT-WOULD-USER-SAY」、「feedback precognition」でアクティブ化します。
 ---
 
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # build-your-users-mind — アグノスティックToMモジュール（フィードバック予知）
 
 > **What you mind is what you get.** フレームワークではなく**レシピ**です。各エージェントモデルはこれを使用して、*自身*のユーザーのToMモデルを構築します：自身のデータの評価 → 意思決定パターンの抽出 → アバターファイルの保守 → 自身のメモリ/ルールファイル/システムプロンプトへのバインド。

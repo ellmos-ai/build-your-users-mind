@@ -1,7 +1,8 @@
 # WHAT I DID CAUSE I ASSUMED IT'S THE WILL OF <USER>
 
 > Runtime log. Record when the agent acts on behalf of `<USER>` (derived, not directly instructed),
-> especially at 🟡/🔴 confidence. Plain command execution does NOT belong here.
+> especially at 🟡 confidence. This log never authorizes an action: only already-authorized,
+> reversible work is eligible. At 🔴 or for external/irreversible/high-impact action, ask first.
 
 ```
 ## [YYYY-MM-DD HH:MM] <title> — confidence: 🟢/🟡/🔴

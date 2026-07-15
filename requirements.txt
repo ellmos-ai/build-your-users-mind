@@ -1,5 +1,3 @@
-# build-your-users-mind — Zero-Dependency (nur Python-3.10+-Stdlib).
-# Die Pipeline-Skripte nutzen ausschliesslich: json, re, argparse, pathlib, collections, glob.
-# Die Stufe-2-Klassifikation laeuft ueber den Agenten-Schwarm (kein Python-LLM-SDK noetig).
-# Falls eine Variante stattdessen direkt eine LLM-API ruft, dort die jeweilige
-# SDK-Abhaengigkeit (z.B. anthropic) ergaenzen.
+# Runtime: Python 3.10+ standard library only.
+# No LLM SDK or network client is installed by this module.
+# Development/CI pins Ruff separately; tests use unittest from the standard library.

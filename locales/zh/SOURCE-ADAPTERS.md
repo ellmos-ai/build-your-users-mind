@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # SOURCE-ADAPTERS —— 每个模型从何处读取用户提示词
 
 > 本模块中**唯一与特定智能体相关的部分**（`SKILL.md` 中的步骤 1）。每个适配器输出相同格式的规范化行：`{ts, source, project, session, sender:"human", text}`。

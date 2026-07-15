@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # SOURCE-ADAPTERS — Откуда каждая модель читает промты пользователя
 
 > **Единственная специфичная для модели часть** модуля (Шаг 1 в `SKILL.md`). Каждый адаптер выдает одну и ту же нормализованную строку: `{ts, source, project, session, sender:"human", text}`.

@@ -1,6 +1,7 @@
 # build-your-users-mind
 
-Last-checked: 2026-06-26
+Last-checked: 2026-07-15
+Version: 1.1.0-dev (development, not stable)
 Canonical repository: https://github.com/ellmos-ai/build-your-users-mind
 Primary language: English
 Translations: locales/de, locales/es, locales/ja, locales/ru, locales/zh
@@ -27,7 +28,10 @@ License: MIT
 - `templates/WHAT-USER-SAID.md` - evidence-based rule template.
 - `templates/WHAT-WOULD-USER-SAY.md` - prediction and confidence template.
 - `scripts/corpus_extract.py` - prompt extraction and redaction.
-- `scripts/chunk_corpus.py` - corpus chunking for classification.
+- `scripts/merge_corpora.py` - stable-ID multi-source merge.
+- `scripts/chunk_corpus.py` - fresh corpus chunk manifest for classification.
+- `scripts/validate_classifications.py` - strict Stage-2 completeness/collision gate.
+- `schemas/classification.schema.json` - executable classification row contract.
 - `scripts/aggregate_stats.py` - aggregate report helper.
 - `.gitignore` - excludes private corpora, generated avatar files, logs and local data.
 
@@ -49,4 +53,4 @@ This repository is not a hosted AI personalization SaaS, not an HR platform, not
 
 ## Safety notes
 
-Never commit a real user corpus, filled avatar files, private logs, `.env` files, databases or generated decision records. The repository ships templates and extraction scripts only; each operator is responsible for redacting sensitive health, tax, legal, financial or personal content before any material leaves a private workspace.
+Never commit a real user corpus, filled avatar files, private logs, `.env` files, databases or generated decision records. Built-in redaction is not a universal sensitive-data detector; operators must add reviewed domain rules. Generated preferences are uncertain hypotheses, not diagnoses or authority grants. External, irreversible, novel, or high-impact action requires direct confirmation.

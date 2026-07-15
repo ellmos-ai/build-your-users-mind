@@ -1,100 +1,85 @@
 #!/usr/bin/env python3
-"""
-build-your-users-mind - Evidence-ID spot check
-================================================
-Verifies that the evidence prompt-IDs cited in avatar files (e.g. WHAT-<USER>-SAID.md)
-actually exist in the raw corpus, and shows the swarm's classification for each ID
-(type_code / decision_kind) side by side with the source text.
+"""Resolve evidence IDs against a strict, collision-free classified corpus."""
 
-Use this BEFORE trusting a "belegt"/"evidenced" claim in a generated avatar file, and
-periodically as a quality gate (see TODO.md: "classification spot check / inter-rater
-Kappa"). It only checks IDs you pass in -- pick a random or load-bearing sample.
+from __future__ import annotations
 
-Usage:
-    PYTHONIOENCODING=utf-8 python verify_ids.py ID1 ID2 ID3 ...
-    PYTHONIOENCODING=utf-8 python verify_ids.py --corpus ./STUDIE/00_corpus.jsonl \\
-        --chunks ./STUDIE/_chunks --sample 10
-
-If no IDs are given, draws a random sample (--sample, default 10) from the corpus so you
-always have something to eyeball.
-"""
-import json
-import glob
 import argparse
 import random
+import sys
 from pathlib import Path
 
-
-def load_corpus(path):
-    corpus = {}
-    for line in open(path, encoding="utf-8"):
-        line = line.strip()
-        if not line:
-            continue
-        rec = json.loads(line)
-        corpus[rec["id"]] = rec
-    return corpus
+from classification_contract import load_classifications
+from pipeline_common import load_jsonl, validate_unique_ids
 
 
-def load_classifications(chunks_dir):
-    cats = {}
-    for fn in glob.glob(str(Path(chunks_dir) / "cat_*.jsonl")):
-        for line in open(fn, encoding="utf-8"):
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                c = json.loads(line)
-                cid = c.get("id")
-                if cid in cats:
-                    # duplicate/collided classification across chunks -- flag it
-                    c["_collision"] = True
-                cats[cid] = c
-            except json.JSONDecodeError:
-                pass
-    return cats
-
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("ids", nargs="*", help="Prompt IDs to check (default: random sample)")
-    ap.add_argument("--corpus", default="./STUDIE/00_corpus.jsonl")
-    ap.add_argument("--chunks", default="./STUDIE/_chunks")
-    ap.add_argument("--sample", type=int, default=10, help="Random sample size if no IDs given")
-    args = ap.parse_args()
-
-    corpus = load_corpus(args.corpus)
-    cats = load_classifications(args.chunks)
-
-    ids = args.ids
-    if not ids:
-        pool = list(corpus.keys())
-        ids = random.sample(pool, min(args.sample, len(pool)))
-
-    n_missing, n_collision = 0, 0
-    for i in ids:
-        rec = corpus.get(i)
-        cat = cats.get(i, {})
-        print(f"=== {i} ===")
-        if not rec:
-            print("  !! NOT IN CORPUS (evidence ID does not resolve)")
-            n_missing += 1
-            continue
-        if cat.get("_collision"):
-            n_collision += 1
-        proj = (rec.get("project") or "?").replace("\\", "/").split("/")[-1]
-        print(
-            f"  project={proj} score={rec.get('decision_score')} "
-            f"outcome={rec.get('outcome_signal')} type={cat.get('type_code', '?')} "
-            f"kind={cat.get('decision_kind', '?')}"
-            + ("  [COLLISION: classified in >1 chunk]" if cat.get("_collision") else "")
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("ids", nargs="*", help="evidence IDs to check")
+    parser.add_argument("--corpus", default="./STUDIE/00_corpus.jsonl")
+    parser.add_argument("--chunks", default="./STUDIE/_chunks")
+    parser.add_argument("--sample", type=int, default=10)
+    parser.add_argument(
+        "--show-text",
+        action="store_true",
+        help="opt in to printing private prompt text to the terminal/log",
+    )
+    args = parser.parse_args(argv)
+    if args.sample <= 0:
+        parser.error("--sample must be positive")
+    try:
+        corpus_path = Path(args.corpus).expanduser()
+        corpus_rows = load_jsonl(corpus_path)
+        validate_unique_ids(corpus_rows)
+        classifications, contract_errors = load_classifications(
+            Path(args.chunks).expanduser(), corpus_path
         )
-        print("  TEXT: " + " ".join(rec["text"][:260].split()))
-
-    print(f"\n-> checked {len(ids)} IDs: {n_missing} missing, {n_collision} chunk-collisions.")
-    if n_missing or n_collision:
-        print("   Missing IDs or collisions undermine 'evidenced' claims -- see TAXONOMY.md bias notes.")
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
+    if contract_errors:
+        for error in contract_errors:
+            print(f"ERROR: {error}", file=sys.stderr)
+        return 2
+    if not classifications:
+        print("ERROR: no classifications found", file=sys.stderr)
+        return 2
+    corpus = {str(row["id"]): row for row in corpus_rows}
+    cats = {str(row["id"]): row for row in classifications}
+    unknown_classifications = sorted(set(cats) - set(corpus))
+    if unknown_classifications:
+        print(
+            f"ERROR: {len(unknown_classifications)} classifications do not resolve in the corpus",
+            file=sys.stderr,
+        )
+        return 2
+    ids = list(args.ids)
+    if not ids:
+        ids = random.SystemRandom().sample(list(cats), min(args.sample, len(cats)))
+    missing = 0
+    unclassified = 0
+    for record_id in ids:
+        record = corpus.get(record_id)
+        classification = cats.get(record_id)
+        print(f"=== {record_id} ===")
+        if record is None:
+            print("  ERROR: ID does not exist in corpus")
+            missing += 1
+            continue
+        if classification is None:
+            print("  ERROR: ID has no classification (it may be a deduplicated corpus row)")
+            unclassified += 1
+            continue
+        project = str(record.get("project") or "?").replace("\\", "/").split("/")[-1]
+        print(
+            f"  project={project} score={record.get('decision_score')} "
+            f"outcome={record.get('outcome_signal')} type={classification['type_code']} "
+            f"kind={classification['decision_kind']}"
+        )
+        if args.show_text:
+            print("  TEXT: " + " ".join(str(record["text"])[:260].split()))
+    print(f"\n-> checked {len(ids)} IDs: {missing} missing, {unclassified} unclassified")
+    return 2 if missing or unclassified else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

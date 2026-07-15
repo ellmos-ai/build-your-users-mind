@@ -1,31 +1,32 @@
-# RELEASE_GATE — build-your-users-mind
+# RELEASE GATE — build-your-users-mind
 
-**Date:** 2026-06-17
-**Script:** `.MODULES/_scripts/final_gate_check.py`
-**Result:** **10 PASS / 0 FAIL / 0 WARN → READY FOR PUBLIC RELEASE**
-**Target Repo:** `ellmos-ai/build-your-users-mind` (initially **private**)
-**Commit:** Locally initialized, no push (waiting for explicit approval).
+**Date:** 2026-07-15<br>
+**Repository:** `https://github.com/ellmos-ai/build-your-users-mind` (public)<br>
+**Version/status:** `1.1.0-dev` / development<br>
+**Scope:** repository hygiene and deterministic pipeline safety, not semantic model validity.
 
-| # | Check | Result |
-|---|---|---|
-| 1 | .gitignore minimum entries | PASS |
-| 2 | README.md (English) | PASS |
-| 3 | LICENSE | PASS |
-| 4 | No .db tracked | PASS |
-| 5 | No .env tracked | PASS |
-| 6 | No secrets | PASS |
-| 7 | No hardcoded private paths | PASS |
-| 8 | No PII patterns | PASS |
-| 9 | No internal BACH documents | PASS |
-| 10 | TODO.md with STATUS table | PASS |
+## Current local gate
 
-## Intentionally Accepted Open Items (Not Gate Blockers)
-- Source adapters for Claude, Codex, Gemini, and Kimi are implemented and smoke-tested; future work is quality calibration, not adapter completion.
-- No automated classification spot check or inter-rater Kappa (optional quality step, in `TODO.md`).
-- No private corpus or filled avatar files in the repo (enforced by `.gitignore`).
+| Check | Result |
+|---|---|
+| Python 3.10+ standard-library runtime | PASS |
+| `python -m compileall -q scripts tests` | PASS |
+| Synthetic adapter/pipeline regression suite | PASS |
+| Ruff 0.15.18 | PASS |
+| ELLMOS module manifest schema | PASS |
+| Classification JSON contract and collision/completeness gate | PASS on fixtures |
+| Missing/empty input preserves existing output | PASS on fixtures |
+| Recursive private corpus/avatar Git exclusions | PASS |
+| Root repository hygiene final gate | PASS |
+| GitHub Windows/Linux CI on this revision | PENDING until push |
 
-## Before the Actual Push (Operator Steps)
-1. Create GitHub repository `ellmos-ai/build-your-users-mind` as **private**.
-2. Set remote and push.
-3. Configure topics: theory-of-mind, llm, user-modeling, personalization, ai-agents, prompt-analysis.
-4. Set public only after conscious release (Gate is green, Claude path is sufficient content-wise).
+## Honest release decision
+
+The repository is suitable for a **public development** state once the remote CI for the pushed
+revision is green. It is **not yet a stable semantic release**: the historical low inter-rater
+agreement requires a new representative evaluation, localized documents need refresh, and a private
+operator-owned end-to-end run must confirm the complete human review workflow.
+
+No corpus, generated profile, or real user content is part of this gate. A green deterministic gate
+does not make generated preferences true, does not grant an agent authority, and does not permit
+psychological diagnosis or external/irreversible/high-impact action without direct confirmation.

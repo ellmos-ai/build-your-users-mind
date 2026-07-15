@@ -1,58 +1,94 @@
 #!/usr/bin/env python3
-"""
-build-your-users-mind · PROMPT-LOG-Builder
-===========================================
-Baut aus 00_corpus.jsonl eine lesbare PROMPT-LOG.txt: Kopf + Cut-and-Clue-
-Archivierungsregeln + rollendes Fenster der juengsten Entscheidungs-Prompts.
-Vollarchiv bleibt 00_corpus.jsonl.
+"""Build a private, line-capped readable view over the full JSONL corpus."""
 
-Nutzung:
-    PYTHONIOENCODING=utf-8 python build_prompt_log.py [--corpus ./STUDIE/00_corpus.jsonl] [--out ./avatar/PROMPT-LOG.txt] [--window 300]
-"""
-import json, argparse
-from pathlib import Path
+from __future__ import annotations
+
+import argparse
+import sys
 from collections import Counter
+from pathlib import Path
+
+from pipeline_common import atomic_write_text, load_jsonl, validate_unique_ids
 
 HEADER = """# PROMPT-LOG — {user}
 
-> **Datenhaltung:** Vollstaendiges Korpus = `STUDIE/00_corpus.jsonl`. Diese .txt ist die
-> lesbare Sicht mit rollendem Fenster der juengsten Entscheidungs-Prompts.
+> **Storage:** The complete archive is `STUDIE/00_corpus.jsonl`. This file is a
+> private, rolling readable view capped at {maxlines} lines. Older entries remain
+> addressable by their stable evidence IDs in the JSONL archive.
 
-## Archivierungsanweisung (Cut-and-Clue)
-1. Nur das **rollende Fenster** ({window} juengste Entscheidungs-Prompts) inline halten.
-2. Bei > {maxlines} Zeilen: aelteste Inline-Eintraege nach `PROMPT-LOG_archiv_<YYYY-MM-DD>.txt`
-   auslagern, im Kopf einen **Clue/Pointer** (Vorlaeufer/Nachfolger) lassen.
-3. Das JSONL-Archiv wird NIE gekuerzt — nur die lesbare .txt rolliert.
 ---
 """
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--corpus", default="./STUDIE/00_corpus.jsonl")
-    ap.add_argument("--out", default="./avatar/PROMPT-LOG.txt")
-    ap.add_argument("--user", default="USER")
-    ap.add_argument("--window", type=int, default=300)
-    ap.add_argument("--maxlines", type=int, default=2000)
-    a = ap.parse_args()
-    recs = [json.loads(l) for l in open(a.corpus, encoding="utf-8") if l.strip()]
-    dec = sorted([r for r in recs if r.get("decision_score",0)>=1 and r.get("ptype")!="ack"],
-                 key=lambda r: r["ts"], reverse=True)
-    win = dec[:a.window]
-    by_o = Counter(r["outcome_signal"] for r in recs)
-    span = (min(r["ts"][:10] for r in recs), max(r["ts"][:10] for r in recs)) if recs else ("?","?")
-    L = [HEADER.format(user=a.user, window=a.window, maxlines=a.maxlines),
-         f"## Kurzstatistik\n\n- Zeitraum: {span[0]} – {span[1]}\n",
-         f"- Human-Prompts: {len(recs)} | Entscheidungs-Kandidaten: {len(dec)}\n",
-         f"- Outcome: " + ", ".join(f"{k}={v}" for k,v in by_o.most_common()) + "\n\n",
-         f"## Rollendes Fenster — juengste {len(win)} Entscheidungs-Prompts\n\n"]
-    for r in win:
-        proj = (r.get("project") or "?").replace("\\","/").split("/")[-1]
-        L.append(f"### [{r['id']}] {r['ts'][:16]} · {proj} · outcome={r['outcome_signal']} · score={r['decision_score']}\n")
-        t = r["text"].strip()
-        L.append((t[:600] + " […]" if len(t) > 600 else t) + "\n\n")
-    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(a.out).write_text("".join(L), encoding="utf-8")
-    print(f"-> {a.out} ({len(win)} inline, {len(recs)} im JSONL-Archiv)")
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--corpus", default="./STUDIE/00_corpus.jsonl")
+    parser.add_argument("--out", default="./avatar/PROMPT-LOG.txt")
+    parser.add_argument("--user", default="USER")
+    parser.add_argument("--window", type=int, default=300)
+    parser.add_argument("--maxlines", type=int, default=2000)
+    args = parser.parse_args(argv)
+    if args.window <= 0:
+        parser.error("--window must be positive")
+    if args.maxlines <= 0:
+        parser.error("--maxlines must be positive")
+    try:
+        records = load_jsonl(Path(args.corpus).expanduser())
+        validate_unique_ids(records)
+    except ValueError as exc:
+        parser.error(str(exc))
+    all_decisions = sorted(
+        (
+            record
+            for record in records
+            if int(record.get("decision_score", 0)) >= 1 and record.get("ptype") != "ack"
+        ),
+        key=lambda record: (str(record.get("ts", "")), str(record["id"])),
+        reverse=True,
+    )
+    decisions = all_decisions[: args.window]
+    outcomes = Counter(str(record.get("outcome_signal", "none")) for record in records)
+    dates = [str(record.get("ts", ""))[:10] for record in records if record.get("ts")]
+    span = (min(dates), max(dates)) if dates else ("?", "?")
+    prefix = [
+        HEADER.format(user=args.user, maxlines=args.maxlines),
+        "## Summary\n\n",
+        f"- Period: {span[0]} – {span[1]}\n",
+        f"- Human prompts: {len(records)} | decision candidates: {len(all_decisions)}\n",
+        "- Outcome: " + ", ".join(f"{key}={value}" for key, value in outcomes.most_common()) + "\n\n",
+        "## Rolling decision window\n\n",
+    ]
+    if len("".join(prefix).splitlines()) > args.maxlines:
+        parser.error("--maxlines is too small for the document header")
+    included: list[str] = []
+    for record in decisions:
+        project = str(record.get("project") or "?").replace("\\", "/").split("/")[-1]
+        text = str(record["text"]).strip()
+        if len(text) > 600:
+            text = text[:600] + " […]"
+        section = (
+            f"### [{record['id']}] {str(record.get('ts', ''))[:16]} · {project} · "
+            f"outcome={record.get('outcome_signal')} · score={record.get('decision_score')}\n"
+            f"{text}\n\n"
+        )
+        candidate = "".join(prefix + included + [section])
+        if len(candidate.splitlines()) > args.maxlines:
+            break
+        included.append(section)
+    omitted = len(all_decisions) - len(included)
+    if omitted:
+        note = f"> {omitted} older decision entries omitted from this view; use the JSONL archive.\n"
+        while included and len("".join(prefix + [note] + included).splitlines()) > args.maxlines:
+            included.pop()
+            omitted = len(all_decisions) - len(included)
+            note = f"> {omitted} older decision entries omitted from this view; use the JSONL archive.\n"
+        if len("".join(prefix + [note] + included).splitlines()) <= args.maxlines:
+            prefix.append(note)
+    target = Path(args.out).expanduser()
+    atomic_write_text(target, "".join(prefix + included))
+    print(f"-> {target} ({len(included)} inline, {len(records)} in JSONL archive)")
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

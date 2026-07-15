@@ -2,10 +2,19 @@
   "schema": "ellmos.module.v2",
   "id": "build-your-users-mind",
   "display_name": "build-your-users-mind",
+  "version": "1.1.0-dev",
   "category": "memory",
   "kind": "workflow",
-  "status": "active",
-  "visibility": "public-candidate",
+  "status": "development",
+  "visibility": "public",
+  "description": "Local-first, evidence-backed user preference and decision-support workflow with deterministic private-log adapters.",
+  "entrypoints": {
+    "skill": "SKILL.md",
+    "claude": "scripts/corpus_extract.py",
+    "codex": "scripts/adapters/codex_adapter.py",
+    "gemini": "scripts/adapters/gemini_adapter.py",
+    "kimi": "scripts/adapters/kimi_adapter.py"
+  },
   "provides": [
     "memory.user-model",
     "decision.preferences"
@@ -17,7 +26,9 @@
   ],
   "conflicts": [],
   "surfaces": [
+    "cli",
     "workflow",
+    "skill",
     "template"
   ],
   "state": {
@@ -34,9 +45,14 @@
     ]
   },
   "source_of_truth": {
-    "type": "local-directory",
+    "type": "git-repository",
     "path": ".",
-    "repository": null
+    "repository": "https://github.com/ellmos-ai/build-your-users-mind"
   },
-  "adapters": []
+  "adapters": [
+    {"type": "cli-wrapper", "id": "scripts/corpus_extract.py"},
+    {"type": "cli-wrapper", "id": "scripts/adapters/codex_adapter.py"},
+    {"type": "cli-wrapper", "id": "scripts/adapters/gemini_adapter.py"},
+    {"type": "cli-wrapper", "id": "scripts/adapters/kimi_adapter.py"}
+  ]
 }

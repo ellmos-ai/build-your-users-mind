@@ -1,7 +1,8 @@
-# avatar-orchestrator — Autonomous avatar chain over many decisions
+# avatar-orchestrator — Triage an authorized reversible work queue
 
-Use the user's ToM model as an **orchestrator** for autonomous work when <USER> is unreachable and
-**several** blockers/decisions are pending. Read the avatar files in `<AVATAR_DIR>` and follow `START.md`.
+Use the preference model to triage **several** blockers/decisions when <USER> is unreachable. It may
+execute only work that is already authorized, reversible, local, and low-impact. Read the avatar
+files in `<AVATAR_DIR>` and follow `START.md`.
 
 **Tasks / open items (optional):** $ARGUMENTS
 (If empty: gather open decisions/blockers from the current context, TODO/task files.)
@@ -11,8 +12,9 @@ Use the user's ToM model as an **orchestrator** for autonomous work when <USER> 
 2. **Chain the components per item:**
    - **read-my-mind** → assess situation + confidence.
    - **decide-like-me** → set the fork.
-   - **be-my-avatar** → execute **only if reversible AND ≥🟡**; otherwise defer.
-3. **Bundle 🔴 / irreversible:** do NOT guess these one by one — collect them into a **single**
+   - **be-my-avatar** → execute **only if already authorized, reversible, local, low-impact, and ≥🟡**;
+     otherwise defer.
+3. **Bundle 🔴 / external / irreversible / high-impact:** do NOT guess these one by one — collect them into a **single**
    question to <USER>.
 4. **Log:** assumptions per item into `MY-ACTIONS.txt` (+ detail in `WHAT-I-DID-…md`).
 
@@ -21,5 +23,5 @@ Use the user's ToM model as an **orchestrator** for autonomous work when <USER> 
 - **Bundled question** to <USER> for all 🔴/irreversible items.
 - Pointer to the log entries.
 
-This yields autonomous progress without overreaching: reversible patterns get handled, everything
-uncertain lands with the user as one batch — instead of guessing item by item.
+This may advance an already-authorized reversible queue without broadening scope. Everything
+uncertain or consequential lands with the user as one batch instead of being guessed item by item.

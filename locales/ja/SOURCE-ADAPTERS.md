@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # SOURCE-ADAPTERS — 各モデルがユーザーのプロンプトを読み込む場所
 
 > モジュールの**唯一のエージェント固有の部分**（`SKILL.md` のステップ1）。すべてのエアダプターは、次の正規化された行を出力します：`{ts, source, project, session, sender:"human", text}`。

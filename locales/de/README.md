@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 > Englisch (README.md) ist maßgeblich; diese Übersetzung kann veraltet sein.
 
 # build-your-users-mind

@@ -1,67 +1,49 @@
-# Pre-Release TODO: build-your-users-mind
+# Development status: build-your-users-mind
 
-**Audit Date:** 2026-06-17
-**Auditor:** Claude (for Lukas Geiger)
-**Target Repo:** `ellmos-ai/build-your-users-mind` (initially private)
-**Status:** `development` — Claude/Codex/Gemini/Kimi source adapters are implemented; private reference implementation exists.
+**Audit date:** 2026-07-15<br>
+**Target:** `ellmos-ai/build-your-users-mind` (public)<br>
+**Version:** `1.1.0-dev`<br>
+**Status:** development — deterministic pipeline hardened; semantic quality remains human-gated.
 
----
+## Completed safety and reliability work
 
-## BLOCKERS
-> Must be resolved before public release.
+- [x] Claude, Codex, Gemini/Antigravity, and Kimi source adapters.
+- [x] Codex internal-artifact filtering and `session_meta`/`turn_context` propagation.
+- [x] Current common credential patterns plus operator-supplied custom redaction rules.
+- [x] Stable source/session/timestamp/content-bound evidence IDs and multi-source merge.
+- [x] Exact date/root/timestamp validation, atomic private writes, and explicit empty/partial overrides.
+- [x] Fresh chunk manifests with managed stale-output cleanup and safe domain filenames.
+- [x] Executable Stage-2 worker template, JSON schema, completeness/collision validator, and strict
+  aggregation/verification exit codes.
+- [x] Recursive Git exclusions for private corpora and filled avatar files.
+- [x] Synthetic fixture suite and Windows/Linux CI with pinned Ruff.
+- [x] Authorization, diagnosis, privacy, and irreversible/high-impact action boundaries documented.
 
-- [x] **Secrets:** No API keys/tokens/passwords in tracked files.
-- [x] **Private Data:** No PII/real paths (leak scan is green).
-- [x] **Hardcoded Paths:** Generic/relative paths in all scripts.
-- [x] **Database Files:** No `.db` files tracked.
-- [x] **.env Files:** No `.env` files tracked.
-- [x] **BACH Internals:** No BACH-internal documents.
-- [x] **.gitignore:** Minimum entries present.
-- [x] **LICENSE:** MIT license present.
-- [x] **README.md:** English, complete.
+## Open before a stable release
 
-## HIGH PRIORITY
-- [x] Implement source adapters for Codex rollout, Gemini SQLite, and Kimi wire JSONL.
-- [~] Add classification spot check / inter-rater Kappa as an optional quality step.
-  `scripts/verify_ids.py` added (evidence-ID resolution + chunk-collision check); a real run
-  surfaced poor inter-rater agreement (κ ≈ 0.24) from artifact contamination — see TAXONOMY.md
-  "Known Failure Mode". Still open: an actual Kappa-computation script (not just ID/collision
-  spot check) and a hardened extractor artifact filter.
-- [ ] Add `domains.json` example.
+- [ ] Run and publish a new representative semantic inter-rater evaluation. The historical κ≈0.24
+  result remains a warning; deterministic artifact/collision fixes do not prove label quality.
+- [ ] Refresh localized documents from the authoritative 1.1 English contract. Until then each
+  translation is explicitly marked as a historical, potentially stale draft.
+- [ ] Perform an operator-owned end-to-end classification run on authorized private data and record
+  only non-sensitive aggregate gate evidence.
+- [ ] Decide a stable-release version and tag only after those semantic/manual gates pass.
 
-## MEDIUM PRIORITY
-- [x] Added `SECURITY.md`.
-- [x] Create `CHANGELOG.md` starting from v1.0.0.
-- [x] Add `llms.txt` for LLM/crawler discovery.
-- [ ] Create `CONTRIBUTING.md`.
-- [ ] Keep localized documentation in sync after the next content change.
+## Optional improvements
 
-## LOW PRIORITY
-- [ ] Test/smoke suite, GitHub Actions CI, badges.
+- [ ] Add a dependency-free inter-rater Cohen's-kappa helper.
+- [ ] Add more synthetic source-schema fixtures as upstream log formats evolve.
 
-## Intentionally Excluded
-- No private corpus, no filled avatar files (enforced by `.gitignore`).
-- No per-prompt hook (batch + logbook chosen intentionally).
+## STATUS — current gate
 
----
+| Category | Status | Evidence |
+|---|---|---|
+| Repository hygiene | PASS | final gate, recursive private-data ignores |
+| Python syntax/lint | PASS | compileall + Ruff |
+| Deterministic behavior | PASS | synthetic unit/CLI suite |
+| Manifest | PASS | `ellmos.module.v2` schema |
+| Cross-platform automation | PENDING REMOTE | CI workflow added; GitHub run required after push |
+| Semantic classifier quality | OPEN | new representative review not yet run |
+| Stable release | NOT READY | development/public is honest; no stable tag |
 
-## STATUS
-
-| Category | Status | Notes |
-|----------|--------|-------|
-| Secrets | :green_circle: | Leak scan green |
-| Private Data (PII) | :green_circle: | No PII/paths |
-| .gitignore | :green_circle: | Minimum entries + corpus/avatar exclusion |
-| Language (English) | :green_circle: | README in English |
-| BACH Internals | :green_circle: | None |
-| Database Files | :green_circle: | None tracked |
-| README.md | :green_circle: | Complete |
-| LICENSE | :green_circle: | MIT |
-| **Overall** | **READY** | Private; adapters implemented and smoke-tested |
-
-**Audit Date:** 2026-06-17
-**Gate Check Exit Code:** `0`
-
----
-
-*Basis: MODULES/_templates/TODO_TEMPLATE.md*
+Private corpora, generated profiles, and filled avatar files are intentionally excluded.

@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # TAXONOMY — 8 tipos de prompt + campos de clasificación
 
 > Versión independiente (el módulo es autónomo). **Base metodológica:** *Prompt-Archaeology* (L. Geiger) — el método de clasificar un protocolo completo de interacción humano-IA.

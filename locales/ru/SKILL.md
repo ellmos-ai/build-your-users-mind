@@ -3,6 +3,8 @@ name: build-your-users-mind
 description: Инструкции для любой модели агента (Claude, Codex, agy/Gemini, Kimi) по созданию, поддержке и привязке эмпирической модели разума (Theory of Mind) своего пользователя на основе журналов взаимодействия к файлам памяти/правил/системного промта. Активируется при запросах "baue ein ToM/Entscheidungs-Avatar für meinen User", "Theory of Mind System Nutzer-Modell", "WHAT-WOULD-USER-SAY", "feedback precognition".
 ---
 
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # build-your-users-mind — независимый ToM-модуль (предчувствие обратной связи)
 
 > **What you mind is what you get.** Это **рецепт**, а не фреймворк. Каждая модель агента использует его для построения ToM-модели *своего* пользователя: оценка собственных данных → выделение паттернов принятия решений → поддержка файлов аватара → привязка к собственному файлу памяти/правил/системного промта.

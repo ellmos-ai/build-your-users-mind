@@ -10,9 +10,9 @@ Copy them into your agent's command/prompt directory and replace the placeholder
 
 | Command | Loop depth | Side effect | Logs (3)? | Role |
 |---|---|---|---|---|
-| `read-my-mind` | 0→2 | no | no | diagnosis: predict what the user wants |
+| `read-my-mind` | 0→2 | no | no | uncertain preference prediction, not diagnosis |
 | `decide-like-me` | 0→2 | no | no | a single decision (workflow component) |
-| `be-my-avatar` | 0→4 | yes (reversible only) | yes | act in the user's name (component/persona) |
+| `be-my-avatar` | 0→4 | yes (authorized, local, reversible only) | yes | apply a preference hypothesis within existing scope |
 | `avatar-orchestrator` | 0→4 ×N | yes (reversible only) | yes | autonomous chain over many decisions |
 
 `decide-like-me` and `be-my-avatar` are designed to be **workflow components**: the first returns a

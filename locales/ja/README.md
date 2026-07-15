@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 > 英語 (README.md) が公式なドキュメントであり、この翻訳は古い可能性があります。
 
 # build-your-users-mind

@@ -3,6 +3,8 @@ name: build-your-users-mind
 description: Instrucciones para cualquier modelo de agente (Claude, Codex, agy/Gemini, Kimi) para construir, mantener y conectar un modelo empírico de teoría de la mente de SU usuario a partir de sus propios registros de interacción con archivos de memoria/reglas/system prompt. Se activa en "build a ToM/decision avatar for my user", "Theory of Mind system user model", "WHAT-WOULD-USER-SAY", "feedback precognition".
 ---
 
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # build-your-users-mind — Módulo agnóstico de ToM (Precognición de retroalimentación)
 
 > **What you mind is what you get.** Una **receta**, no un marco de trabajo. Cada modelo de agente lo utiliza para construir un modelo de ToM de *su* usuario: evaluar datos propios → destilar patrones de decisión → mantener archivos de avatar → vincular a su propio archivo de memoria/reglas/system prompt.

@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # TAXONOMY —— 8 种提示词类型 + 分类字段
 
 > 独立版本（本模块自包含）。**方法论基础：** *Prompt-Archaeology* (L. Geiger) —— 对完整的人机交互协议进行分类的方法。

@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # TAXONOMY — 8つのプロンプトタイプ + 分類フィールド
 
 > スタンドアロン版（モジュールは自己完結しています）。**方法論的基盤：** *Prompt-Archaeology*（L. Geiger） — 人間とAIの完全なインタラクションプロトコルを分類する手法。

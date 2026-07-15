@@ -1,3 +1,5 @@
+> **Translation status (2026-07-15): historical pre-1.1 draft. The root English documents are authoritative; do not use this translation as the current operational or security contract.**
+
 # SOURCE-ADAPTERS — De dónde lee cada modelo sus instrucciones de usuario
 
 > La **única parte específica del modelo** del módulo (Paso 1 en `SKILL.md`). Cada adaptador ofrece la misma fila normalizada: `{ts, source, project, session, sender:"human", text}`.
