@@ -42,8 +42,9 @@ You'll watch `extract → merge → chunk → classify → validate → aggregat
 logs (a planted secret gets redacted), then the hard validation gate reject a tampered result with a
 non-zero exit. Details: [`examples/synthetic-demo/`](examples/synthetic-demo/).
 
-<!-- TODO(demo-video): after upload, replace the placeholder below with the published YouTube URL. -->
-🎬 **Watch the 2:30 demo:** _video URL coming soon_
+[![build-your-users-mind — 2:30 demo](https://img.youtube.com/vi/BvEyCuBLuQg/maxresdefault.jpg)](https://youtu.be/BvEyCuBLuQg)
+
+🎬 **Watch the 2:30 demo:** https://youtu.be/BvEyCuBLuQg
 
 ## Start here
 
