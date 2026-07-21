@@ -16,6 +16,7 @@
 - **Filter:** `type=="response_item"` & `payload.role=="user"` & `payload.content[].type=="input_text"`.
 - **Exclude:** `<environment_context>`, `<user_instructions>`, tool outputs.
 - Tracks `session_meta`/`turn_context` for project context and drops Codex internal-context/plugin records.
+- Written by Codex itself (brief: `_prompts/adapter-codex.md`), control-tested on 946 prompts (schema-conform).
 
 ## Gemini / agy (antigravity)  ✅ Implemented → `scripts/adapters/gemini_adapter.py`
 - **Path:** `~/.gemini/antigravity/conversations/<uuid>.db` (SQLite).
