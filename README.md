@@ -84,6 +84,9 @@ A 0→4 runtime loop (see `templates/START.md`):
 
 Quality metric = **how often the anticipated reaction matches the user's real later feedback.**
 At 🔴 (novel/no pattern) the rule is **escalate, don't guess.**
+Measure it from the loop files with
+[`scripts/score_predictions.py`](scripts/score_predictions.py): hit rate overall and per
+🟢/🟡/🔴 tier, plus the 🔴 escalation rate.
 
 ### Pipeline (build the model)
 1. **Extract** (`scripts/corpus_extract.py`) — deterministic: pull only human-typed prompts from your

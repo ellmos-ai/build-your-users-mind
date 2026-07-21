@@ -1,4 +1,8 @@
 # MY-ACTIONS.txt — append-only action log (machine-readable)
-# Format: <ISO-ts>\t<confidence 🟢|🟡|🔴>\t<reversible y|n>\t<status open|confirmed|corrected>\t<title>\t<assumed-will-short>
+# Format: <ISO-ts>\t<confidence 🟢|🟡|🔴>\t<reversible y|n>\t<status>\t<title>\t<assumed-will-short>
+# status: open | confirmed | corrected | rejected | escalated
+#   confirmed = prediction hit · corrected/rejected = miss · escalated = raised a hand
+#   at 🔴 instead of guessing (excluded from hit rate) · open = awaiting feedback.
 # One line per action taken on behalf of <USER>. Full context in WHAT-I-DID-…md.
+# Score the loop: `python scripts/score_predictions.py --actions MY-ACTIONS.txt`.
 # ---

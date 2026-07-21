@@ -80,6 +80,9 @@ The ToM model must **actually be used**, not just exist:
 - **Runtime (guided):** within existing authority, log reversible assumptions made on behalf of the
   user → file (3); anything external, irreversible, novel, or high-impact requires confirmation;
   on feedback → file (4) → update rules in (1), adjust confidence in (2).
+- **Score the loop:** `scripts/score_predictions.py` reads `MY-ACTIONS.txt` (+ optionally the
+  `WHAT-<USER>-SAID-ABOUT` feedback) and reports hit rate overall and per 🟢/🟡/🔴 tier plus the
+  🔴 escalation rate — the empirical measure of whether the precognition actually works.
 
 ## Bias & Limits (always mention)
 - **Silent approval is invisible** → corrections are overrepresented, making the avatar appear "critical".
