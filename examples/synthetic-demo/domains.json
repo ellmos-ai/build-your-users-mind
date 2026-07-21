@@ -1,0 +1,5 @@
+{
+  "frontend": ["aurora-web"],
+  "backend": ["aurora-api"],
+  "research": ["tom-lab"]
+}
