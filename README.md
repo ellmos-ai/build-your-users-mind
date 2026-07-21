@@ -44,16 +44,17 @@ fictional user's logs and pre-authored loop fixtures (a planted secret gets reda
 validation gate reject a tampered result with a non-zero exit. The fixtures demonstrate mechanics,
 not accuracy. Details: [`examples/synthetic-demo/`](examples/synthetic-demo/).
 
-[![build-your-users-mind — 2:30 demo](https://img.youtube.com/vi/BvEyCuBLuQg/maxresdefault.jpg)](https://youtu.be/BvEyCuBLuQg)
+[![build-your-users-mind — 2:28 demo](https://img.youtube.com/vi/oJlrCHW-BXQ/maxresdefault.jpg)](https://youtu.be/oJlrCHW-BXQ)
 
-🎬 **Watch the 2:30 demo:** https://youtu.be/BvEyCuBLuQg
+🎬 **Watch the 2:28 demo:** https://youtu.be/oJlrCHW-BXQ
 
 ## Built with OpenAI Codex
 
 - The **Codex source adapter** (`scripts/adapters/codex_adapter.py`) — the component that reads
-  Codex's own session logs — **was written by Codex itself** (commit `1e3abc4`, *"Add Codex source
-  adapter (delegated to Codex, control-tested)"*), then control-tested on 946 real prompts. Who
-  better to parse an agent's log format than the agent that writes it?
+  Codex's own session logs — **was written by Codex itself** in Codex Session
+  `019ed298-fdc4-72d2-a255-97d7dc117128` (commit `1e3abc4`, *"Add Codex source adapter (delegated
+  to Codex, control-tested)"*), then control-tested on 946 real prompts. This earlier contribution
+  is intentionally attributed to Codex without claiming a specific model version.
 - **Codex also authored this repository's discovery metadata** — commit `0ec49df` carries the git
   author `Codex <codex@local>`. It's all in the git history.
 - **GPT-5.6 powered the final Build Week hardening pass through Codex** (Codex Session
