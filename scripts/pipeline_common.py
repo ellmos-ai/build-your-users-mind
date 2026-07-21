@@ -53,6 +53,7 @@ SYNTHETIC_PREFIXES = (
     "<post-tool-use-hook", "<user-prompt-submit-hook", "<session-start-hook",
     "<environment_context>", "<user_instructions>", "<tool", "tool-outputs",
     "<codex_internal_context>", "<recommended_plugins>",
+    "# agents.md instructions",
 )
 SYNTHETIC_CONTAINS = (
     "your questions have been answered:",
@@ -67,6 +68,20 @@ DEFAULT_REDACTIONS = (
     (re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{16,}\b"), "[REDACTED_SLACK]"),
     (re.compile(r"\bhf_[A-Za-z0-9]{20,}\b"), "[REDACTED_HF]"),
     (re.compile(r"\bAKIA[0-9A-Z]{16}\b"), "[REDACTED_AWS]"),
+    (re.compile(r"\bAIza[0-9A-Za-z_-]{30,}\b"), "[REDACTED_GOOGLE_APIKEY]"),
+    (
+        re.compile(
+            r"(?i)(\bAWS_SECRET_ACCESS_KEY\s*[:=]\s*)['\"]?[A-Za-z0-9/+=]{20,}['\"]?"
+        ),
+        r"\1[REDACTED_AWS_SECRET]",
+    ),
+    (
+        re.compile(
+            r"(?i)(\b(?:postgres(?:ql)?|mysql|mariadb|mongodb(?:\+srv)?|redis|amqps?|https?)"
+            r"://[^:\s/@]+:)[^@\s/]+(?=@)"
+        ),
+        r"\1[REDACTED]",
+    ),
     (re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b"), "[REDACTED_JWT]"),
     (
         re.compile(
@@ -77,7 +92,13 @@ DEFAULT_REDACTIONS = (
     ),
     (re.compile(r"(_authToken\s*=\s*)\S+"), r"\1[REDACTED]"),
     (re.compile(r"(?i)\b(bearer)\s+[A-Za-z0-9._\-]{12,}"), r"\1 [REDACTED_TOKEN]"),
-    (re.compile(r"(?i)(api[_-]?key|access[_-]?token|token|secret|passwo?rt?|password)\s*[:=]\s*['\"]?[^\s'\"]{8,}"), r"\1=[REDACTED]"),
+    (
+        re.compile(
+            r"(?i)\b(api[_-]?key|access[_-]?token|token|secret|passwo?rt?|password)"
+            r"\s*[:=]\s*(?:\"[^\"\r\n]{8,}\"|'[^'\r\n]{8,}'|[^\s'\"]{8,})"
+        ),
+        r"\1=[REDACTED]",
+    ),
     (re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b"), "[REDACTED_EMAIL]"),
     (re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"), "[REDACTED_IP]"),
     (re.compile(r"\b(?:\d[ ]?){13,19}\b"), "[REDACTED_NUM]"),
@@ -224,6 +245,12 @@ def normalize_rows(
         is_command, command_name, normalized = parse_command(row["raw"])
         text, count = redact(normalized if is_command else row["raw"], redaction_rules)
         redactions += count
+        project, count = redact(row.get("project", ""), redaction_rules)
+        redactions += count
+        branch, count = redact(row.get("branch", ""), redaction_rules)
+        redactions += count
+        command, count = redact(command_name if is_command else "", redaction_rules)
+        redactions += count
         followup = ""
         if index + 1 < len(rows):
             _, _, next_text = parse_command(rows[index + 1]["raw"])
@@ -236,12 +263,12 @@ def normalize_rows(
             "id": stable_id(source, row["session"], row["ts"], normalized if is_command else row["raw"]),
             "ts": row["ts"],
             "source": source,
-            "project": row.get("project", ""),
-            "branch": row.get("branch", ""),
+            "project": project,
+            "branch": branch,
             "session": row["session"],
             "sender": "human",
             "ptype": ptype,
-            "command": command_name if is_command else "",
+            "command": command,
             "text": text,
             "text_short": " ".join(words[:15]) + ("..." if len(words) > 15 else ""),
             "word_count": len(words),

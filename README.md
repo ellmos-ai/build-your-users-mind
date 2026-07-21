@@ -30,7 +30,8 @@ own logs). Everything else is universal.
 
 ## Try it in 60 seconds
 
-Run the whole pipeline **offline** on synthetic data — no LLM, no API key, no network:
+Run the deterministic preparation/validation pipeline and feedback scorer **offline** on synthetic
+data — no LLM, no API key, no network:
 
 ```bash
 git clone https://github.com/ellmos-ai/build-your-users-mind
@@ -38,22 +39,27 @@ cd build-your-users-mind
 python examples/synthetic-demo/run_demo.py
 ```
 
-You'll watch `extract → merge → chunk → classify → validate → aggregate` run on a fictional user's
-logs (a planted secret gets redacted), then the hard validation gate reject a tampered result with a
-non-zero exit. Details: [`examples/synthetic-demo/`](examples/synthetic-demo/).
+You'll watch `extract → merge → chunk → classify → validate → aggregate → score feedback` run on a
+fictional user's logs and pre-authored loop fixtures (a planted secret gets redacted), then the hard
+validation gate reject a tampered result with a non-zero exit. The fixtures demonstrate mechanics,
+not accuracy. Details: [`examples/synthetic-demo/`](examples/synthetic-demo/).
 
 [![build-your-users-mind — 2:30 demo](https://img.youtube.com/vi/BvEyCuBLuQg/maxresdefault.jpg)](https://youtu.be/BvEyCuBLuQg)
 
 🎬 **Watch the 2:30 demo:** https://youtu.be/BvEyCuBLuQg
 
-## Built with OpenAI Codex & GPT-5.6
+## Built with OpenAI Codex
 
 - The **Codex source adapter** (`scripts/adapters/codex_adapter.py`) — the component that reads
   Codex's own session logs — **was written by Codex itself** (commit `1e3abc4`, *"Add Codex source
-  adapter (delegated to Codex, control-tested)"*), running GPT-5.6, then control-tested on 946 real
-  prompts. Who better to parse an agent's log format than the agent that writes it?
-- **GPT-5.6, through Codex, also authored this repository's discovery metadata** — commit `0ec49df`
-  carries the git author `Codex <codex@local>`. It's all in the git history.
+  adapter (delegated to Codex, control-tested)"*), then control-tested on 946 real prompts. Who
+  better to parse an agent's log format than the agent that writes it?
+- **Codex also authored this repository's discovery metadata** — commit `0ec49df` carries the git
+  author `Codex <codex@local>`. It's all in the git history.
+- **GPT-5.6 powered the final Build Week hardening pass through Codex** (Codex Session
+  `019f8674-fe9a-7d91-a80f-7ee799e8ced0`). It found and fixed nine privacy and data-integrity
+  defects across source extraction, redaction, corpus merging, and prediction scoring; the final
+  deterministic suite contains 73 tests.
 - Codex is a first-class **source**: what Codex learns about the user flows into the same shared,
   evidence-cited model that all agents consume (see `SOURCE-ADAPTERS.md`).
 

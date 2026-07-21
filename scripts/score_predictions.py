@@ -17,8 +17,10 @@ escalation rate at 🔴 ("escalate, don't guess").
     escalated  -> agent escalated at 🔴 instead of guessing (excluded from hit rate)
     open       -> pending (no feedback yet)
 
-An optional `--feedback` file resolves still-`open` predictions by matching the
-title against `## [date] <title> — verdict: 👍 confirmed / ✋ corrected / ⛔ rejected`.
+An optional `--feedback` file resolves still-`open` predictions from
+`## [feedback-date] <title> — verdict: 👍 confirmed / ✋ corrected / ⛔ rejected`.
+Exact date/title matches take precedence; later feedback may match one uniquely
+identifiable earlier open action with the same title. Ambiguity fails closed.
 Deterministic, stdlib-only, offline. This scores the loop; it is not an accuracy
 guarantee for the semantic classifier (see TODO.md, κ≈0.24).
 """
@@ -29,6 +31,8 @@ import json
 import re
 import sys
 from pathlib import Path
+
+from pipeline_common import validate_since, validate_timestamp
 
 CONFIDENCE = {
     "🟢": "green", "green": "green", "g": "green", "high": "green",
@@ -42,7 +46,11 @@ STATUS = {
     "open": "pending", "pending": "pending", "": "pending",
 }
 TIERS = ("green", "yellow", "red")
-_VERDICT_RE = re.compile(r"^##\s*\[[^\]]*\]\s*(?P<title>.+?)\s*[—-]\s*verdict:\s*(?P<verdict>.+?)\s*$")
+_VERDICT_RE = re.compile(
+    r"^##\s*\[(?P<date>\d{4}-\d{2}-\d{2})\]\s*(?P<title>.+?)\s*"
+    r"[—-]\s*verdict:\s*(?P<verdict>.+?)\s*$"
+)
+FeedbackKey = tuple[str, str]
 
 
 def norm_confidence(raw: str) -> str | None:
@@ -52,32 +60,61 @@ def norm_confidence(raw: str) -> str | None:
 def parse_actions(text: str) -> list[dict[str, str]]:
     """Parse MY-ACTIONS.txt content into normalized rows."""
     rows: list[dict[str, str]] = []
-    for line in text.splitlines():
+    for line_number, line in enumerate(text.splitlines(), 1):
         if not line.strip() or line.lstrip().startswith("#"):
             continue
         fields = line.split("\t")
-        if len(fields) < 4:
-            continue
+        if len(fields) != 6:
+            raise ValueError(
+                f"line {line_number}: expected 6 tab-separated fields, found {len(fields)}"
+            )
+        timestamp = fields[0].strip()
+        try:
+            validate_timestamp(timestamp)
+        except ValueError as exc:
+            raise ValueError(f"line {line_number}: invalid timestamp: {exc}") from exc
         confidence = norm_confidence(fields[1])
-        outcome = STATUS.get(fields[3].strip().lower(), "pending")
-        title = fields[4].strip() if len(fields) > 4 else ""
-        rows.append({"confidence": confidence or "", "outcome": outcome, "title": title})
+        if confidence is None:
+            raise ValueError(f"line {line_number}: unknown confidence {fields[1]!r}")
+        reversible = fields[2].strip().lower()
+        if reversible not in {"y", "n"}:
+            raise ValueError(f"line {line_number}: reversible must be 'y' or 'n'")
+        status = fields[3].strip().lower()
+        if status not in STATUS or not status:
+            raise ValueError(f"line {line_number}: unknown status {fields[3]!r}")
+        title = fields[4].strip()
+        if not title:
+            raise ValueError(f"line {line_number}: title must not be empty")
+        rows.append(
+            {
+                "date": timestamp[:10],
+                "confidence": confidence,
+                "outcome": STATUS[status],
+                "title": title,
+            }
+        )
     return rows
 
 
-def parse_feedback(text: str) -> dict[str, str]:
-    """Parse WHAT-USER-SAID-ABOUT verdict headers into {title -> hit|miss}."""
-    verdicts: dict[str, str] = {}
+def parse_feedback(text: str) -> dict[FeedbackKey, str]:
+    """Parse verdict headers into {(date, normalized title) -> hit|miss}."""
+    verdicts: dict[FeedbackKey, str] = {}
     for line in text.splitlines():
         match = _VERDICT_RE.match(line.strip())
         if not match:
             continue
+        feedback_date = validate_since(match.group("date"))
         title = match.group("title").strip().lower()
+        key = (feedback_date, title)
+        if key in verdicts:
+            raise ValueError(
+                f"duplicate feedback verdict for {feedback_date} and title {title!r}"
+            )
         verdict = match.group("verdict").lower()
         if "👍" in verdict or "confirmed" in verdict:
-            verdicts[title] = "hit"
+            verdicts[key] = "hit"
         elif "✋" in verdict or "⛔" in verdict or "corrected" in verdict or "rejected" in verdict:
-            verdicts[title] = "miss"
+            verdicts[key] = "miss"
     return verdicts
 
 
@@ -90,18 +127,59 @@ def _bucket(rows: list[dict[str, str]]) -> dict[str, object]:
 
 
 def score(actions: list[dict[str, str]],
-          feedback: dict[str, str] | None = None) -> dict[str, object]:
+          feedback: dict[FeedbackKey, str] | None = None) -> dict[str, object]:
     feedback = feedback or {}
-    matched: set[str] = set()
+    matched: set[FeedbackKey] = set()
     rows: list[dict[str, str]] = []
     for action in actions:
-        row = dict(action)
-        if row["outcome"] == "pending":
-            key = row["title"].strip().lower()
-            if key in feedback:
-                row["outcome"] = feedback[key]
-                matched.add(key)
-        rows.append(row)
+        rows.append(dict(action))
+
+    pending_by_key: dict[FeedbackKey, int] = {}
+    pending_by_title: dict[str, list[int]] = {}
+    for index, row in enumerate(rows):
+        if row["outcome"] != "pending":
+            continue
+        title = row["title"].strip().lower()
+        key = (row["date"], title)
+        if key in pending_by_key:
+            raise ValueError(f"ambiguous open actions share date/title key {key!r}")
+        pending_by_key[key] = index
+        pending_by_title.setdefault(title, []).append(index)
+
+    resolved_actions: set[int] = set()
+    # First bind every exact action-date/title reference. This makes matching
+    # independent of feedback-file order when a title is reused.
+    for key, outcome in feedback.items():
+        index = pending_by_key.get(key)
+        if index is None:
+            continue
+        rows[index]["outcome"] = outcome
+        resolved_actions.add(index)
+        matched.add(key)
+
+    # A feedback header normally carries the day the feedback was received,
+    # which can be later than the action. Resolve only a single remaining
+    # earlier action with the same title; never guess among repeated titles.
+    for key, outcome in feedback.items():
+        if key in matched:
+            continue
+        feedback_date, title = key
+        candidates = [
+            index
+            for index in pending_by_title.get(title, [])
+            if index not in resolved_actions and rows[index]["date"] <= feedback_date
+        ]
+        if len(candidates) > 1:
+            dates = ", ".join(rows[index]["date"] for index in candidates)
+            raise ValueError(
+                f"feedback for {feedback_date} and title {title!r} could match "
+                f"multiple earlier open actions ({dates})"
+            )
+        if candidates:
+            index = candidates[0]
+            rows[index]["outcome"] = outcome
+            resolved_actions.add(index)
+            matched.add(key)
 
     red = [r for r in rows if r["confidence"] == "red"]
     escalated = sum(1 for r in red if r["outcome"] == "escalated")
@@ -159,17 +237,29 @@ def main(argv: list[str] | None = None) -> int:
     if not actions_path.is_file():
         print(f"ERROR: actions log not found: {actions_path}", file=sys.stderr)
         return 2
-    actions = parse_actions(actions_path.read_text(encoding="utf-8"))
+    try:
+        actions = parse_actions(actions_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        print(f"ERROR: cannot read valid actions log: {exc}", file=sys.stderr)
+        return 2
 
-    feedback: dict[str, str] = {}
+    feedback: dict[FeedbackKey, str] = {}
     if args.feedback:
         feedback_path = Path(args.feedback).expanduser()
         if not feedback_path.is_file():
             print(f"ERROR: feedback file not found: {feedback_path}", file=sys.stderr)
             return 2
-        feedback = parse_feedback(feedback_path.read_text(encoding="utf-8"))
+        try:
+            feedback = parse_feedback(feedback_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, ValueError) as exc:
+            print(f"ERROR: cannot read feedback file: {exc}", file=sys.stderr)
+            return 2
 
-    result = score(actions, feedback)
+    try:
+        result = score(actions, feedback)
+    except ValueError as exc:
+        print(f"ERROR: cannot score ambiguous action log: {exc}", file=sys.stderr)
+        return 2
     payload = json.dumps(result, ensure_ascii=False, indent=2) if args.json else format_report(result)
     if args.out:
         Path(args.out).expanduser().write_text(payload + "\n", encoding="utf-8")

@@ -6,6 +6,10 @@
 
 ```
 ## [YYYY-MM-DD] <title> — verdict: 👍 confirmed / ✋ corrected / ⛔ rejected
+
+Use the date the feedback was received. The scorer prefers an exact date/title match, then accepts
+one uniquely identifiable earlier open action with the same title; repeated-title ambiguity fails
+closed.
 - What I did (ref WHAT-I-DID …)
 - Prediction was: <…>   | Reality: <…>   | Hit? yes/no
 - Lesson: <…>   | Feedback: <which rule/confidence was adjusted>

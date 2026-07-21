@@ -95,6 +95,42 @@ class CommonTests(unittest.TestCase):
             self.assertEqual(cleaned, "[REDACTED_APIKEY]")
             self.assertEqual(count, 1)
 
+    def test_common_credentials_are_redacted(self) -> None:
+        samples = (
+            (
+                "postgresql://alice:correct-horse-battery-staple@db.example/app",
+                "correct-horse-battery-staple",
+            ),
+            (
+                "AWS_SECRET_ACCESS_KEY='AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCD'",
+                "AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCD",
+            ),
+            (("pass" + 'word="correct horse battery staple"'), "correct horse battery staple"),
+            ("AIza" + "A" * 35, "AIza" + "A" * 35),
+        )
+        for value, secret in samples:
+            with self.subTest(value=value):
+                cleaned, count = redact(value)
+                self.assertNotIn(secret, cleaned)
+                self.assertGreaterEqual(count, 1)
+
+    def test_metadata_fields_are_redacted(self) -> None:
+        google_key = "AIza" + "B" * 35
+        rows = [
+            {
+                "ts": "2026-01-01T00:00:00Z",
+                "session": "opaque-session-id",
+                "project": "postgresql://alice:database-password@db.example/app",
+                "branch": f"release/{google_key}",
+                "raw": '<command-name>/deploy ' + "pass" + 'word="correct horse battery staple"</command-name>',
+            }
+        ]
+        records, count = normalize_rows(rows, "test")
+        serialized = json.dumps(records[0])
+        for secret in ("database-password", google_key, "correct horse battery staple"):
+            self.assertNotIn(secret, serialized)
+        self.assertGreaterEqual(count, 4)
+
     def test_custom_sensitive_rule(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "rules.json"
@@ -166,6 +202,7 @@ class AdapterTests(unittest.TestCase):
                 {"timestamp": "2026-01-01T00:00:00Z", "type": "session_meta", "payload": {"cwd": "old"}},
                 {"timestamp": "2026-01-01T00:00:01Z", "type": "response_item", "payload": {"role": "user", "content": [{"type": "input_text", "text": "<codex_internal_context>hidden</codex_internal_context>"}]}},
                 {"timestamp": "2026-01-01T00:00:02Z", "type": "turn_context", "payload": {"cwd": "new", "git_branch": "main"}},
+                {"timestamp": "2026-01-01T00:00:02Z", "type": "response_item", "payload": {"role": "user", "content": [{"type": "input_text", "text": "# AGENTS.md instructions for C:\\Workspace\\demo\n<INSTRUCTIONS>hidden</INSTRUCTIONS>"}]}},
                 {"timestamp": "2026-01-01T00:00:03Z", "type": "response_item", "payload": {"role": "user", "content": [{"type": "input_text", "text": "Never use Docker"}]}},
                 {"timestamp": "2026-01-01T00:00:04Z", "type": "response_item", "payload": {"role": "user", "content": {"type": "input_text", "text": "schema drift"}}},
                 [],
@@ -217,6 +254,8 @@ class AdapterTests(unittest.TestCase):
             wire.write_text(
                 json.dumps({"type": "turn.prompt", "origin": {"kind": "user"}, "input": "Use PostgreSQL", "time": 1_700_000_000_000})
                 + "\n"
+                + json.dumps({"type": "turn.steer", "origin": {"kind": "user"}, "input": "Actually, use SQLite", "time": 1_700_000_000_500})
+                + "\n"
                 + json.dumps({"type": "turn.prompt", "origin": {"kind": "user"}, "input": {"text": "drift"}, "time": 1_700_000_001_000})
                 + "\n"
                 + json.dumps([])
@@ -224,7 +263,8 @@ class AdapterTests(unittest.TestCase):
                 encoding="utf-8",
             )
             rows, _, _, errors = kimi_adapter.build_records([wire], root, "", DEFAULT_REDACTIONS)
-            self.assertEqual((len(rows), errors), (1, 2))
+            self.assertEqual((len(rows), errors), (2, 2))
+            self.assertEqual([row["text"] for row in rows], ["Use PostgreSQL", "Actually, use SQLite"])
 
     def test_kimi_malformed_session_index_is_counted(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -256,6 +296,11 @@ class AdapterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             gemini_adapter.parse_proto(b"\x0a\x05A")
 
+    def test_gemini_missing_timestamp_seconds_is_rejected(self) -> None:
+        # Metadata field 1 contains an empty protobuf timestamp.  Treating the
+        # absent seconds field as zero would silently invent 1970-01-01.
+        self.assertEqual(gemini_adapter.extract_timestamp(field_bytes(1, b"")), "")
+
     def test_gemini_read_only_fixture(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "fixture.db"
@@ -277,6 +322,30 @@ class AdapterTests(unittest.TestCase):
             with self.assertRaises(sqlite3.OperationalError):
                 read_only.execute("CREATE TABLE forbidden (id INTEGER)")
             read_only.close()
+
+    def test_gemini_missing_steps_table_keeps_existing_output(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "conversations"
+            root.mkdir()
+            good = root / "good.db"
+            connection = sqlite3.connect(good)
+            connection.execute(
+                "CREATE TABLE steps (idx INTEGER, step_type INTEGER, metadata BLOB, step_payload BLOB)"
+            )
+            metadata = field_bytes(1, field_varint(1, 1_700_000_000))
+            payload = field_bytes(19, field_bytes(2, b"Use PostgreSQL"))
+            connection.execute("INSERT INTO steps VALUES (1, 14, ?, ?)", (metadata, payload))
+            connection.commit()
+            connection.close()
+            sqlite3.connect(root / "missing-steps.db").close()
+
+            output = Path(temp) / "out"
+            output.mkdir()
+            target = output / "00_corpus.jsonl"
+            target.write_text("sentinel", encoding="utf-8")
+            with self.assertRaises(SystemExit):
+                gemini_adapter.main(["--root", str(root), "--out", str(output)])
+            self.assertEqual(target.read_text(encoding="utf-8"), "sentinel")
 
     def test_gemini_preserves_unix_file_uri_root(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -359,6 +428,24 @@ class PipelineTests(unittest.TestCase):
             atomic_write_jsonl(second, [record("H_a", "different")])
             with self.assertRaises(ValueError):
                 merge_corpora.merge([first, second])
+
+    def test_empty_merge_keeps_existing_output_without_override(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            empty = base / "empty.jsonl"
+            output = base / "00_corpus.jsonl"
+            empty.write_text("", encoding="utf-8")
+            output.write_text("sentinel", encoding="utf-8")
+            with self.assertRaises(SystemExit):
+                merge_corpora.main([str(empty), "--out", str(output)])
+            self.assertEqual(output.read_text(encoding="utf-8"), "sentinel")
+            self.assertEqual(
+                merge_corpora.main(
+                    [str(empty), "--out", str(output), "--allow-empty"]
+                ),
+                0,
+            )
+            self.assertEqual(output.read_text(encoding="utf-8"), "")
 
     def test_chunker_cleans_stale_files_and_sanitizes_domain(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

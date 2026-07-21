@@ -31,12 +31,22 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("inputs", nargs="+", help="source-specific corpus JSONL files")
     parser.add_argument("--out", default="./STUDIE/00_corpus.jsonl")
+    parser.add_argument(
+        "--allow-empty",
+        action="store_true",
+        help="explicitly permit replacing the output with an empty merged corpus",
+    )
     args = parser.parse_args(argv)
     paths = [Path(value).expanduser() for value in args.inputs]
     try:
         records = merge(paths)
     except ValueError as exc:
         parser.error(str(exc))
+    if not records and not args.allow_empty:
+        parser.error(
+            "merge inputs contain no records; output was left untouched "
+            "(use --allow-empty to confirm an empty replacement)"
+        )
     target = Path(args.out).expanduser()
     atomic_write_jsonl(target, records)
     print(f"Merged {len(paths)} corpora -> {target} ({len(records)} records)")

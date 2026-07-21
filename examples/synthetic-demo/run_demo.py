@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""One-command offline demo of the build-your-users-mind pipeline.
+"""One-command offline demo of the deterministic build and feedback pipeline.
 
 Runs the whole deterministic pipeline on SYNTHETIC fixtures (invented user
 "Sam Rivera") with NO LLM and NO network:
 
     extract -> merge -> chunk -> classify (answer-key) -> validate -> aggregate
+    -> score a pre-authored synthetic prediction/feedback loop
 
 then shows the hard validation gate rejecting a tampered classification (exit 2).
 
@@ -91,8 +92,16 @@ def step(number: str, title: str) -> None:
 
 
 def main() -> int:
+    # The scorer intentionally prints confidence emoji. Child processes already
+    # receive PYTHONIOENCODING via ENV; configure this parent as well so the
+    # one-command demo works in Windows shells whose legacy default is cp1252.
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="replace")
     work = prepare_work_dir(HERE / "_run")
     studie = work / "STUDIE"
+    avatar = work / "avatar"
     chunks = studie / "_chunks"
     corpus = studie / "00_corpus.jsonl"
     print("build-your-users-mind - offline synthetic demo (no LLM, no network)")
@@ -125,11 +134,21 @@ def main() -> int:
 
     _show_redaction(corpus)
 
-    step("7", "tamper test - the gate must REJECT a corrupted classification")
+    step("7", "feedback loop - score synthetic predictions against synthetic feedback")
+    run(
+        SCRIPTS / "score_predictions.py",
+        "--actions",
+        str(avatar / "MY-ACTIONS.txt"),
+        "--feedback",
+        str(avatar / "WHAT-SAM-SAID-ABOUT-DEMO.md"),
+    )
+
+    step("8", "tamper test - the gate must REJECT a corrupted classification")
     _tamper_test(chunks, corpus)
 
-    print("\nOK - full pipeline is green and the tamper case was correctly rejected.")
+    print("\nOK - deterministic build, feedback scoring, and tamper rejection are green.")
     print(f"Inspect the run: {studie}  (04_statistik.md, 00_corpus.jsonl, _chunks/manifest.json)")
+    print(f"Inspect the synthetic feedback loop: {avatar}")
     return 0
 
 

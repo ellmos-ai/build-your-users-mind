@@ -78,9 +78,15 @@ def extract_timestamp(metadata: bytes | None) -> str:
     if not isinstance(timestamp_bytes, bytes):
         return ""
     timestamp = parse_proto(timestamp_bytes)
-    seconds = timestamp.get(1, 0)
+    seconds = timestamp.get(1)
     nanos = timestamp.get(2, 0)
-    if not isinstance(seconds, int) or not isinstance(nanos, int):
+    if (
+        isinstance(seconds, bool)
+        or not isinstance(seconds, int)
+        or seconds <= 0
+        or isinstance(nanos, bool)
+        or not isinstance(nanos, int)
+    ):
         return ""
     if nanos < 0 or nanos >= 1_000_000_000:
         raise ValueError("invalid protobuf timestamp nanos")
@@ -158,6 +164,11 @@ def build_records(
                     "SELECT 1 FROM sqlite_master WHERE type='table' AND name='steps'"
                 ).fetchone()
                 if not exists:
+                    read_errors += 1
+                    print(
+                        f"warning: skipped {path}: missing required steps table",
+                        file=sys.stderr,
+                    )
                     continue
                 cursor = connection.execute(
                     "SELECT metadata, step_payload FROM steps WHERE step_type = 14 ORDER BY idx"

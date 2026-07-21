@@ -1,7 +1,8 @@
-# Synthetic demo — the whole pipeline, offline, in one command
+# Synthetic demo — deterministic build + feedback scoring, offline
 
-Runs the complete build-your-users-mind pipeline on **synthetic** data with **no LLM
-and no network**, then shows the hard validation gate rejecting a tampered result.
+Runs the deterministic preparation/validation pipeline and a pre-authored feedback-loop fixture on
+**synthetic** data with **no LLM and no network**, then shows the hard validation gate rejecting a
+tampered result.
 
 ```bash
 python examples/synthetic-demo/run_demo.py
@@ -18,7 +19,7 @@ holds a lock on a previous run, the demo transparently switches to `_run-2/`,
 ## What it does
 
 ```
-extract -> merge -> chunk -> classify -> validate -> aggregate -> tamper test
+extract -> merge -> chunk -> classify -> validate -> aggregate -> score feedback -> tamper test
 ```
 
 | Stage | Script | What you see |
@@ -30,6 +31,7 @@ extract -> merge -> chunk -> classify -> validate -> aggregate -> tamper test
 | classify | `classify_worker.py` | **offline** — labels come from the answer key, so no model is needed |
 | validate | `scripts/validate_classifications.py` | hard gate: schema, completeness, collisions → **PASS** |
 | aggregate | `scripts/aggregate_stats.py` | Stage-4 stats (`N=23`, `B:K`, decisions, …) |
+| score | `scripts/score_predictions.py` | one hit, one deliberate miss, and a 🔴 escalation from synthetic loop files |
 | tamper | (in `run_demo.py`) | corrupts one classification → the gate refuses with **exit 2** |
 
 ## Honesty notes
@@ -39,6 +41,8 @@ extract -> merge -> chunk -> classify -> validate -> aggregate -> tamper test
   quality remains human-reviewed by design (see the κ≈0.24 note in `TODO.md`).
 - Redaction runs **before** classification, so the classifier only ever sees the
   redacted text (`[REDACTED_APIKEY]`, `[REDACTED_EMAIL]`).
+- The prediction playbook, action log, and feedback are also pre-authored synthetic fixtures. Their
+  score demonstrates the measurement path; it does not report product accuracy.
 
 ## Output
 
@@ -47,3 +51,4 @@ Written to `examples/synthetic-demo/_run/` (git-ignored). Inspect after a run:
 - `_run/STUDIE/00_corpus.jsonl` — the extracted, redacted corpus
 - `_run/STUDIE/_chunks/manifest.json` — SHA-256-bound chunk manifest
 - `_run/STUDIE/04_statistik.md` — the Stage-4 aggregate
+- `_run/avatar/` — synthetic playbook, action log, and feedback used by the scorer

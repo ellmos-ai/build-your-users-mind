@@ -14,18 +14,21 @@
 ## Codex CLI (GPT)  ✅ Implemented → `scripts/adapters/codex_adapter.py`
 - **Path:** `~/.codex/sessions/<YYYY>/<MM>/<DD>/rollout-*.jsonl` (+ `~/.codex/archived_sessions/`).
 - **Filter:** `type=="response_item"` & `payload.role=="user"` & `payload.content[].type=="input_text"`.
-- **Exclude:** `<environment_context>`, `<user_instructions>`, tool outputs.
+- **Exclude:** `<environment_context>`, `<user_instructions>`, injected `# AGENTS.md instructions`,
+  tool outputs.
 - Tracks `session_meta`/`turn_context` for project context and drops Codex internal-context/plugin records.
 - Written by Codex itself (brief: `_prompts/adapter-codex.md`), control-tested on 946 prompts (schema-conform).
 
 ## Gemini / agy (antigravity)  ✅ Implemented → `scripts/adapters/gemini_adapter.py`
 - **Path:** `~/.gemini/antigravity/conversations/<uuid>.db` (SQLite).
 - **Findings:** `steps` table stores `metadata` + `step_payload` as **Protobuf blobs**; user turns = `step_type==14`, text = payload field 19→2, timestamp from metadata field 1. Custom varint parser in the adapter.
-- Opens SQLite databases read-only and rejects malformed/truncated protobuf fields.
+- Opens SQLite databases read-only and rejects malformed/truncated protobuf fields or databases
+  missing the required `steps` table.
 
 ## Kimi Code CLI  ✅ Implemented → `scripts/adapters/kimi_adapter.py`
 - **Path:** `~/.kimi-code/sessions/.../<sessionDir>/agents/main/wire.jsonl` (JSONL); index `~/.kimi-code/session_index.jsonl` (sessionId/sessionDir/workDir).
-- **Filter:** `type=="turn.prompt"` & `origin.kind=="user"`; text from `input` (text blocks/string); `time` = Unix ms.
+- **Filter:** `type in {"turn.prompt", "turn.steer"}` & `origin.kind=="user"`; text from `input`
+  (text blocks/string); `time` = Unix ms. Steering turns preserve human corrections.
 - Validates finite positive Unix-ms timestamps and filters the same synthetic artifact classes.
 
 ## Adapter Contract
@@ -44,5 +47,8 @@ python scripts/adapters/codex_adapter.py --output-name corpus_codex.jsonl --out 
 python scripts/adapters/kimi_adapter.py --root ~/.kimi-code/sessions --output-name corpus_kimi.jsonl --out ./STUDIE
 python scripts/merge_corpora.py ./STUDIE/corpus_codex.jsonl ./STUDIE/corpus_kimi.jsonl --out ./STUDIE/00_corpus.jsonl
 ```
+
+`merge_corpora.py` also refuses to replace an existing corpus when all merge inputs are empty.
+Use its explicit `--allow-empty` override only after confirming that an empty replacement is intended.
 
 Optional `--redaction-rules rules.json` appends operator-reviewed regex replacements to the built-ins.

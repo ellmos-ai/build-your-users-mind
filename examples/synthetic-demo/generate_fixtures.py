@@ -166,6 +166,38 @@ def build(out_dir: Path) -> None:
         ts_hour += 1
     (out_dir / "answer_key.json").write_text(
         json.dumps(ANSWER, ensure_ascii=False, indent=2), encoding="utf-8")
+    avatar = out_dir / "avatar"
+    avatar.mkdir(parents=True, exist_ok=True)
+    (avatar / "WHAT-WOULD-SAM-SAY.md").write_text(
+        """# SYNTHETIC prediction playbook — Sam Rivera
+
+This is an invented fixture, not a claim about a real person.
+
+| Situation | Prediction | Confidence |
+|---|---|---|
+| Choosing a package manager | Keep pnpm for this repository | 🟢 |
+| Refactoring authentication | Ask before changing the module | 🟡 |
+| Replacing the framework | Escalate; there is no stable pattern | 🔴 |
+""",
+        encoding="utf-8",
+    )
+    (avatar / "MY-ACTIONS.txt").write_text(
+        """# SYNTHETIC action log — deliberately includes one miss
+2026-05-14T10:00:00Z\tgreen\ty\tconfirmed\tKeep pnpm\tSam will prefer pnpm
+2026-05-14T10:05:00Z\tyellow\ty\topen\tRefactor authentication\tSam will approve a small refactor
+2026-05-14T10:10:00Z\tred\tn\tescalated\tReplace the framework\tNo reliable pattern
+""",
+        encoding="utf-8",
+    )
+    (avatar / "WHAT-SAM-SAID-ABOUT-DEMO.md").write_text(
+        """# SYNTHETIC feedback fixture
+
+## [2026-05-14] Refactor authentication — verdict: ✋ corrected
+
+Sam asked the agent to leave the authentication module untouched.
+""",
+        encoding="utf-8",
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -174,7 +206,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     out_dir = Path(args.out).expanduser()
     build(out_dir)
-    print(f"synthetic logs + answer key -> {out_dir}")
+    print(f"synthetic logs + answer key + feedback-loop fixtures -> {out_dir}")
     return 0
 
 

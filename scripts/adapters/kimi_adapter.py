@@ -27,11 +27,12 @@ from pipeline_common import (  # noqa: E402
 
 
 def extract_human(entry: dict[str, object]) -> str | None:
-    if entry.get("type") != "turn.prompt":
+    entry_type = entry.get("type")
+    if entry_type not in {"turn.prompt", "turn.steer"}:
         return None
     origin = entry.get("origin") or {}
     if not isinstance(origin, dict):
-        raise ValueError("malformed Kimi turn.prompt origin")
+        raise ValueError(f"malformed Kimi {entry_type} origin")
     if origin.get("kind") != "user":
         return None
     value = entry.get("input", "")
