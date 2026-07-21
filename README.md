@@ -28,6 +28,23 @@ It is **not** a chatbot persona and **not** a heavy framework — it is a method
 + document templates. The only agent-specific part is the *source adapter* (where each agent reads its
 own logs). Everything else is universal.
 
+## Try it in 60 seconds
+
+Run the whole pipeline **offline** on synthetic data — no LLM, no API key, no network:
+
+```bash
+git clone https://github.com/ellmos-ai/build-your-users-mind
+cd build-your-users-mind
+python examples/synthetic-demo/run_demo.py
+```
+
+You'll watch `extract → merge → chunk → classify → validate → aggregate` run on a fictional user's
+logs (a planted secret gets redacted), then the hard validation gate reject a tampered result with a
+non-zero exit. Details: [`examples/synthetic-demo/`](examples/synthetic-demo/).
+
+<!-- TODO(demo-video): after upload, replace the placeholder below with the published YouTube URL. -->
+🎬 **Watch the 2:30 demo:** _video URL coming soon_
+
 ## Start here
 
 | If you are... | Open first | Why |
