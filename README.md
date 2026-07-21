@@ -46,6 +46,17 @@ non-zero exit. Details: [`examples/synthetic-demo/`](examples/synthetic-demo/).
 
 🎬 **Watch the 2:30 demo:** https://youtu.be/BvEyCuBLuQg
 
+## Built with OpenAI Codex & GPT-5.6
+
+- The **Codex source adapter** (`scripts/adapters/codex_adapter.py`) — the component that reads
+  Codex's own session logs — **was written by Codex itself** (commit `1e3abc4`, *"Add Codex source
+  adapter (delegated to Codex, control-tested)"*), running GPT-5.6, then control-tested on 946 real
+  prompts. Who better to parse an agent's log format than the agent that writes it?
+- **GPT-5.6, through Codex, also authored this repository's discovery metadata** — commit `0ec49df`
+  carries the git author `Codex <codex@local>`. It's all in the git history.
+- Codex is a first-class **source**: what Codex learns about the user flows into the same shared,
+  evidence-cited model that all agents consume (see `SOURCE-ADAPTERS.md`).
+
 ## Start here
 
 | If you are... | Open first | Why |
