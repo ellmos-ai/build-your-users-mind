@@ -31,7 +31,11 @@
 
 ## Optional improvements
 
-- [ ] Add a dependency-free inter-rater Cohen's-kappa helper.
+- [x] Add a dependency-free inter-rater Cohen's-kappa helper. → `scripts/kappa.py` (CSV/JSONL → κ +
+  confusion matrix; tested in `tests/test_kappa.py`).
+- [x] Score the feedback-precognition loop. → `scripts/score_predictions.py` (hit rate overall + per
+  🟢/🟡/🔴 tier + 🔴 escalation rate; tested in `tests/test_score_predictions.py`).
+- [x] One-command offline demo of the full pipeline. → `examples/synthetic-demo/run_demo.py`.
 - [ ] Add more synthetic source-schema fixtures as upstream log formats evolve.
 
 ## STATUS — current gate
