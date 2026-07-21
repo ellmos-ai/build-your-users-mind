@@ -11,6 +11,10 @@ Everything is fictional: an invented user "Sam Rivera" and 23 hand-written promp
 including a **planted fake secret** so you can watch redaction happen. No real or
 private interaction logs are read or produced.
 
+Outputs land in `_run/` (git-ignored). If a cloud-sync client (e.g. OneDrive)
+holds a lock on a previous run, the demo transparently switches to `_run-2/`,
+`_run-3/`, ... instead of failing.
+
 ## What it does
 
 ```
