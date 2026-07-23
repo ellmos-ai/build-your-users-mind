@@ -4,6 +4,9 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## Unreleased — 1.1.0-dev
 
+- Added `templates/decision-ledger/` — an operator-neutral, append-only decision chain
+  (`D-YYYYMMDD-NNN`) with an open-queue template, a decided-and-done archive template,
+  and a multi-option decision-briefing template; linked from the main README.
 - Hardened all adapters to fail closed, validate timestamps/dates, and write atomically.
 - Filtered Codex internal-context/plugin artifacts and carried turn-level project context.
 - Expanded secret redaction, added operator-defined sensitive-data rules, and private file modes.

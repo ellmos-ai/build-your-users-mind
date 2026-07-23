@@ -107,6 +107,15 @@ Measure it from the loop files with
 [`scripts/score_predictions.py`](scripts/score_predictions.py): hit rate overall and per
 🟢/🟡/🔴 tier, plus the 🔴 escalation rate.
 
+### Tracking one-off decisions
+
+The 0→4 loop above governs feedback prediction for *recurring* situations. For real,
+one-off decisions that need a citable record — question, options, recommendation, chosen
+answer, verified outcome — see
+[`templates/decision-ledger/`](templates/decision-ledger/): a numbered, append-only
+chain (`D-YYYYMMDD-NNN`) with an open queue, a decided-and-done archive, and an optional
+multi-option briefing template.
+
 ### Pipeline (build the model)
 1. **Extract** (`scripts/corpus_extract.py`) — deterministic: pull only human-typed prompts from your
    logs, filter synthetic turns, **redact secrets**, link each prompt to the next turn's `outcome_signal`
