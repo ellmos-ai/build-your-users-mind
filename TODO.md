@@ -38,6 +38,22 @@
 - [x] One-command offline demo of the deterministic build, feedback scoring, and tamper gate.
   → `examples/synthetic-demo/run_demo.py`.
 - [ ] Add more synthetic source-schema fixtures as upstream log formats evolve.
+- [ ] **Training wizard: build evidence by asking, not only by mining logs.** The pipeline derives
+  its model from a user's *past* interaction logs, so a new operator starts with nothing — and an
+  existing one has thin coverage wherever no comparable situation ever came up. A wizard would
+  close that gap directly: present simulated decision cases (in the shape of a decision briefing —
+  situation, options, trade-offs), let the user decide, and record the answer as first-class
+  evidence with its own provenance. Design questions to settle first: where the case catalogue
+  comes from (hand-written seed set, generated from the taxonomy, or mined from anonymized real
+  situations), how wizard-derived evidence is weighted against log-derived evidence, and whether
+  the wizard can be pointed at the avatar's current 🟡 areas to train exactly where confidence is
+  weak instead of asking at random.
+  *Motivation from live use (2026-07-25):* the avatar decided a release question at 🟡 solely
+  because no directly comparable case existed in the corpus; the user's confirmation afterwards
+  turned it into a rule. That feedback loop already works — it is just slow, because it waits for
+  situations to occur by chance. The wizard would drive the same loop on purpose.
+  Requested by the user; to be picked up once the Build-Week judging hold is lifted
+  (noted on local branch `judging-hold/training-wizard`, 2026-07-25).
 
 ## STATUS — current gate
 
