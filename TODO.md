@@ -28,6 +28,9 @@
 - [ ] Perform an operator-owned end-to-end classification run on authorized private data and record
   only non-sensitive aggregate gate evidence.
 - [ ] Decide a stable-release version and tag only after those semantic/manual gates pass.
+- [ ] Propagate the new USER.md (0.5) declared-preferences layer into `SKILL.md` and the localized
+  documents (de/es/ja/ru/zh) once the Build-Week judging hold is lifted (layer added on local
+  branch `judging-hold/user-md`, 2026-07-24).
 
 ## Optional improvements
 
