@@ -96,6 +96,7 @@ A 0→4 runtime loop (see `templates/START.md`):
 | Step | File | Role |
 |---|---|---|
 | 0 | project `DECISIONS.md` | project-specific decisions win (more specific) |
+| 0.5 | `USER.md` | **declared** preferences & delivery defaults (operator-maintained; agent rule files are consumers) |
 | 1 | `WHAT-<USER>-SAID` | **evidence-based** rules/decisions (with prompt-ID citations) |
 | 2 | `WHAT-WOULD-<USER>-SAY` | **precognition** — predicted feedback + confidence (🟢/🟡/🔴) |
 | 3 | `WHAT-I-DID…` + `MY-ACTIONS.txt` | log of actions taken on the prediction |

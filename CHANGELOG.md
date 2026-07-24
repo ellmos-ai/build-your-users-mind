@@ -4,6 +4,9 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## Unreleased — 1.1.0-dev
 
+- Added a declared-preferences layer: `templates/USER.md` at runtime-loop step (0.5) —
+  operator-declared preferences and delivery defaults that outrank older distilled evidence;
+  agent rule files (`CLAUDE.md`, `GPT.md`, `GEMINI.md`, …) act as consumers of it.
 - Hardened all adapters to fail closed, validate timestamps/dates, and write atomically.
 - Filtered Codex internal-context/plugin artifacts and carried turn-level project context.
 - Expanded secret redaction, added operator-defined sensitive-data rules, and private file modes.

@@ -5,6 +5,8 @@
 
 ```
 (0) Project DECISIONS.md present & relevant?  → YES: it wins (precedence). Done.
+(0.5) USER.md                → declared preference / delivery default for the situation?
+        YES → act on it. (Operator-declared beats older distilled evidence.)
 (1) WHAT-<USER>-SAID.md      → evidenced rule/decision for the situation? YES → act on it.
 (2) WHAT-WOULD-<USER>-SAY.md → precognition: predicted feedback + confidence.
         🟢 high   → act only if already authorized and reversible.
