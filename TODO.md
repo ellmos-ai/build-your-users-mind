@@ -81,6 +81,24 @@
   an hour. All three had to be carried into the avatar files by hand, and one of them corrected a
   wrong assumption the avatar had been acting on minutes earlier.
   Requested by the user; same judging-hold conditions as above.
+- [ ] **Session-end rating round as the standard close-out (0–10), and scoring that can represent
+  it.** New user rule: whenever the avatar was used in a session, that session **ends** with a
+  numbered list of every decision the avatar made (question · decision · stated confidence ·
+  outcome); the user rates each one **0–10** (0 = worst possible decision, 10 = „exactly how I
+  would have decided"), and the ratings feed back into the model. The workflow side is already
+  written up in the avatar skill (`tom-lm` v1.2.0) — what is missing here is the tooling:
+  - `MY-ACTIONS.txt` currently carries `<ts> <confidence> <reversible> <status> <title>
+    <assumed-will>` with a categorical status (`confirmed`/`corrected`/`rejected`/`escalated`/
+    `open`). A **score column** has to join it, in a way that keeps old lines parseable.
+  - `scripts/score_predictions.py` reports hit rate per confidence tier. Extend it to report the
+    **mean score per tier** — that is the calibration question that matters: does 🟢 actually
+    score higher than 🟡? A tier that claims high confidence and scores like the middle tier is
+    miscalibrated, and today nothing would reveal it.
+  - **Why a scale rather than hit/miss:** the categorical vocabulary loses degree. A decision that
+    was right in direction and only corrected in scope counts as `corrected` — indistinguishable
+    from one that was simply wrong. Real case from 2026-07-25: the avatar's split of a release-gate
+    document was accepted in principle and corrected only in its target location.
+  Requested by the user; same judging-hold conditions as above.
 
 ## STATUS — current gate
 
