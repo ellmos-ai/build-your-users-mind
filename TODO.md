@@ -41,7 +41,7 @@ allowed and required.
   states/restates a requirement or links a violation to an already evidenced requirement; otherwise
   it is correction/engagement only. Neither establishes project importance or a durable preference
   by itself.
-- [ ] Specify an event-sourced decision-trajectory schema with stable decision/event ID, scope,
+- [x] Specify an event-sourced decision-trajectory schema with stable decision/event ID, scope,
   `observed_at`, optional `effective_at`, project/topic, decision kind, evidence IDs, confidence,
   effective status, change state (introduced/reaffirmed/softened/superseded/revoked), optional
   `supersedes` links, and provenance. Preserve older decisions as history; a newer explicit
