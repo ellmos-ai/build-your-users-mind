@@ -54,6 +54,33 @@
   situations to occur by chance. The wizard would drive the same loop on purpose.
   Requested by the user; to be picked up once the Build-Week judging hold is lifted
   (noted on local branch `judging-hold/training-wizard`, 2026-07-25).
+- [ ] **Close the learning loop automatically: scan, classify, file — triggered by the avatar.**
+  Today the empirical basis is rebuilt by running the scripts *periodically and by hand*
+  (`SKILL.md`: „rerun scripts periodically"). Nothing observes a conversation while it happens, so
+  a rule the user states today may sit unrecorded until someone remembers to rerun the pipeline —
+  and a rule that is never recorded is a rule the avatar cannot apply. Three parts:
+  - **Trigger.** The avatar runs the scan when it starts working and, when it gets to it, again
+    when it finishes. `corpus_extract.py --since` already supports incremental runs, so the state
+    to keep is just „last processed timestamp". Deliberately *not* a per-prompt hook — that was
+    rejected earlier for good reason; note the house rule on hooks (guard against repeated
+    registration, make the action idempotent or rate-limited: an unguarded `atexit` hook once
+    produced 240 backups in a single session).
+  - **Classification without the swarm.** Stage 2 currently means ~52 agents and millions of
+    tokens — far too heavy to fire per session. The user's proposal: a **small local model** that
+    classifies incrementally, or later **Ollama on the Mac Studio**, which runs 24/7 and could
+    process continuously in the background. That removes both the cost ceiling and the batch
+    rhythm — no swarm needed, and the corpus stays close to current instead of lagging behind.
+  - **What may be written back automatically, and what may not.** Extracted rules are
+    **candidates**, not evidence, until the user confirms them; otherwise the model fills itself
+    with its own misreadings and they harden with every round. Keep the existing provenance
+    discipline: `pipeline_common.py` already strips hook and tool artifacts, and only genuine
+    human-typed turns count. Watch one new trap the avatar workflow introduces — when an agent
+    quotes the user inside its own message, that quote must not be counted a second time as an
+    independent statement.
+  *Motivation:* in the 2026-07-25 session the user stated three substantive rules in the space of
+  an hour. All three had to be carried into the avatar files by hand, and one of them corrected a
+  wrong assumption the avatar had been acting on minutes earlier.
+  Requested by the user; same judging-hold conditions as above.
 
 ## STATUS — current gate
 
