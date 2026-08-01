@@ -28,6 +28,8 @@ All notable changes to `build-your-users-mind` are documented here.
   model-unspecified Codex adapter implementation.
 - Synchronized the adapter implementation briefs with stable IDs, read-only sources, current CLI
   flags, and fail-closed output semantics.
+- Revalidated the local deterministic gate on 2026-08-01: 73 tests plus 8 subtests, Ruff,
+  compileall, manifest JSON validation, and the offline synthetic demo passed.
 
 ## 2026-06-17
 
