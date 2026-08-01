@@ -1,6 +1,6 @@
 # Development status: build-your-users-mind
 
-**Audit date:** 2026-07-15<br>
+**Audit date:** 2026-08-01<br>
 **Target:** `ellmos-ai/build-your-users-mind` (public)<br>
 **Version:** `1.1.0-dev`<br>
 **Status:** development — deterministic pipeline hardened; semantic quality remains human-gated.

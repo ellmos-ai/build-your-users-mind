@@ -1,6 +1,6 @@
 # RELEASE GATE — build-your-users-mind
 
-**Date:** 2026-07-21<br>
+**Date:** 2026-08-01<br>
 **Repository:** `https://github.com/ellmos-ai/build-your-users-mind` (public)<br>
 **Version/status:** `1.1.0-dev` / development<br>
 **Scope:** repository hygiene and deterministic pipeline safety, not semantic model validity.
