@@ -1,28 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" font-family="Segoe UI, system-ui, sans-serif">
   <defs>
-    <!-- Background: Neon Grass Green linear base gradient -->
-    <linearGradient id="bg_grass_neon" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0a3a1b"/>
-      <stop offset="35%" stop-color="#11642c"/>
-      <stop offset="70%" stop-color="#0e5224"/>
-      <stop offset="100%" stop-color="#05210e"/>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a1c10"/>
+      <stop offset="1" stop-color="#120c08"/>
     </linearGradient>
-
-    <!-- Radial Neon Glow for central electric grass luminosity -->
-    <radialGradient id="neon_glow_center" cx="45%" cy="38%" r="65%">
-      <stop offset="0%" stop-color="#00ff66" stop-opacity="0.45"/>
-      <stop offset="35%" stop-color="#22c55e" stop-opacity="0.25"/>
-      <stop offset="70%" stop-color="#15803d" stop-opacity="0.08"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
-    </radialGradient>
-
-    <!-- Secondary Neon Accent Glow for title and machine -->
-    <radialGradient id="neon_glow_accent" cx="20%" cy="20%" r="45%">
-      <stop offset="0%" stop-color="#39ff14" stop-opacity="0.30"/>
-      <stop offset="60%" stop-color="#10b981" stop-opacity="0.10"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
-    </radialGradient>
-
     <style>
       @keyframes fall  { 0% { transform: translateY(-120px); opacity:0 } 25% { opacity:1 } 70% { transform: translateY(0); opacity:1 } 85% { opacity:0 } 100% { opacity:0 } }
       @keyframes spin  { to { transform: rotate(360deg) } }
@@ -52,27 +33,24 @@
     </g>
   </defs>
 
-  <!-- Background Base & Neon Glow Layers -->
-  <rect width="1280" height="640" fill="url(#bg_grass_neon)"/>
-  <rect width="1280" height="640" fill="url(#neon_glow_center)"/>
-  <rect width="1280" height="640" fill="url(#neon_glow_accent)"/>
+  <rect width="1280" height="640" fill="url(#bg3)"/>
 
   <!-- title block (top, clear of everything) -->
-  <text x="100" y="92" font-size="56" font-weight="800" fill="#ffffff">build-your-users-<tspan fill="#ffe600">mind</tspan></text>
-  <text x="102" y="130" font-size="23" font-weight="500" fill="#f0fdf4">what you mind is what you get</text>
-  <text x="102" y="160" font-size="15" fill="#86efac">letters in — happy little minds out, hand in hand</text>
+  <text x="100" y="92" font-size="56" font-weight="800" fill="#fff7ec">build-your-users-<tspan fill="#fbbf24">mind</tspan></text>
+  <text x="102" y="130" font-size="23" font-weight="500" fill="#e8c98c">what you mind is what you get</text>
+  <text x="102" y="160" font-size="15" fill="#a9824a">letters in — happy little minds out, hand in hand</text>
 
   <!-- belt supports + ground -->
-  <rect x="0" y="566" width="1280" height="74" fill="#041a0d"/>
-  <line x1="0" y1="566" x2="1280" y2="566" stroke="#22c55e" stroke-width="4"/>
-  <g fill="#093317"><rect x="470" y="532" width="20" height="40"/><rect x="1010" y="532" width="20" height="40"/></g>
+  <rect x="0" y="566" width="1280" height="74" fill="#0c0805"/>
+  <line x1="0" y1="566" x2="1280" y2="566" stroke="#3a2a14" stroke-width="4"/>
+  <g fill="#1c130a"><rect x="470" y="532" width="20" height="40"/><rect x="1010" y="532" width="20" height="40"/></g>
 
   <!-- conveyor belt -->
   <g>
-    <rect x="330" y="500" width="990" height="34" rx="8" fill="#0b401e" stroke="#041a0d" stroke-width="5"/>
-    <line class="tread" x1="342" y1="517" x2="1316" y2="517" stroke="#4ade80" stroke-width="6" stroke-dasharray="14 26"/>
-    <circle cx="352" cy="517" r="15" fill="#16a34a" stroke="#041a0d" stroke-width="5"/>
-    <circle cx="1298" cy="517" r="15" fill="#16a34a" stroke="#041a0d" stroke-width="5"/>
+    <rect x="330" y="500" width="990" height="34" rx="8" fill="#3a2a14" stroke="#0c0805" stroke-width="5"/>
+    <line class="tread" x1="342" y1="517" x2="1316" y2="517" stroke="#7a5a2a" stroke-width="6" stroke-dasharray="14 26"/>
+    <circle cx="352" cy="517" r="15" fill="#9a7430" stroke="#0c0805" stroke-width="5"/>
+    <circle cx="1298" cy="517" r="15" fill="#9a7430" stroke="#0c0805" stroke-width="5"/>
   </g>
 
   <!-- hand-holding mini-brains, emerging from the machine, rolling out of frame -->
@@ -95,18 +73,18 @@
   </g></g>
 
   <!-- machine + funnel (drawn on top: brains appear to exit it) -->
-  <g stroke="#041a0d" stroke-width="6" stroke-linejoin="round">
+  <g stroke="#0c0805" stroke-width="6" stroke-linejoin="round">
     <path d="M150 248 L300 248 L262 320 L188 320 Z" fill="#38bdf8"/>
     <g class="mach">
       <rect x="140" y="320" width="240" height="192" rx="16" fill="#f59e0b"/>
-      <rect x="352" y="468" width="42" height="46" fill="#093317" stroke="#041a0d" stroke-width="5"/>
+      <rect x="352" y="468" width="42" height="46" fill="#1c130a" stroke="#0c0805" stroke-width="5"/>
       <g class="gear">
-        <circle cx="222" cy="408" r="38" fill="#fcd34d" stroke="#041a0d" stroke-width="5"/>
-        <g fill="#041a0d"><rect x="218" y="362" width="8" height="15"/><rect x="218" y="439" width="8" height="15"/>
+        <circle cx="222" cy="408" r="38" fill="#fcd34d" stroke="#0c0805" stroke-width="5"/>
+        <g fill="#0c0805"><rect x="218" y="362" width="8" height="15"/><rect x="218" y="439" width="8" height="15"/>
           <rect x="176" y="404" width="15" height="8"/><rect x="253" y="404" width="15" height="8"/></g>
-        <circle cx="222" cy="408" r="9" fill="#041a0d"/>
+        <circle cx="222" cy="408" r="9" fill="#0c0805"/>
       </g>
-      <circle cx="322" cy="368" r="18" fill="#fcd34d" stroke="#041a0d" stroke-width="4"/>
+      <circle cx="322" cy="368" r="18" fill="#fcd34d" stroke="#0c0805" stroke-width="4"/>
     </g>
   </g>
 
