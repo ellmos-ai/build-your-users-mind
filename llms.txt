@@ -1,6 +1,6 @@
 # build-your-users-mind
 
-Last-checked: 2026-08-01
+Last-checked: 2026-08-03
 Version: 1.1.0-dev (development, not stable)
 Canonical repository: https://github.com/ellmos-ai/build-your-users-mind
 Primary language: English

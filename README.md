@@ -2,7 +2,17 @@
 
 # build-your-users-mind
 
+[![ellmos-ai](https://img.shields.io/badge/organization-ellmos--ai-blue.svg)](https://github.com/ellmos-ai)
+[![open-bricks](https://img.shields.io/badge/umbrella-open--bricks-blue.svg)](https://github.com/open-bricks)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Pytest 73 passed](https://img.shields.io/badge/tests-73%20passed-brightgreen.svg)](https://docs.pytest.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![llms.txt](https://img.shields.io/badge/llms.txt-available-orange.svg)](llms.txt)
+
 > **What you mind is what you get.**
+
+> [!NOTE]
+> A machine-readable index for AI agents and LLM crawlers is available at [`llms.txt`](llms.txt).
 
 **🌐 [EN](README.md) · [DE](locales/de/README.md) · [ES](locales/es/README.md) · [JA](locales/ja/README.md) · [RU](locales/ru/README.md) · [ZH](locales/zh/README.md)** — English is authoritative; translations may lag.
 
