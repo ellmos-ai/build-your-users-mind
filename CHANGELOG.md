@@ -4,6 +4,7 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## Unreleased — 1.1.0-dev
 
+- Maintenance & technical hygiene check: updated llms.txt Last-checked timestamp (2026-08-04) and verified Pytest test suite (73/73 passed, 100% green).
 - Updated discoverability metadata, added GFM callout box for `llms.txt`, synchronized `llms.txt` index timestamp (2026-08-03), and added Shields.io organization/umbrella badges (`ellmos-ai`, `open-bricks`, `Pytest 73 passed`).
 - Hardened all adapters to fail closed, validate timestamps/dates, and write atomically.
 - Filtered Codex internal-context/plugin artifacts and carried turn-level project context.
