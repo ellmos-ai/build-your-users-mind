@@ -28,6 +28,8 @@ All notable changes to `build-your-users-mind` are documented here.
   model-unspecified Codex adapter implementation.
 - Synchronized the adapter implementation briefs with stable IDs, read-only sources, current CLI
   flags, and fail-closed output semantics.
+- Added reviewable synthetic source-schema fixtures for all four adapters, including multi-block
+  JSONL events and hex-encoded Gemini protobuf fields.
 
 ## 2026-06-17
 

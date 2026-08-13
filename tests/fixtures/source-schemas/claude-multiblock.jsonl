@@ -1,0 +1,5 @@
+{"type":"user","timestamp":"2026-02-01T00:00:00Z","cwd":"C:\\synthetic\\claude","gitBranch":"fixture/schema","message":{"role":"user","content":[{"type":"text","text":"Use UTF-8 fixtures"},{"type":"image","source":{"type":"base64","data":"not-real"}},{"type":"document","title":"not-real"}]}}
+{"type":"assistant","timestamp":"2026-02-01T00:00:01Z","message":{"role":"assistant","content":"ignored assistant event"}}
+{"type":"user","timestamp":"2026-02-01T00:00:02Z","cwd":"C:\\synthetic\\claude","gitBranch":"fixture/schema","message":{"role":"user","content":[{"type":"tool_result","content":"known non-text block"}]}}
+{"type":"user","timestamp":"2026-02-01T00:00:03Z","cwd":"C:\\synthetic\\claude","gitBranch":"fixture/schema","message":{"role":"user","content":"<system-reminder> synthetic fixture only"}}
+{"type":"user","timestamp":"2026-02-01T00:00:04Z","cwd":"C:\\synthetic\\claude","gitBranch":"fixture/schema","message":{"role":"user","content":[{"type":"text","text":"Actually, use SQLite"}]}}

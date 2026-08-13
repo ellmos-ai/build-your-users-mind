@@ -37,7 +37,7 @@
   🟢/🟡/🔴 tier + 🔴 escalation rate; tested in `tests/test_score_predictions.py`).
 - [x] One-command offline demo of the deterministic build, feedback scoring, and tamper gate.
   → `examples/synthetic-demo/run_demo.py`.
-- [ ] Add more synthetic source-schema fixtures as upstream log formats evolve.
+- [x] Add synthetic source-schema fixtures for Claude, Codex, Gemini/agy, and Kimi adapters; extend them as upstream log formats evolve. *(verified 2026-08-13)*
 
 ## STATUS — current gate
 

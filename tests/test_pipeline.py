@@ -13,6 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
+SOURCE_SCHEMA_FIXTURES = ROOT / "tests" / "fixtures" / "source-schemas"
 sys.path.insert(0, str(SCRIPTS))
 
 import aggregate_stats  # noqa: E402
@@ -195,6 +196,71 @@ class CommonTests(unittest.TestCase):
 
 
 class AdapterTests(unittest.TestCase):
+    def test_claude_source_schema_fixture(self) -> None:
+        path = SOURCE_SCHEMA_FIXTURES / "claude-multiblock.jsonl"
+        rows, redactions, with_data, errors = corpus_extract.build_records(
+            [path], "", "claude", DEFAULT_REDACTIONS
+        )
+        self.assertEqual((len(rows), redactions, with_data, errors), (2, 0, 1, 0))
+        self.assertEqual([row["text"] for row in rows], ["Use UTF-8 fixtures", "Actually, use SQLite"])
+        self.assertEqual(rows[0]["project"], r"C:\synthetic\claude")
+        self.assertEqual(rows[0]["branch"], "fixture/schema")
+
+    def test_codex_source_schema_fixture(self) -> None:
+        path = SOURCE_SCHEMA_FIXTURES / "codex-multiblock.jsonl"
+        rows, redactions, with_data, errors = codex_adapter.build_records(
+            [path], "", DEFAULT_REDACTIONS
+        )
+        self.assertEqual((len(rows), redactions, with_data, errors), (2, 0, 1, 1))
+        self.assertEqual([row["text"] for row in rows], ["Use UTF-8 fixtures", "Actually, use SQLite"])
+        self.assertEqual(rows[0]["project"], r"C:\synthetic\codex")
+        self.assertEqual(rows[0]["branch"], "fixture/schema")
+        self.assertEqual(rows[1]["project"], r"C:\synthetic\codex-next")
+        self.assertEqual(rows[1]["branch"], "feature/schema")
+
+    def test_gemini_source_schema_fixture(self) -> None:
+        fixture = json.loads((SOURCE_SCHEMA_FIXTURES / "gemini.json").read_text(encoding="utf-8"))
+        metadata = bytes.fromhex(fixture["metadata_hex"])
+        payload = bytes.fromhex(fixture["payload_hex"])
+        self.assertEqual(gemini_adapter.extract_timestamp(metadata), fixture["expected_timestamp"])
+
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "fixture.db"
+            connection = sqlite3.connect(path)
+            connection.execute("CREATE TABLE steps (idx INTEGER, step_type INTEGER, metadata BLOB, step_payload BLOB)")
+            connection.execute("CREATE TABLE trajectory_metadata_blob (id TEXT, data BLOB)")
+            connection.execute(
+                "INSERT INTO trajectory_metadata_blob VALUES ('main', ?)",
+                (bytes.fromhex(fixture["project_metadata_hex"]),),
+            )
+            connection.execute("INSERT INTO steps VALUES (1, 14, ?, ?)", (metadata, payload))
+            connection.execute(
+                "INSERT INTO steps VALUES (2, 14, ?, ?)",
+                (metadata, bytes.fromhex(fixture["synthetic_payload_hex"])),
+            )
+            connection.commit()
+            connection.close()
+
+            rows, redactions, with_data, errors = gemini_adapter.build_records(
+                [path], "", DEFAULT_REDACTIONS
+            )
+        self.assertEqual((len(rows), redactions, with_data, errors), (1, 0, 1, 0))
+        self.assertEqual(rows[0]["text"], fixture["expected_text"])
+        self.assertEqual(rows[0]["project"], fixture["expected_project"])
+        self.assertEqual(rows[0]["branch"], fixture["expected_branch"])
+
+    def test_kimi_source_schema_fixture(self) -> None:
+        fixture_root = SOURCE_SCHEMA_FIXTURES / "kimi"
+        root = fixture_root / "sessions"
+        wire = root / "session-fixture" / "agents" / "main" / "wire.jsonl"
+        rows, redactions, with_data, errors = kimi_adapter.build_records(
+            [wire], root, "", DEFAULT_REDACTIONS
+        )
+        self.assertEqual((len(rows), redactions, with_data, errors), (2, 0, 1, 1))
+        self.assertEqual([row["text"] for row in rows], ["Use UTF-8 fixtures", "Actually, use SQLite"])
+        self.assertEqual(rows[0]["project"], r"C:\synthetic\kimi")
+        self.assertEqual(rows[0]["branch"], "")
+
     def test_codex_filters_internal_records_and_tracks_turn_context(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "rollout-fixture.jsonl"

@@ -1,0 +1,10 @@
+{
+  "metadata_hex": "0a0b0880e2cfaa0610c0b2cd3b",
+  "project_metadata_hex": "0a2a0a1866696c653a2f2f2f73796e7468657469632f67656d696e69220e666978747572652f736368656d61",
+  "payload_hex": "9a01141212557365205554462d38206669787475726573",
+  "synthetic_payload_hex": "9a012512233c73797374656d2d72656d696e6465723e2073796e7468657469632066697874757265",
+  "expected_timestamp": "2023-11-14T22:13:20.125000Z",
+  "expected_project": "/synthetic/gemini",
+  "expected_branch": "fixture/schema",
+  "expected_text": "Use UTF-8 fixtures"
+}
