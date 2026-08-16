@@ -2,9 +2,19 @@
 
 # build-your-users-mind
 
+<p align="center">
+  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-82%20passed%20%7C%208%20subtests-brightgreen" alt="Tests"></a>
+  <a href="https://github.com/ellmos-ai/build-your-users-mind/releases"><img src="https://img.shields.io/badge/version-1.1.0--dev-blue" alt="Version"></a>
+  <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-%3E%3D3.10-blue" alt="Python"></a>
+  <a href="https://github.com/ellmos-ai"><img src="https://img.shields.io/badge/ecosystem-ellmos--ai-purple" alt="Ecosystem"></a>
+  <a href="https://github.com/open-bricks"><img src="https://img.shields.io/badge/umbrella-open--bricks-indigo" alt="Umbrella"></a>
+  <a href="llms.txt"><img src="https://img.shields.io/badge/llms.txt-ready-brightgreen" alt="LLM-Ready"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
+</p>
+
 > **What you mind is what you get.**
 
-**🌐 [EN](README.md) · [DE](locales/de/README.md) · [ES](locales/es/README.md) · [JA](locales/ja/README.md) · [RU](locales/ru/README.md) · [ZH](locales/zh/README.md)** — English is authoritative; translations may lag.
+**🌐 [EN](README.md) · [DE](README_de.md) · [ES](locales/es/README.md) · [JA](locales/ja/README.md) · [RU](locales/ru/README.md) · [ZH](locales/zh/README.md)** — English is authoritative; translations may lag.
 
 A local-first recipe for an operator to build an empirical, inspectable **preference and
 decision-support model** from their own AI interaction logs. It can help an authorized agent
@@ -17,6 +27,75 @@ Novel, external, irreversible, or high-impact actions always require confirmatio
 
 **Status:** `1.1.0-dev` — public development release. The deterministic safety and classification
 contracts are tested on Windows and Linux; semantic model quality still requires human review.
+
+## System Architecture & Pipeline
+
+```mermaid
+flowchart TD
+    subgraph Sources["1. Authorized Log Sources"]
+        CL["Claude Code Logs"]
+        CX["Codex Sessions"]
+        GM["Gemini / agy SQLite"]
+        KM["Kimi Session Wire"]
+    end
+
+    subgraph Ingestion["2. Extraction & Normalization"]
+        EXT["corpus_extract.py<br/>(Secret Redaction, Outcome Signal Link)"]
+        MRG["merge_corpora.py<br/>(Stable ID Preservation, Non-destructive)"]
+        CHK["chunk_corpus.py<br/>(SHA-256 Bound Manifest, Domain Partition)"]
+    end
+
+    subgraph Processing["3. Classification & Hard Gate"]
+        CLS["Classification Worker / Swarm<br/>(8-Type Taxonomy, Decision Patterns)"]
+        VAL["validate_classifications.py<br/>(Schema, Completeness & Collision Gate)"]
+        AGG["aggregate_stats.py<br/>(B:K Ratios, Statistical Summary)"]
+    end
+
+    subgraph Output["4. Theory-of-Us Artifacts"]
+        DEC["project DECISIONS.md"]
+        WUS["WHAT-USER-SAID.md (Evidence Rules)"]
+        WWUS["WHAT-WOULD-USER-SAY.md (Precognition)"]
+        ACT["MY-ACTIONS.txt (Action Ledger)"]
+    end
+
+    CL --> EXT
+    CX --> EXT
+    GM --> EXT
+    KM --> EXT
+    EXT --> MRG
+    MRG --> CHK
+    CHK --> CLS
+    CLS --> VAL
+    VAL --> AGG
+    AGG --> WUS
+    AGG --> WWUS
+    DEC -.-> WWUS
+    WWUS --> ACT
+```
+
+## Feedback Precognition Runtime Loop
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User / Operator
+    participant Agent as Autonomous Agent
+    participant Memory as Avatar / Model (WHAT-*)
+    participant Scorer as score_predictions.py
+
+    User->>Agent: Interaction / Task Trigger (when absent or async)
+    Agent->>Memory: Consult DECISIONS.md & WHAT-USER-SAID
+    Agent->>Memory: Form Precognition (WHAT-WOULD-USER-SAY)
+    alt Confidence is 🔴 RED (Novel / High Impact)
+        Agent->>User: Escalate & Request Explicit Confirmation
+    else Confidence is 🟢 GREEN / 🟡 YELLOW (Recurring)
+        Agent->>Agent: Execute within Authorization Boundary
+        Agent->>Memory: Record in MY-ACTIONS.txt
+    end
+    User->>Agent: Real Later Feedback (Outcome Signal)
+    Agent->>Scorer: Evaluate Prediction vs. Real Outcome
+    Scorer-->>Memory: Update Hit Rate & Calibrate Confidence
+```
 
 ## "I know what you want."
 
@@ -72,6 +151,24 @@ not accuracy. Details: [`examples/synthetic-demo/`](examples/synthetic-demo/).
 | A maintainer wiring log sources | `SOURCE-ADAPTERS.md` | Claude, Codex, Gemini/agy and Kimi log locations |
 | A reviewer checking safety boundaries | `SECURITY.md` and `.gitignore` | Redaction, private-corpus and generated-avatar exclusions |
 | A researcher comparing concepts | `TAXONOMY.md` | Prompt-Archaeology categories and decision patterns |
+
+## Sibling Tools & Ecosystem
+
+`build-your-users-mind` operates within the **[ellmos-ai](https://github.com/ellmos-ai)** ecosystem under the **[open-bricks](https://github.com/open-bricks)** umbrella:
+
+| Tool | Focus | Role in Ecosystem |
+|---|---|---|
+| [coma](https://github.com/ellmos-ai/coma) | Context Management | Local-first memory backbone and conversation state manager |
+| [swarm-ai](https://github.com/ellmos-ai/swarm-ai) | Multi-Agent Swarms | Hierarchical worker dispatch and consensus classification |
+| [memoryhooker](https://github.com/ellmos-ai/memoryhooker) | Memory Triggers | Hook-based persistence and reactive context recall |
+| [workflowhooker](https://github.com/ellmos-ai/workflowhooker) | Workflow Hooks | Pre/post-execution hooks for autonomous agent pipelines |
+| [system-explorer](https://github.com/ellmos-ai/system-explorer) | Discovery Engine | Fleet introspection and stack composition tools |
+| [policy-registry](https://github.com/ellmos-ai/policy-registry) | Policy Contracts | Declarative security policies and validation rules |
+| [sqlite-transit-sync](https://github.com/ellmos-ai/sqlite-transit-sync) | SQLite Transit | Encrypted SQLite replication and snapshot sync |
+| [ellmos-delegation-authority](https://github.com/ellmos-ai/ellmos-delegation-authority) | Delegation | Dynamic role routing and task assignment |
+| [prompt-archaeology-casestudy2](https://github.com/research-line/prompt-archaeology-casestudy2) | Prompt Archaeology | Empirical study on long-term prompt interaction patterns |
+| [DevCenter](https://github.com/dev-bricks/DevCenter) | Developer Hub | Central developer portal across all open-bricks products |
+| [CodeBox](https://github.com/dev-bricks/CodeBox) | Code Utilities | Developer utilities, syntax parsers, and packaging tools |
 
 ## Find this repository
 

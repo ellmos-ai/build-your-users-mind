@@ -4,6 +4,13 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## Unreleased — 1.1.0-dev
 
+- Synchronized discovery metadata, Shields.io badges, and test status across `README.md`, `README_de.md`, and `llms.txt`.
+- Added interactive bilingual Mermaid diagrams for system architecture and feedback-precognition runtime loop.
+- Added comprehensive German documentation in `README_de.md` with complete parity.
+- Added sibling tools matrix linking related repositories in `ellmos-ai`, `dev-bricks`, `research-line`, and `open-bricks`.
+- Configured PEP 621 `pyproject.toml` with project metadata, pytest options, and `[tool.ruff]` lint settings.
+- Added automated metadata, schema, and manifest parity testsuite in `tests/test_metadata.py` (5 assertions, 82 total passed).
+
 - Hardened all adapters to fail closed, validate timestamps/dates, and write atomically.
 - Filtered Codex internal-context/plugin artifacts and carried turn-level project context.
 - Expanded secret redaction, added operator-defined sensitive-data rules, and private file modes.
