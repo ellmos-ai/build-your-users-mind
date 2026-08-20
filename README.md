@@ -3,7 +3,7 @@
 # build-your-users-mind
 
 <p align="center">
-  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-82%20passed%20%7C%208%20subtests-brightgreen" alt="Tests"></a>
+  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-101%20passed-brightgreen" alt="Tests"></a>
   <a href="https://github.com/ellmos-ai/build-your-users-mind/releases"><img src="https://img.shields.io/badge/version-1.1.0--dev-blue" alt="Version"></a>
   <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-%3E%3D3.10-blue" alt="Python"></a>
   <a href="https://github.com/ellmos-ai"><img src="https://img.shields.io/badge/ecosystem-ellmos--ai-purple" alt="Ecosystem"></a>
@@ -95,6 +95,39 @@ sequenceDiagram
     User->>Agent: Real Later Feedback (Outcome Signal)
     Agent->>Scorer: Evaluate Prediction vs. Real Outcome
     Scorer-->>Memory: Update Hit Rate & Calibrate Confidence
+```
+
+## Decision prediction and Secure-Mode text simulation
+
+The optional v1 prediction layer keeps five records deliberately separate: **best recommendation**,
+**likely operator choice**, **simulated wording**, **the later explicit decision**, and **permission to
+act**. A prediction never grants the last one.
+
+`scripts/decision_prediction.py` validates an append-only JSONL event stream before projecting it.
+Each prediction carries offered options, a recommendation with rationale, an independently predicted
+probability distribution, model/version and evidence IDs. Explicit later decisions produce ordinary
+top-1/Brier/log-loss calibration metrics and a separate advice-process score:
+
+- 10: recommendation selected without correction;
+- 7: another offered alternative selected without correction;
+- 5–9: an offered choice needed material clarification or correction;
+- 3: none of the offered choices fit;
+- 0–2: additional penalty for clearly wrong, misleading or harmful advice.
+
+Previously documented advice elements earn one recovery point when the operator explicitly adopts
+them immediately or in a later correction. Explicit operator bonus points are supported; the score
+history remains event-sourced and the total is capped at 10.
+
+`scripts/secure_text_avatar.py` is a **Secure-Mode-only prototype**. It retrieves relevant rows from
+an already authorized and redacted corpus, re-applies built-in redaction, and either emits a
+privacy-minimized plan or calls an explicitly configured loopback Ollama endpoint. It never emits its
+private evidence prompt, labels generated text as simulation, and sets `execution_authorized=false`.
+Novel/insufficient evidence returns `escalate` instead of invented wording.
+
+```bash
+python scripts/decision_prediction.py --events templates/DECISION-PREDICTION-EVENTS.jsonl --json
+python scripts/secure_text_avatar.py --corpus ./STUDIE/00_corpus.jsonl --scenario "Should release work continue locally?"
+python scripts/secure_text_avatar.py --corpus ./STUDIE/00_corpus.jsonl --scenario "Should release work continue locally?" --provider ollama --model <local-model>
 ```
 
 ## "I know what you want."

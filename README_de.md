@@ -3,7 +3,7 @@
 # build-your-users-mind
 
 <p align="center">
-  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-82%20passed%20%7C%208%20subtests-brightgreen" alt="Tests"></a>
+  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-101%20passed-brightgreen" alt="Tests"></a>
   <a href="https://github.com/ellmos-ai/build-your-users-mind/releases"><img src="https://img.shields.io/badge/version-1.1.0--dev-blue" alt="Version"></a>
   <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-%3E%3D3.10-blue" alt="Python"></a>
   <a href="https://github.com/ellmos-ai"><img src="https://img.shields.io/badge/ecosystem-ellmos--ai-purple" alt="Ecosystem"></a>
@@ -91,6 +91,41 @@ sequenceDiagram
     Scorer-->>Memory: Aktualisiere Trefferquote & kalibriere Konfidenz
 ```
 
+## Entscheidungsprognose und Secure-Mode-Textsimulation
+
+Die optionale v1-Prognoseebene hält fünf Datensätze bewusst getrennt: **beste Empfehlung**,
+**wahrscheinliche Nutzerentscheidung**, **simulierte Formulierung**, **spätere ausdrückliche
+Entscheidung** und **Handlungserlaubnis**. Eine Prognose erteilt niemals die letzte.
+
+`scripts/decision_prediction.py` validiert einen unveränderlich fortgeschriebenen JSONL-Ereignisstrom,
+bevor daraus der aktuelle Stand projiziert wird. Jede Prognose enthält angebotene Optionen, eine
+begründete Empfehlung, eine davon unabhängige Wahrscheinlichkeitsverteilung, Modell/Version und
+Evidenz-IDs. Spätere ausdrückliche Entscheidungen erzeugen normale Top-1-, Brier- und Log-Loss-
+Kalibrierungswerte sowie einen getrennten Prozessscore für die Beratungsqualität:
+
+- 10: Empfehlung ohne Korrektur gewählt;
+- 7: andere angebotene Alternative ohne Korrektur gewählt;
+- 5–9: eine angebotene Wahl benötigte eine wesentliche Präzisierung oder Korrektur;
+- 3: keine angebotene Wahl passte;
+- 0–2: zusätzlicher Abzug für eindeutig falsche, irreführende oder schädliche Beratung.
+
+Vorher dokumentierte Beratungselemente erhalten jeweils einen Recovery-Punkt, wenn der Nutzer sie
+unmittelbar oder bei einer späteren Korrektur ausdrücklich übernimmt. Ausdrückliche Nutzerbonuspunkte
+sind möglich; die Scorehistorie bleibt ereignisbasiert und der Gesamtwert ist auf 10 begrenzt.
+
+`scripts/secure_text_avatar.py` ist ausschließlich ein **Secure-Mode-Prototyp**. Er sucht relevante
+Zeilen in einem bereits autorisierten und geschwärzten Korpus, wendet die eingebaute Schwärzung erneut
+an und erzeugt entweder einen datensparsamen Plan oder ruft einen ausdrücklich konfigurierten lokalen
+Ollama-Loopback-Endpunkt auf. Der private Evidenzprompt wird nie ausgegeben, generierter Text wird als
+Simulation gekennzeichnet und `execution_authorized=false` gesetzt. Bei neuartigen oder unzureichend
+belegten Situationen wird `escalate` zurückgegeben, statt eine Formulierung zu erfinden.
+
+```bash
+python scripts/decision_prediction.py --events templates/DECISION-PREDICTION-EVENTS.jsonl --json
+python scripts/secure_text_avatar.py --corpus ./STUDIE/00_corpus.jsonl --scenario "Should release work continue locally?"
+python scripts/secure_text_avatar.py --corpus ./STUDIE/00_corpus.jsonl --scenario "Should release work continue locally?" --provider ollama --model <local-model>
+```
+
 ## „Ich weiß, was du willst.“
 
 Der Agent liest autorisierte Protokolle, destilliert, **was der Nutzer explizit entschieden hat, wie er es formuliert hat und ob späteres Feedback ein schwaches Ergebnissignal lieferte**, und wandelt dies in eine kleine Reihe lebendiger, editierbarer Dokumente um. Dies sind zitierte Hypothesen, keine Fakten über einen inneren mentalen Zustand.
@@ -117,7 +152,7 @@ Sie sehen, wie `extract → merge → chunk → classify → validate → aggreg
 
 - Der **Codex Source Adapter** (`scripts/adapters/codex_adapter.py`) – die Komponente, die Codex' eigene Sitzungsprotokolle liest – **wurde von Codex selbst geschrieben** in Codex Session `019ed298-fdc4-72d2-a255-97d7dc117128` (Commit `1e3abc4`), danach an 946 echten Prompts kontrollgetestet.
 - **Codex hat auch die Discovery-Metadaten dieses Repositories verfasst** – Commit `0ec49df` trägt den Git-Autor `Codex <codex@local>`.
-- **GPT-5.6 trieb den finalen Build-Week-Härtungslauf über Codex an** (Codex Session `019f8674-fe9a-7d91-a80f-7ee799e8ced0`). Dabei wurden neun Datenschutz- und Datenintegritätsmängel behoben; die finale Testsuite umfasst 82 bestandene Tests.
+- **GPT-5.6 trieb den finalen Build-Week-Härtungslauf über Codex an** (Codex Session `019f8674-fe9a-7d91-a80f-7ee799e8ced0`). Dabei wurden neun Datenschutz- und Datenintegritätsmängel behoben; die damalige Testsuite umfasste 82 bestandene Tests.
 - Codex ist eine erstklassige **Quelle**: Was Codex über den Nutzer lernt, fließt in dasselbe evidenzzitierte Modell ein (siehe `SOURCE-ADAPTERS.md`).
 
 ## Einstieg

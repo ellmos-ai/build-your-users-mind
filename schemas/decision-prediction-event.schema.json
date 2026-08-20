@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ellmos-ai/build-your-users-mind/schemas/decision-prediction-event.schema.json",
+  "title": "BYUM append-only decision prediction event",
+  "type": "object",
+  "required": ["schema", "event_id", "prediction_id", "event_type", "occurred_at"],
+  "properties": {
+    "schema": {"const": "byum.decision-prediction.v1"},
+    "event_id": {"type": "string", "minLength": 1},
+    "prediction_id": {"type": "string", "minLength": 1},
+    "event_type": {
+      "enum": [
+        "prediction.created",
+        "decision.observed",
+        "validation.scored",
+        "advice.adopted",
+        "user.bonus"
+      ]
+    },
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "decision_type": {"type": "string"},
+    "scope": {"type": "string"},
+    "evidence_ids": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "policy_ids": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "options": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "label": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "recommendation": {
+      "type": "object",
+      "required": ["option_id", "rationale"],
+      "properties": {
+        "option_id": {"type": "string"},
+        "rationale": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "prediction": {
+      "type": "object",
+      "required": ["likely_option", "probabilities", "confidence"],
+      "properties": {
+        "likely_option": {"type": "string"},
+        "probabilities": {
+          "type": "object",
+          "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}
+        },
+        "confidence": {"enum": ["high", "medium", "low"]}
+      },
+      "additionalProperties": false
+    },
+    "model": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {"type": "string"},
+        "version": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "execution_authorized": {"const": false},
+    "explicit_user_feedback": {"type": "boolean"},
+    "selected_option": {"type": ["string", "null"]},
+    "custom_decision": {"type": "string"},
+    "correction_deduction": {"type": "integer", "minimum": 0, "maximum": 5},
+    "harm_penalty": {"type": "integer", "minimum": 0, "maximum": 3},
+    "element_id": {"type": "string"},
+    "source": {"enum": ["immediate", "later_correction"]},
+    "points": {"type": "integer", "minimum": 1, "maximum": 10},
+    "reason": {"type": "string"}
+  },
+  "additionalProperties": true
+}

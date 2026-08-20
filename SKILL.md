@@ -84,6 +84,22 @@ The ToM model must **actually be used**, not just exist:
   `WHAT-<USER>-SAID-ABOUT` feedback) and reports hit rate overall and per 🟢/🟡/🔴 tier plus the
   🔴 escalation rate — the empirical measure of whether the precognition actually works.
 
+### Optional v1: Decision-prediction events and Secure-Mode text simulation
+
+- Use `scripts/decision_prediction.py` when a briefing needs an auditable split between the best
+  recommendation, the likely operator choice, probability calibration, the later explicit decision,
+  and the evolving advice-quality score. The event contract is
+  `schemas/decision-prediction-event.schema.json`; start from
+  `templates/DECISION-PREDICTION-EVENTS.jsonl`.
+- Only explicit user feedback can create `decision.observed`, `advice.adopted`, or `user.bonus`
+  events. Never infer them from silence, agent text, or a generated simulation.
+- Use `scripts/secure_text_avatar.py` only with an authorized, already redacted local corpus. Its
+  default `plan` provider discloses no raw evidence. The optional `ollama` provider accepts HTTP
+  loopback endpoints only and does not start a model service itself.
+- Secure-Mode output is labelled `SIMULATED USER TEXT — NOT A USER STATEMENT`, never contains the
+  private generation prompt, and always carries `execution_authorized=false`. Low/novel evidence
+  escalates to the operator. Role-mode impersonation and external delivery are not implemented.
+
 ## Bias & Limits (always mention)
 - **Silent approval is invisible** → corrections are overrepresented, making the avatar appear "critical".
 - **ToM fragility:** robust on recurring situations, fragile under novel/adversarial variations → confidence tiers,

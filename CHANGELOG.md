@@ -4,6 +4,14 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## Unreleased — 1.1.0-dev
 
+- Added an append-only decision-prediction event architecture that keeps recommendation, likely
+  choice, explicit user feedback, recovery scoring and execution authority separate.
+- Added top-1 accuracy, multiclass Brier score and log loss alongside the operator-defined 0–10
+  advice-process score with later adoption credits and explicit bonus events.
+- Added a Secure-Mode-only text-avatar prototype with deterministic evidence retrieval, repeated
+  redaction, privacy-minimized outputs, novelty escalation and optional loopback-only Ollama use.
+- Added executable JSON schemas, synthetic examples and regression tests for both new contracts.
+
 - Synchronized discovery metadata, Shields.io badges, and test status across `README.md`, `README_de.md`, and `llms.txt`.
 - Added interactive bilingual Mermaid diagrams for system architecture and feedback-precognition runtime loop.
 - Added comprehensive German documentation in `README_de.md` with complete parity.

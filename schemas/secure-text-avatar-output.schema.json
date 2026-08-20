@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ellmos-ai/build-your-users-mind/schemas/secure-text-avatar-output.schema.json",
+  "title": "BYUM Secure-Mode text-avatar result",
+  "type": "object",
+  "required": [
+    "schema", "text_prediction_id", "prediction_id", "mode", "label", "status", "scenario_sha256", "evidence_ids",
+    "confidence", "provider", "private_prompt_included", "simulated_text",
+    "execution_authorized", "next_step"
+  ],
+  "properties": {
+    "schema": {"const": "byum.secure-text-avatar.v1"},
+    "text_prediction_id": {"type": "string", "pattern": "^TP_[0-9a-f]{20}$"},
+    "prediction_id": {"type": ["string", "null"]},
+    "mode": {"const": "secure"},
+    "label": {"const": "SIMULATED USER TEXT — NOT A USER STATEMENT"},
+    "status": {"enum": ["ready", "escalate"]},
+    "scenario_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "evidence_ids": {"type": "array", "items": {"type": "string"}},
+    "retrieval_scores": {"type": "array", "items": {"type": "number"}},
+    "confidence": {"enum": ["high", "medium", "low"]},
+    "confidence_basis": {"type": "string"},
+    "provider": {"enum": ["plan", "ollama"]},
+    "model": {"type": ["string", "null"]},
+    "prompt_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "private_prompt_included": {"const": false},
+    "additional_redactions": {"type": "integer", "minimum": 0},
+    "simulated_text": {"type": ["string", "null"]},
+    "execution_authorized": {"const": false},
+    "next_step": {"type": "string"}
+  },
+  "additionalProperties": false
+}

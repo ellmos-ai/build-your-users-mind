@@ -13,11 +13,15 @@
     "claude": "scripts/corpus_extract.py",
     "codex": "scripts/adapters/codex_adapter.py",
     "gemini": "scripts/adapters/gemini_adapter.py",
-    "kimi": "scripts/adapters/kimi_adapter.py"
+    "kimi": "scripts/adapters/kimi_adapter.py",
+    "decision_prediction": "scripts/decision_prediction.py",
+    "secure_text_avatar": "scripts/secure_text_avatar.py"
   },
   "provides": [
     "memory.user-model",
-    "decision.preferences"
+    "decision.preferences",
+    "decision.prediction-events",
+    "avatar.text-simulation.secure"
   ],
   "requires": [],
   "optional": [
@@ -36,7 +40,7 @@
     "location": "user-home"
   },
   "boundaries": {
-    "network": "none",
+    "network": "transport-defined",
     "data": "sensitive",
     "platforms": [
       "windows",
@@ -53,6 +57,8 @@
     {"type": "cli-wrapper", "id": "scripts/corpus_extract.py"},
     {"type": "cli-wrapper", "id": "scripts/adapters/codex_adapter.py"},
     {"type": "cli-wrapper", "id": "scripts/adapters/gemini_adapter.py"},
-    {"type": "cli-wrapper", "id": "scripts/adapters/kimi_adapter.py"}
+    {"type": "cli-wrapper", "id": "scripts/adapters/kimi_adapter.py"},
+    {"type": "cli-wrapper", "id": "scripts/decision_prediction.py"},
+    {"type": "cli-wrapper", "id": "scripts/secure_text_avatar.py"}
   ]
 }

@@ -16,6 +16,12 @@ STUDIE/
 **/START.md
 **/avatar/
 **/out/
+**/decision-events*.jsonl
+**/decision-predictions*.jsonl
+**/secure-text-avatar*.json
+**/secure-avatar*.json
+# Öffentliche Verträge bleiben trotz outputnaher Namen versioniert:
+!schemas/secure-text-avatar-output.schema.json
 # Die generischen Vorlagen explizit behalten:
 !templates/
 !templates/**

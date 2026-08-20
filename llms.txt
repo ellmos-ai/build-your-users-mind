@@ -1,8 +1,8 @@
 # build-your-users-mind
 
-Last-checked: 2026-08-16
+Last-checked: 2026-08-20
 Version: 1.1.0-dev (development, not stable)
-Tests: 82 passed | 8 subtests
+Tests: 101 passed
 Canonical repository: https://github.com/ellmos-ai/build-your-users-mind
 Primary language: English
 Translations: README_de.md, locales/de, locales/es, locales/ja, locales/ru, locales/zh
@@ -12,7 +12,7 @@ Umbrella: open-bricks
 
 ## Summary
 
-`build-your-users-mind` is a local-first method, script set and template library for AI agents that need an evidence-backed model of their own user. It turns private interaction logs into a small "theory of us" documentation set that helps agents predict likely user feedback, act conservatively when the user is away, and improve those predictions after real feedback arrives.
+`build-your-users-mind` is a local-first method, script set and template library for AI agents that need an evidence-backed model of their own user. It turns private interaction logs into a small "theory of us" documentation set, separates recommendations from calibrated decision predictions, and can simulate clearly labelled user wording through an optional loopback-only local model.
 
 ## Audience
 
@@ -51,6 +51,11 @@ Umbrella: open-bricks
 - `schemas/classification.schema.json` - executable classification row contract.
 - `scripts/aggregate_stats.py` - aggregate report helper.
 - `scripts/score_predictions.py` - prediction scoring and escalation rate evaluator.
+- `scripts/decision_prediction.py` - append-only decision prediction, validation, recovery scoring and calibration.
+- `scripts/secure_text_avatar.py` - evidence-gated Secure-Mode text simulation with plan-only and loopback Ollama providers.
+- `schemas/decision-prediction-event.schema.json` - versioned decision-event contract.
+- `schemas/secure-text-avatar-output.schema.json` - safe simulated-text output contract.
+- `docs/DECISION-PREDICTION-AND-SECURE-TEXT.md` - architecture, scoring and registry-integration notes.
 - `.gitignore` - excludes private corpora, generated avatar files, logs and local data.
 
 ## Search phrases
