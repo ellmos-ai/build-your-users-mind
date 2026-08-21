@@ -1,8 +1,8 @@
 # build-your-users-mind
 
-Last-checked: 2026-08-16
+Last-checked: 2026-08-21
 Version: 1.1.0-dev (development, not stable)
-Tests: 82 passed | 8 subtests
+Tests: 86 passed | 8 subtests
 Canonical repository: https://github.com/ellmos-ai/build-your-users-mind
 Primary language: English
 Translations: README_de.md, locales/de, locales/es, locales/ja, locales/ru, locales/zh
@@ -31,13 +31,22 @@ Umbrella: open-bricks
 - [ellmos-ai/policy-registry](https://github.com/ellmos-ai/policy-registry) — Canonical policy distribution and contract verification
 - [ellmos-ai/sqlite-transit-sync](https://github.com/ellmos-ai/sqlite-transit-sync) — Transactional SQLite replication and backup
 - [ellmos-ai/ellmos-delegation-authority](https://github.com/ellmos-ai/ellmos-delegation-authority) — Dynamic task delegation and role routing
+- [ellmos-ai/ellmos-controlcenter-mcp](https://github.com/ellmos-ai/ellmos-controlcenter-mcp) — Central capability routing and MCP profile lifecycle
+- [ellmos-ai/ellmos-filecommander-mcp](https://github.com/ellmos-ai/ellmos-filecommander-mcp) — Local-first atomic file management MCP server
+- [ellmos-ai/ellmos-codecommander-mcp](https://github.com/ellmos-ai/ellmos-codecommander-mcp) — AST parsing, diagnostics & preview-safe refactoring
 - [research-line/prompt-archaeology-casestudy2](https://github.com/research-line/prompt-archaeology-casestudy2) — Empirical prompt archaeology research
+- [dev-bricks/DevCenter](https://github.com/dev-bricks/DevCenter) — Central developer portal across all open-bricks products
+- [dev-bricks/CodeBox](https://github.com/dev-bricks/CodeBox) — Developer utilities, syntax parsers, and packaging tools
+- [dev-bricks/MethodenAnalyser](https://github.com/dev-bricks/MethodenAnalyser) — AST-based Python code analysis and structural inspection
+- [doc-bricks/PDFtoPDFocr](https://github.com/doc-bricks/PDFtoPDFocr) — Local-first lossless OCR pipeline for scanned documents
+- [doc-bricks/CleanMarkdown](https://github.com/doc-bricks/CleanMarkdown) — Deterministic Markdown formatting and link linting
 - [open-bricks](https://github.com/open-bricks) — Modular open-source tool ecosystem
 
 ## Important files
 
 - `README.md` - authoritative overview, runtime loop, privacy boundaries and search phrases.
 - `README_de.md` - comprehensive German documentation.
+- `SECURITY.md` - bilingual security and privacy policy (Local-First, Zero-Egress, Redaction boundaries).
 - `SKILL.md` - full implementation recipe for building an avatar/user model.
 - `SOURCE-ADAPTERS.md` - adapter notes for Claude, Codex, Gemini/agy and Kimi logs.
 - `TAXONOMY.md` - prompt-archaeology classification categories.

@@ -3,9 +3,13 @@
 # build-your-users-mind
 
 <p align="center">
-  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-82%20passed%20%7C%208%20subtests-brightgreen" alt="Tests"></a>
+  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ellmos-ai/build-your-users-mind/ci.yml?branch=master&label=CI&logo=github" alt="CI"></a>
+  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-86%20passed%20%7C%208%20subtests-brightgreen" alt="Tests"></a>
   <a href="https://github.com/ellmos-ai/build-your-users-mind/releases"><img src="https://img.shields.io/badge/version-1.1.0--dev-blue" alt="Version"></a>
-  <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-%3E%3D3.10-blue" alt="Python"></a>
+  <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Python"></a>
+  <a href="#"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Platform"></a>
+  <a href="SECURITY.md"><img src="https://img.shields.io/badge/privacy-100%25%20Offline%20%7C%20Zero--Egress-brightgreen" alt="Privacy"></a>
+  <a href="SECURITY.md"><img src="https://img.shields.io/badge/security-Local--First%20%7C%20Redaction--Bound-success" alt="Security"></a>
   <a href="https://github.com/ellmos-ai"><img src="https://img.shields.io/badge/ecosystem-ellmos--ai-purple" alt="Ecosystem"></a>
   <a href="https://github.com/open-bricks"><img src="https://img.shields.io/badge/umbrella-open--bricks-indigo" alt="Umbrella"></a>
   <a href="llms.txt"><img src="https://img.shields.io/badge/llms.txt-ready-brightgreen" alt="LLM-Ready"></a>
@@ -15,6 +19,13 @@
 > **What you mind is what you get.**
 
 **🌐 [EN](README.md) · [DE](README_de.md) · [ES](locales/es/README.md) · [JA](locales/ja/README.md) · [RU](locales/ru/README.md) · [ZH](locales/zh/README.md)** — English is authoritative; translations may lag.
+
+---
+
+### Quick Navigation
+[Quick Demo](#try-it-in-60-seconds) · [Architecture](#system-architecture--pipeline) · [Precognition Loop](#feedback-precognition-runtime-loop) · [Built with Codex](#built-with-openai-codex) · [Ecosystem](#sibling-tools--ecosystem) · [Security & Privacy](#privacy--redaction) · [LLM Context](llms.txt)
+
+---
 
 A local-first recipe for an operator to build an empirical, inspectable **preference and
 decision-support model** from their own AI interaction logs. It can help an authorized agent
@@ -166,9 +177,16 @@ not accuracy. Details: [`examples/synthetic-demo/`](examples/synthetic-demo/).
 | [policy-registry](https://github.com/ellmos-ai/policy-registry) | Policy Contracts | Declarative security policies and validation rules |
 | [sqlite-transit-sync](https://github.com/ellmos-ai/sqlite-transit-sync) | SQLite Transit | Encrypted SQLite replication and snapshot sync |
 | [ellmos-delegation-authority](https://github.com/ellmos-ai/ellmos-delegation-authority) | Delegation | Dynamic role routing and task assignment |
+| [ellmos-controlcenter-mcp](https://github.com/ellmos-ai/ellmos-controlcenter-mcp) | MCP Control | Central capability routing and MCP profile lifecycle |
+| [ellmos-filecommander-mcp](https://github.com/ellmos-ai/ellmos-filecommander-mcp) | File Operations | Local-first atomic file management MCP server |
+| [ellmos-codecommander-mcp](https://github.com/ellmos-ai/ellmos-codecommander-mcp) | Code Intelligence | AST parsing, diagnostics & preview-safe refactoring |
 | [prompt-archaeology-casestudy2](https://github.com/research-line/prompt-archaeology-casestudy2) | Prompt Archaeology | Empirical study on long-term prompt interaction patterns |
 | [DevCenter](https://github.com/dev-bricks/DevCenter) | Developer Hub | Central developer portal across all open-bricks products |
 | [CodeBox](https://github.com/dev-bricks/CodeBox) | Code Utilities | Developer utilities, syntax parsers, and packaging tools |
+| [MethodenAnalyser](https://github.com/dev-bricks/MethodenAnalyser) | Method Analysis | AST-based Python code analysis and structural inspection |
+| [PDFtoPDFocr](https://github.com/doc-bricks/PDFtoPDFocr) | OCR Processing | Local-first lossless OCR pipeline for scanned documents |
+| [CleanMarkdown](https://github.com/doc-bricks/CleanMarkdown) | Document Hygiene | Deterministic Markdown formatting and link linting |
+| [open-bricks](https://github.com/open-bricks) | Umbrella | Open-source ecosystem for modular developer utilities |
 
 ## Find this repository
 
@@ -249,6 +267,7 @@ Built-in rules cover common current tokens (including modern project-scoped API 
 emails, IP-like values, and long digit runs. Domain-specific health, legal, tax, financial, or other
 sensitive content cannot be inferred reliably: provide reviewed `--redaction-rules` before writing
 or sharing. Never commit a real corpus or filled avatar file — see `.gitignore`.
+Detailed privacy policies and security contacts are documented in [`SECURITY.md`](SECURITY.md).
 
 ## Suggested GitHub topics
 `theory-of-mind` · `llm` · `user-modeling` · `personalization` · `ai-agents` · `prompt-analysis`

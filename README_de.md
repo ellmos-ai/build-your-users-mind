@@ -3,18 +3,29 @@
 # build-your-users-mind
 
 <p align="center">
-  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-82%20passed%20%7C%208%20subtests-brightgreen" alt="Tests"></a>
+  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ellmos-ai/build-your-users-mind/ci.yml?branch=master&label=CI&logo=github" alt="CI"></a>
+  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-86%20passed%20%7C%208%20subtests-brightgreen" alt="Tests"></a>
   <a href="https://github.com/ellmos-ai/build-your-users-mind/releases"><img src="https://img.shields.io/badge/version-1.1.0--dev-blue" alt="Version"></a>
-  <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-%3E%3D3.10-blue" alt="Python"></a>
-  <a href="https://github.com/ellmos-ai"><img src="https://img.shields.io/badge/ecosystem-ellmos--ai-purple" alt="Ecosystem"></a>
-  <a href="https://github.com/open-bricks"><img src="https://img.shields.io/badge/umbrella-open--bricks-indigo" alt="Umbrella"></a>
+  <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Python"></a>
+  <a href="#"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Plattform"></a>
+  <a href="SECURITY.md"><img src="https://img.shields.io/badge/datenschutz-100%25%20Offline%20%7C%20Zero--Egress-brightgreen" alt="Datenschutz"></a>
+  <a href="SECURITY.md"><img src="https://img.shields.io/badge/sicherheit-Local--First%20%7C%20Redaction--Bound-success" alt="Sicherheit"></a>
+  <a href="https://github.com/ellmos-ai"><img src="https://img.shields.io/badge/ecosystem-ellmos--ai-purple" alt="Ökosystem"></a>
+  <a href="https://github.com/open-bricks"><img src="https://img.shields.io/badge/umbrella-open--bricks-indigo" alt="Dachorganisation"></a>
   <a href="llms.txt"><img src="https://img.shields.io/badge/llms.txt-ready-brightgreen" alt="LLM-Ready"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/lizenz-MIT-green" alt="Lizenz"></a>
 </p>
 
 > **What you mind is what you get.**
 
 **🌐 [EN](README.md) · [DE](README_de.md) · [ES](locales/es/README.md) · [JA](locales/ja/README.md) · [RU](locales/ru/README.md) · [ZH](locales/zh/README.md)** — Englisch ist maßgeblich.
+
+---
+
+### Schnellnavigation
+[Schnelldemo](#in-60-sekunden-ausprobieren) · [Systemarchitektur](#systemarchitektur--pipeline) · [Precognition-Schleife](#feedback-precognition-laufzeit-schleife) · [Erstellt mit Codex](#erstellt-mit-openai-codex) · [Ökosystem](#geschwisterwerkzeuge--okosystem) · [Sicherheit & Datenschutz](#privatsphare--schwarzungs-richtlinien) · [LLM-Kontext](llms.txt)
+
+---
 
 Ein lokales Rezept für Betreiber, um aus ihren eigenen KI-Interaktionsprotokollen ein empirisches, überprüfbares **Präferenz- und Entscheidungsunterstützungsmodell** aufzubauen. Es hilft autorisierten Agenten, Feedback in wiederkehrenden Situationen zu antizipieren; es offenbart nicht die innere Psyche einer Person und darf nicht für psychologische Diagnostik, verdecktes Profiling oder autonome Entscheidungen mit hohem Risiko eingesetzt werden.
 
@@ -117,7 +128,7 @@ Sie sehen, wie `extract → merge → chunk → classify → validate → aggreg
 
 - Der **Codex Source Adapter** (`scripts/adapters/codex_adapter.py`) – die Komponente, die Codex' eigene Sitzungsprotokolle liest – **wurde von Codex selbst geschrieben** in Codex Session `019ed298-fdc4-72d2-a255-97d7dc117128` (Commit `1e3abc4`), danach an 946 echten Prompts kontrollgetestet.
 - **Codex hat auch die Discovery-Metadaten dieses Repositories verfasst** – Commit `0ec49df` trägt den Git-Autor `Codex <codex@local>`.
-- **GPT-5.6 trieb den finalen Build-Week-Härtungslauf über Codex an** (Codex Session `019f8674-fe9a-7d91-a80f-7ee799e8ced0`). Dabei wurden neun Datenschutz- und Datenintegritätsmängel behoben; die finale Testsuite umfasst 82 bestandene Tests.
+- **GPT-5.6 trieb den finalen Build-Week-Härtungslauf über Codex an** (Codex Session `019f8674-fe9a-7d91-a80f-7ee799e8ced0`). Dabei wurden neun Datenschutz- und Datenintegritätsmängel behoben; die finale Testsuite umfasst 86 bestandene Tests.
 - Codex ist eine erstklassige **Quelle**: Was Codex über den Nutzer lernt, fließt in dasselbe evidenzzitierte Modell ein (siehe `SOURCE-ADAPTERS.md`).
 
 ## Einstieg
@@ -143,9 +154,16 @@ Sie sehen, wie `extract → merge → chunk → classify → validate → aggreg
 | [policy-registry](https://github.com/ellmos-ai/policy-registry) | Policy-Verträge | Deklarative Sicherheitsrichtlinien und Validierungsregeln |
 | [sqlite-transit-sync](https://github.com/ellmos-ai/sqlite-transit-sync) | SQLite-Transit | Verschlüsselte SQLite-Replikation und Snapshot-Synchronisation |
 | [ellmos-delegation-authority](https://github.com/ellmos-ai/ellmos-delegation-authority) | Delegation | Dynamisches Rollen-Routing und Aufgabenzuweisung |
+| [ellmos-controlcenter-mcp](https://github.com/ellmos-ai/ellmos-controlcenter-mcp) | MCP-Steuerung | Zentrale Fähigkeits- und Profil-Routenführung |
+| [ellmos-filecommander-mcp](https://github.com/ellmos-ai/ellmos-filecommander-mcp) | Dateisystem | Atomare dateibasierte MCP-Dateiverwaltung |
+| [ellmos-codecommander-mcp](https://github.com/ellmos-ai/ellmos-codecommander-mcp) | Code-Intelligenz | AST-Parsing, Code-Diagnostik & Preview-Safe-Edits |
 | [prompt-archaeology-casestudy2](https://github.com/research-line/prompt-archaeology-casestudy2) | Prompt-Archäologie | Empirische Fallstudie zu langfristigen Interaktionsmustern |
 | [DevCenter](https://github.com/dev-bricks/DevCenter) | Entwickler-Hub | Zentrales Entwicklerportal aller open-bricks Produkte |
 | [CodeBox](https://github.com/dev-bricks/CodeBox) | Code-Utilities | Entwickler-Werkzeuge, Syntax-Parser und Packaging-Tools |
+| [MethodenAnalyser](https://github.com/dev-bricks/MethodenAnalyser) | Methoden-Analyse | AST-basierte Python-Codeanalyse & strukturelle Inspektion |
+| [PDFtoPDFocr](https://github.com/doc-bricks/PDFtoPDFocr) | OCR-Pipeline | Lokale verlustfreie OCR-Verarbeitung für gescannte PDFs |
+| [CleanMarkdown](https://github.com/doc-bricks/CleanMarkdown) | Dokumenten-Hygiene | Deterministische Markdown-Formatierung & Link-Linting |
+| [open-bricks](https://github.com/open-bricks) | Dachorganisation | Modulares Open-Source-Ökosystem für Entwicklerwerkzeuge |
 
 ## Repository finden
 
@@ -191,8 +209,8 @@ Es basiert auf:
 - **Prompt-Archäologie** (L. Geiger) — die Methode zur Klassifizierung vollständiger Mensch-KI-Interaktionsprotokolle (`TAXONOMY.md`).
 - Eine bekannte Grenze: LLM-ToM ist **robust bei wiederkehrenden Fällen, aber anfällig bei neuartigen/adversarialen Variationen** — daher die Konfidenzstufen und die Regel „Eskalieren, nicht raten“.
 
-## Privatsphäre & Schwärzung
-Verwenden Sie nur Protokolle, zu deren Verarbeitung der Betreiber autorisiert ist. Extraktoren schlagen bei fehlenden Wurzeln, ungültigen Datumsangaben, unlesbaren/leeren Eingaben und fehlenden Zeitstempeln fehl. Eingebaute Regeln decken gängige Token, Zugangsdaten, E-Mails, IP-Adressen und lange Ziffernfolgen ab. Domänenspezifische sensible Daten erfordern geprüfte `--redaction-rules`. Niemals echte Corpora committen — siehe `.gitignore`.
+## Privatsphäre & Schwärzungs-Richtlinien
+Verwenden Sie nur Protokolle, zu deren Verarbeitung der Betreiber autorisiert ist. Extraktoren schlagen bei fehlenden Wurzeln, ungültigen Datumsangaben, unlesbaren/leeren Eingaben und fehlenden Zeitstempeln fehl. Eingebaute Regeln decken gängige Token, Zugangsdaten, E-Mails, IP-Adressen und lange Ziffernfolgen ab. Domänenspezifische sensible Daten erfordern geprüfte `--redaction-rules`. Niemals echte Corpora committen — siehe `.gitignore`. Ausführliche Sicherheits- und Datenschutzrichtlinien sind in [`SECURITY.md`](SECURITY.md) dokumentiert.
 
 ## Lizenz
 Methode: *Prompt-Archaeology* von Lukas Geiger. Modul & Konzept: Lukas Geiger (+ Claude).

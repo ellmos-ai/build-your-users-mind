@@ -2,7 +2,17 @@
 
 All notable changes to `build-your-users-mind` are documented here.
 
-## Unreleased — 1.1.0-dev
+## [1.1.0-dev] - 2026-08-21
+
+- **Marketing & Discoverability**: Synchronized Shields.io badges across `README.md` and `README_de.md` (CI status, 86 passed tests, Python 3.10-3.13, Platform support, 100% Offline / Zero-Egress Privacy, Local-First / Redaction-Bound Security, Ecosystem & Umbrella badges).
+- **Quick Navigation**: Integrated bilingual quick navigation headers in `README.md` and `README_de.md`.
+- **Ecosystem Matrix**: Expanded sibling tools and ecosystem matrix across `ellmos-ai`, `dev-bricks`, `doc-bricks`, `research-line`, and `open-bricks`.
+- **Bilingual Security Policy**: Upgraded `SECURITY.md` to comprehensive English and German documentation, covering local-first & zero-egress invariants, fail-closed redaction bounds, non-elevation (user-mode), direct security contacts (`security@ellmos.ai` and `support@lukasgeiger.com`), and GitHub Private Vulnerability Reporting.
+- **PEP 621 Classifiers & URLs**: Extended `pyproject.toml` with PEP 621 classifiers (Python 3.13, OS Independent, Windows, Linux, MacOS) and project URLs (Documentation, Changelog).
+- **Automated Metadata Parity Tests**: Extended `tests/test_metadata.py` to 9 contract tests (86 total passed tests in suite), verifying bilingual security policy, PEP 621 classifiers, CI workflow integrity, and sibling ecosystem table parity.
+- **LLM Context**: Synchronized `llms.txt` with Last-checked date `2026-08-21`, 86 passed tests, and complete sibling ecosystem list.
+
+## 2026-08-16
 
 - Synchronized discovery metadata, Shields.io badges, and test status across `README.md`, `README_de.md`, and `llms.txt`.
 - Added interactive bilingual Mermaid diagrams for system architecture and feedback-precognition runtime loop.
@@ -10,7 +20,6 @@ All notable changes to `build-your-users-mind` are documented here.
 - Added sibling tools matrix linking related repositories in `ellmos-ai`, `dev-bricks`, `research-line`, and `open-bricks`.
 - Configured PEP 621 `pyproject.toml` with project metadata, pytest options, and `[tool.ruff]` lint settings.
 - Added automated metadata, schema, and manifest parity testsuite in `tests/test_metadata.py` (5 assertions, 82 total passed).
-
 - Hardened all adapters to fail closed, validate timestamps/dates, and write atomically.
 - Filtered Codex internal-context/plugin artifacts and carried turn-level project context.
 - Expanded secret redaction, added operator-defined sensitive-data rules, and private file modes.
