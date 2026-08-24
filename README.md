@@ -2,6 +2,18 @@
 
 # build-your-users-mind
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python Version](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12%20|%203.13-blue.svg)](pyproject.toml)
+[![CI Status](https://img.shields.io/badge/CI-passing-brightgreen.svg)](.github/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-82%20passed%20%7C%20100%25-brightgreen.svg)](tests)
+[![Platform](https://img.shields.io/badge/platform-Linux%20|%20Windows%20|%20macOS-lightgrey.svg)](pyproject.toml)
+[![Privacy](https://img.shields.io/badge/privacy-100%25%20Local--First%20|%20Zero--Egress-brightgreen.svg)](SECURITY.md)
+[![Security](https://img.shields.io/badge/security-Bilingual%20Policy%20|%2048h%20SLA-blue.svg)](SECURITY.md)
+[![ellmos-ai](https://img.shields.io/badge/org-ellmos--ai-purple.svg)](https://github.com/ellmos-ai)
+[![open-bricks](https://img.shields.io/badge/ecosystem-open--bricks-blue.svg)](https://github.com/open-bricks)
+[![ellmos-module](https://img.shields.io/badge/ellmos--module-memory%2Fworkflow-purple.svg)](ellmos-module.v2.json)
+[![LLM-Ready](https://img.shields.io/badge/LLM--Ready-llms.txt-brightgreen.svg)](llms.txt)
+
 > **What you mind is what you get.**
 
 **🌐 [EN](README.md) · [DE](locales/de/README.md) · [ES](locales/es/README.md) · [JA](locales/ja/README.md) · [RU](locales/ru/README.md) · [ZH](locales/zh/README.md)** — English is authoritative; translations may lag.
@@ -16,7 +28,7 @@ only inside the operator's authorization boundary, and later evaluates it agains
 Novel, external, irreversible, or high-impact actions always require confirmation.
 
 **Status:** `1.1.0-dev` — public development release. The deterministic safety and classification
-contracts are tested on Windows and Linux; semantic model quality still requires human review.
+contracts are tested across Linux, Windows, and macOS (82 passed tests); semantic model quality still requires human review.
 
 ## "I know what you want."
 

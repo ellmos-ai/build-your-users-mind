@@ -1,37 +1,63 @@
-# Security Policy
+# Security Policy / Sicherheitsrichtlinie
 
-## Reporting
-Please report vulnerabilities via **GitHub Private Vulnerability Reporting** on this repository
-(Security → Report a vulnerability). Do not open public issues for security problems.
+## English
 
-## Data & privacy model
-This tool processes only AI interaction logs the operator is authorized to use. Treat the produced corpus and avatar files as
-**private personal data**:
-- The corpus (`STUDIE/`), classified chunks, and filled avatar files are **gitignored** by default —
-  never commit a real corpus.
-- Extractors redact common current API-key/token formats, credentials, asymmetric credential material, emails, IP-like
-  values and long digit runs **before an atomic write**. Output directories/files request private
-  permissions where the platform supports them.
-- Built-ins are not a universal sensitive-data detector. Add reviewed `--redaction-rules` for health,
-  tax, legal, financial, identity, employer, or other domain-specific data before persistence/sharing.
-- Missing/unreadable/empty or partially malformed inputs do not replace a good corpus. Overrides are
-  explicit (`--allow-empty` / `--allow-partial`) and should follow source inspection.
-- Stable evidence IDs are hashes for referential integrity, not anonymization.
-- No data is sent anywhere by the scripts themselves; classification runs through whatever agent/LLM
-  you point it at — review that agent's data handling separately.
+### Execution Safety, Local-First Isolation, and Privacy Invariants
 
-## Authorization and action boundary
+`build-your-users-mind` operates on sensitive interaction logs with strict fail-safe privacy and safety invariants:
 
-Generated rules are editable preference hypotheses, not diagnoses or authority grants. Do not use
-them for covert profiling. An avatar may guide only already-authorized, reversible local actions.
-External, irreversible, novel, safety-critical, legal, medical, employment, financial, or otherwise
-high-impact actions require the user's direct confirmation.
+1. **100% Local-First & Zero-Egress**: The extraction, merging, chunking, and validation pipeline runs entirely offline within the operator's local environment. No telemetry, user interaction data, or prompt logs are transmitted to external endpoints or third-party servers by this repository's scripts.
+2. **Non-Elevation & Unprivileged Execution**: Operates strictly in standard user space without requiring administrator or root privileges.
+3. **Fail-Closed Secret Redaction**: Built-in regex filters redact common API keys, bearer tokens, passwords, private keys, emails, IP addresses, and long digit runs prior to atomic file writes. Domain-specific sensitive data requires operator-defined `--redaction-rules`.
+4. **Gitignore Safety & Data Containment**: Output corpora (`STUDIE/`, `00_corpus.jsonl`), classification chunks, and populated avatar files are gitignored by default. Real personal corpora and interaction logs must never be committed to version control.
+5. **Authorization and Non-Diagnosis Boundary**: Generated preference models are hypotheses for authorized, reversible agent assistance. They do not grant autonomous authority and must never be used for psychological profiling, covert surveillance, or high-stakes autonomous actions without human confirmation.
 
-## Classification integrity
+### Supported Versions
 
-Treat chunk text as untrusted data, not instructions. Run `validate_classifications.py` before
-aggregation; missing rows, malformed fields, stale files, unknown IDs, and collisions must stop the
-pipeline. Use `verify_ids.py --show-text` only when intentionally exposing private text to the terminal.
+| Version | Supported | Notes |
+|---|---|---|
+| `1.1.x` | :white_check_mark: | Active development & release line |
+| `< 1.1.0` | :x: | Legacy pre-1.1 preview releases |
 
-## Secrets
-Any secret ever committed must be **rotated**, not just removed from the working tree.
+### Reporting a Vulnerability
+
+If you discover a security vulnerability, data leak risk, or redaction bypass, please report it privately to the maintainers rather than opening a public issue:
+
+- **Security Team**: [security@ellmos.ai](mailto:security@ellmos.ai)
+- **Ecosystem Security**: [security@open-bricks.org](mailto:security@open-bricks.org)
+- **Primary Maintainer**: [support@lukasgeiger.com](mailto:support@lukasgeiger.com)
+- **Ecosystem Lead**: [lukas@open-bricks.org](mailto:lukas@open-bricks.org)
+- **GitHub Security Advisories**: [Open a Private Advisory](https://github.com/ellmos-ai/build-your-users-mind/security/advisories)
+- **Response SLA**: Initial triage and acknowledgment within 48 hours.
+
+---
+
+## Deutsch
+
+### Ausführungssicherheit, Local-First Isolation und Datenschutz-Invarianten
+
+`build-your-users-mind` verarbeitet sensible Interaktionsprotokolle unter Einhaltung strikter Sicherheits- und Datenschutzregeln:
+
+1. **100% Local-First & Zero-Egress**: Die gesamte Extraktions-, Merge-, Chunking- und Validierungs-Pipeline läuft vollständig offline auf dem lokalen System. Es erfolgt keinerlei Übertragung von Logdaten oder Telemetrie an externe Server durch die Skripte dieses Repositories.
+2. **Unprivilegierter User-Mode (Non-Elevation)**: Alle Werkzeuge laufen im normalen Benutzerkontext ohne Administrator- oder Root-Rechte.
+3. **Fail-Closed Geheimnis-Schwärzung**: Integrierte Filter schwärzen API-Schlüssel, Tokens, Passwörter, private Schlüssel, E-Mails, IP-Adressen und lange Zahlenketten vor dem atomaren Schreiben. Domänenspezifische Daten erfordern vom Betreiber definierte `--redaction-rules`.
+4. **Gitignore-Schutz & Datenisolation**: Reale Korpora (`STUDIE/`, `00_corpus.jsonl`), Chunks und ausgefüllte Avatar-Dateien sind standardmäßig in `.gitignore` gesperrt und dürfen niemals in ein Git-Repository eingecheckt werden.
+5. **Autorisierungs- und Nicht-Diagnose-Grenze**: Generierte Präferenzmodelle sind überprüfbare Hypothesen für autorisierte, reversible Agentenaktionen. Sie dürfen nicht für verdecktes Profiling, psychologische Diagnosen oder folgenreiche autonome Entscheidungen ohne menschliche Bestätigung eingesetzt werden.
+
+### Unterstützte Versionen
+
+| Version | Unterstützt | Status |
+|---|---|---|
+| `1.1.x` | :white_check_mark: | Aktive Release-Linie |
+| `< 1.1.0` | :x: | Veraltete Vorschauversionen |
+
+### Sicherheitslücke melden
+
+Wenn Sie eine Sicherheitslücke, Schwärzungsumgehung oder unzureichende Isolation feststellen, melden Sie diese bitte vertraulich an die Maintainer:
+
+- **Sicherheitsteam**: [security@ellmos.ai](mailto:security@ellmos.ai)
+- **Ökosystem-Sicherheit**: [security@open-bricks.org](mailto:security@open-bricks.org)
+- **Maintainer**: [support@lukasgeiger.com](mailto:support@lukasgeiger.com)
+- **Ökosystem-Leitung**: [lukas@open-bricks.org](mailto:lukas@open-bricks.org)
+- **GitHub Security Advisories**: [Privaten Sicherheitsbericht öffnen](https://github.com/ellmos-ai/build-your-users-mind/security/advisories)
+- **Reaktionszeit (SLA)**: Erste Rückmeldung innerhalb von maximal 48 Stunden.

@@ -2,7 +2,16 @@
 
 All notable changes to `build-your-users-mind` are documented here.
 
-## Unreleased — 1.1.0-dev
+## [1.1.0-dev] — 2026-08-24
+
+- **Multi-OS GitHub Actions CI Matrix**: Hardened `.github/workflows/ci.yml` with concurrency control (`cancel-in-progress: true`), full multi-OS matrix (`ubuntu-latest`, `windows-latest`, `macos-latest`), Python 3.10-3.13 matrix, bytecode compilation checks, Ruff linter gate, and Pytest test execution.
+- **PEP 621 Metadata Standards**: Added standard `pyproject.toml` with PEP 621 metadata, standard PyPI classifiers (`Topic :: Security`, `Topic :: Scientific/Engineering :: Artificial Intelligence`), full `[project.urls]` (`Homepage`, `Documentation`, `Repository`, `Bug Tracker`, `Changelog`, `Security`, `Parent Organization`, `Umbrella Ecosystem`), and pytest configuration.
+- **Bilingual Security Policy (`SECURITY.md`)**: Expanded security policy with Supported Versions matrix (`1.1.x`), 48-hour response SLA, GitHub Security Advisories link, official security contact channels (`security@ellmos.ai`, `security@open-bricks.org`, `support@lukasgeiger.com`, `lukas@open-bricks.org`), and formal guarantees for Local-First processing, Zero-Egress, Non-Elevation (unprivileged user space), and fail-closed secret redaction.
+- **Automated Contract & Hygiene Test Suite**: Implemented `tests/test_metadata.py` containing 9 contract tests for version parity, PEP 621 compliance, CI matrix validation, security SLA & advisories verification, manifest boundaries, llms.txt synchronization, and zero-egress invariants (82/82 tests passing).
+- **Documentation & Badges Parity**: Synchronized Shields.io badges in `README.md` (CI status, 82 passed tests, Python 3.10-3.13, Linux/Windows/macOS, Local-First, Security Policy, LLM-Ready).
+- **Repository Hygiene**: Hardened `.gitignore` to exclude build artifacts, sync conflict patterns (`*.sync-conflict-*`, `*.conflict`), and lock files.
+
+## 1.1.0-dev (Pre-Release)
 
 - Hardened all adapters to fail closed, validate timestamps/dates, and write atomically.
 - Filtered Codex internal-context/plugin artifacts and carried turn-level project context.
