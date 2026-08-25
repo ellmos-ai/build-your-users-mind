@@ -46,6 +46,15 @@
 - [ ] Run a private operator acceptance round against a real local model and authorized corpus;
   evaluate style resemblance separately from decision calibration and advice quality. Do not publish
   prompts, generated text or private evidence.
+- [ ] Add a clarification/contradiction queue: competing evidence-backed user preferences remain
+  visible until a human confirms, rejects, or scopes them; the classifier must not silently merge
+  them into one rule.
+- [ ] Add historical replay cases for changed preferences: evaluate which model version would have
+  predicted the later response, preserve failures, and avoid training and evaluation on the same
+  evidence slice.
+- [ ] Emit a bounded decision-support packet with prediction, confidence, evidence anchors,
+  counter-evidence, missing information, and escalation reason. It must never be interpreted as
+  authorization for an irreversible action.
 
 ## STATUS — current gate
 
