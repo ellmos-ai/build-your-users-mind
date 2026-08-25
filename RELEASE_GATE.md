@@ -1,6 +1,6 @@
 # RELEASE GATE — build-your-users-mind
 
-**Date:** 2026-07-21<br>
+**Date:** 2026-08-26<br>
 **Repository:** `https://github.com/ellmos-ai/build-your-users-mind` (public)<br>
 **Version/status:** `1.1.0-dev` / development<br>
 **Scope:** repository hygiene and deterministic pipeline safety, not semantic model validity.
@@ -11,14 +11,14 @@
 |---|---|
 | Python 3.10+ standard-library runtime | PASS |
 | `python -m compileall -q scripts tests` | PASS |
-| Synthetic adapter/pipeline regression suite | PASS |
+| Synthetic adapter/pipeline regression suite | PASS — 107 tests |
 | Ruff 0.15.18 | PASS |
 | ELLMOS module manifest schema | PASS |
 | Classification JSON contract and collision/completeness gate | PASS on fixtures |
 | Missing/empty input preserves existing output | PASS on fixtures |
 | Recursive private corpus/avatar Git exclusions | PASS |
 | Root repository hygiene final gate | PASS |
-| GitHub Windows/Linux CI baseline | PASS for `7a05519` ([run 29868228916](https://github.com/ellmos-ai/build-your-users-mind/actions/runs/29868228916)) |
+| GitHub Ubuntu/Windows/macOS, Python 3.10-3.13 CI matrix | PENDING REMOTE — the post-hold integration must pass after push |
 
 ## Honest release decision
 

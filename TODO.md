@@ -1,6 +1,6 @@
 # Development status: build-your-users-mind
 
-**Audit date:** 2026-07-15<br>
+**Audit date:** 2026-08-26<br>
 **Target:** `ellmos-ai/build-your-users-mind` (public)<br>
 **Version:** `1.1.0-dev`<br>
 **Status:** development — deterministic pipeline hardened; semantic quality remains human-gated.
@@ -16,7 +16,7 @@
 - [x] Executable Stage-2 worker template, JSON schema, completeness/collision validator, and strict
   aggregation/verification exit codes.
 - [x] Recursive Git exclusions for private corpora and filled avatar files.
-- [x] Synthetic fixture suite and Windows/Linux CI with pinned Ruff.
+- [x] Synthetic fixture suite and Ubuntu/Windows/macOS CI matrix for Python 3.10-3.13 with pinned Ruff.
 - [x] Authorization, diagnosis, privacy, and irreversible/high-impact action boundaries documented.
 
 ## Open before a stable release
