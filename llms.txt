@@ -2,7 +2,7 @@
 
 Last-checked: 2026-08-26
 Version: 1.1.0-dev (development, not stable)
-Tests: 105 passed
+Tests: 107 passed
 Canonical repository: https://github.com/ellmos-ai/build-your-users-mind
 Primary language: English
 Translations: README_de.md, locales/de, locales/es, locales/ja, locales/ru, locales/zh
@@ -65,6 +65,8 @@ Umbrella: open-bricks
 - `schemas/decision-prediction-event.schema.json` - versioned decision-event contract.
 - `schemas/secure-text-avatar-output.schema.json` - safe simulated-text output contract.
 - `docs/DECISION-PREDICTION-AND-SECURE-TEXT.md` - architecture, scoring and registry-integration notes.
+- `docs/SIMULATION-CHANNEL-KONZEPT.md` - bounded concept for a clearly labelled simulation channel.
+- `tests/test_metadata.py` - metadata, CI matrix, security, schema and zero-egress contract tests.
 - `.gitignore` - excludes private corpora, generated avatar files, logs and local data.
 
 ## Search phrases

@@ -30,7 +30,7 @@ STUDIE/
 # _run-2/, _run-3/, ... are fallback dirs used when _run/ is cloud-sync-locked)
 examples/synthetic-demo/_run*/
 
-# Python / Env
+# Python / Build / Env
 __pycache__/
 *.pyc
 .venv/
@@ -40,6 +40,16 @@ venv/
 *.db
 data/
 _banner-concepts/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Sync conflicts & locks
+*.sync-conflict-*
+*.conflict
+LOCK*.txt
 
 # IDE
 .idea/

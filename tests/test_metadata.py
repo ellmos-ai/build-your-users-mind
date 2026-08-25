@@ -75,6 +75,13 @@ class TestMetadataParity(unittest.TestCase):
         self.assertEqual(secure_avatar["properties"]["mode"]["const"], "secure")
         self.assertFalse(secure_avatar["properties"]["execution_authorized"]["const"])
 
+    def test_manifest_boundaries(self):
+        manifest = json.loads(self.module_manifest.read_text(encoding="utf-8"))
+        self.assertEqual(manifest.get("category"), "memory")
+        self.assertEqual(manifest.get("kind"), "workflow")
+        self.assertEqual(manifest.get("boundaries", {}).get("network"), "transport-defined")
+        self.assertEqual(manifest.get("boundaries", {}).get("data"), "sensitive")
+
     def test_adapters_and_scripts_exist(self):
         with open(self.module_manifest, "r", encoding="utf-8") as f:
             manifest = json.load(f)
@@ -110,11 +117,14 @@ class TestMetadataParity(unittest.TestCase):
     def test_security_policy_bilingual_and_contacts(self):
         sec_text = self.security.read_text(encoding="utf-8")
         self.assertIn("# Security Policy", sec_text)
-        self.assertIn("# Sicherheitsrichtlinie (German)", sec_text)
+        self.assertIn("## Deutsch", sec_text)
         self.assertIn("security@ellmos.ai", sec_text)
         self.assertIn("support@lukasgeiger.com", sec_text)
-        self.assertIn("GitHub Private Vulnerability Reporting", sec_text)
-        self.assertIn("100% offline", sec_text.lower())
+        self.assertIn("security@open-bricks.org", sec_text)
+        self.assertIn("lukas@open-bricks.org", sec_text)
+        self.assertIn("48 hours", sec_text)
+        self.assertIn("GitHub Security Advisories", sec_text)
+        self.assertIn("100% local-first", sec_text.lower())
         self.assertIn("zero-egress", sec_text.lower())
 
     def test_pyproject_pep621_classifiers_and_urls(self):
@@ -132,7 +142,24 @@ class TestMetadataParity(unittest.TestCase):
         self.assertIn("actions/setup-python@v5", ci_text)
         self.assertIn("ubuntu-latest", ci_text)
         self.assertIn("windows-latest", ci_text)
+        self.assertIn("macos-latest", ci_text)
+        self.assertIn("cancel-in-progress: true", ci_text)
+        for version in ('"3.10"', '"3.11"', '"3.12"', '"3.13"'):
+            self.assertIn(version, ci_text)
         self.assertIn("ruff check .", ci_text)
+
+    def test_zero_egress_import_contract(self):
+        forbidden = {"urllib.request", "requests", "httpx", "aiohttp", "socket"}
+        for path in (ROOT / "scripts").rglob("*.py"):
+            text = path.read_text(encoding="utf-8")
+            if path.name == "secure_text_avatar.py":
+                self.assertIn("_loopback_endpoint", text)
+                self.assertIn('parsed.hostname not in {"127.0.0.1", "localhost", "::1"}', text)
+                self.assertIn('parsed.scheme != "http"', text)
+                continue
+            for module in forbidden:
+                self.assertNotIn(f"import {module}", text, f"Forbidden network import {module} in {path}")
+                self.assertNotIn(f"from {module}", text, f"Forbidden network import {module} in {path}")
 
     def test_sibling_tools_matrix_parity(self):
         readme_en_text = self.readme_en.read_text(encoding="utf-8")

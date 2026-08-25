@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,22 +7,29 @@ name = "build-your-users-mind"
 version = "1.1.0-dev"
 description = "Local-first, evidence-backed user preference and decision-support workflow with deterministic private-log adapters."
 readme = "README.md"
-license = {text = "MIT"}
 requires-python = ">=3.10"
-authors = [
-    {name = "ellmos-ai", email = "oss@ellmos.ai"}
-]
+license = { text = "MIT" }
+authors = [{ name = "Lukas Geiger", email = "support@lukasgeiger.com" }]
 keywords = [
     "theory-of-mind",
-    "llm",
     "user-modeling",
     "personalization",
     "ai-agents",
     "prompt-analysis",
     "feedback",
-    "decision-support",
+    "prompt-archaeology",
     "agent-memory",
-    "ellmos-ai",
+    "decision-support",
+    "feedback-precognition",
+    "local-first",
+    "zero-egress",
+    "privacy",
+    "codex",
+    "claude",
+    "gemini",
+    "kimi",
+    "ellmos",
+    "open-bricks",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -40,24 +47,40 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Security",
+    "Topic :: Utilities",
 ]
 dependencies = []
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "ruff>=0.5.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/ellmos-ai/build-your-users-mind"
-Repository = "https://github.com/ellmos-ai/build-your-users-mind.git"
-Issues = "https://github.com/ellmos-ai/build-your-users-mind/issues"
 Documentation = "https://github.com/ellmos-ai/build-your-users-mind#readme"
+Repository = "https://github.com/ellmos-ai/build-your-users-mind.git"
+"Bug Tracker" = "https://github.com/ellmos-ai/build-your-users-mind/issues"
 Changelog = "https://github.com/ellmos-ai/build-your-users-mind/blob/master/CHANGELOG.md"
+Security = "https://github.com/ellmos-ai/build-your-users-mind/blob/master/SECURITY.md"
+"Parent Organization" = "https://github.com/ellmos-ai"
+"Umbrella Ecosystem" = "https://github.com/open-bricks"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["scripts*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["scripts"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
 
 [tool.ruff]
-target-version = "py310"
 line-length = 120
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "W"]
 ignore = ["E501"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]

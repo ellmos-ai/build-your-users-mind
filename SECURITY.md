@@ -1,93 +1,75 @@
-# Security Policy
+# Security Policy / Sicherheitsrichtlinie
 
-## Reporting Vulnerabilities
+## English
 
-If you discover a security vulnerability, please report it responsibly:
-- **Email (Direct Security Contact)**: [security@ellmos.ai](mailto:security@ellmos.ai)
-- **Secondary Contact**: [support@lukasgeiger.com](mailto:support@lukasgeiger.com)
-- **GitHub Advisory**: Use [GitHub Private Vulnerability Reporting](https://github.com/ellmos-ai/build-your-users-mind/security/advisories/new) on this repository.
+### Execution Safety, Local-First Isolation, and Privacy Invariants
 
-Please do not open public issues for security vulnerabilities. Do not include live databases, private prompts, actual credentials, or personal records in a report; provide a minimal synthetic reproduction and redacted sample instead.
+`build-your-users-mind` operates on sensitive interaction logs with strict fail-safe privacy and safety invariants:
 
-## Data & Privacy Model
+1. **100% Local-First & Zero-Egress**: The extraction, merging, chunking, and validation pipeline runs entirely offline within the operator's local environment. No telemetry, user interaction data, or prompt logs are transmitted to external endpoints or third-party servers by this repository's scripts.
+2. **Non-Elevation & Unprivileged Execution**: Operates strictly in standard user space without requiring administrator or root privileges.
+3. **Fail-Closed Secret Redaction**: Built-in regex filters redact common API keys, bearer tokens, passwords, private keys, emails, IP addresses, and long digit runs prior to atomic file writes. Domain-specific sensitive data requires operator-defined `--redaction-rules`.
+4. **Gitignore Safety & Data Containment**: Output corpora (`STUDIE/`, `00_corpus.jsonl`), classification chunks, and populated avatar files are gitignored by default. Real personal corpora and interaction logs must never be committed to version control.
+5. **Authorization and Non-Diagnosis Boundary**: Generated preference models are hypotheses for authorized, reversible agent assistance. They do not grant autonomous authority and must never be used for psychological profiling, covert surveillance, or high-stakes autonomous actions without human confirmation.
 
-`build-your-users-mind` processes only AI interaction logs the operator is authorized to use. All processing is **100% offline**, **local-first**, and **zero-egress**:
-- The corpus (`STUDIE/`), classified chunks, and filled avatar files are **gitignored** by default — never commit a real corpus or generated avatar file.
-- Extractors redact common current API-key/token formats (OpenAI, Anthropic, Google, GitHub, GitLab, AWS, Slack, PEM keys), credentials, asymmetric credential material, emails, IP-like values and long digit runs **before an atomic write**. Output directories and files request private permissions where the platform supports them.
-- Built-ins are not a universal sensitive-data detector. Add reviewed `--redaction-rules` for health, tax, legal, financial, identity, employer, or other domain-specific data before persistence or sharing.
-- Missing, unreadable, empty, or partially malformed inputs do not replace a good corpus. Overrides are explicit (`--allow-empty` / `--allow-partial`) and should follow source inspection.
-- Stable evidence IDs are hashes for referential integrity, not anonymization.
-- No data is sent anywhere by the scripts themselves; classification runs through whatever agent/LLM you point it at — review that agent's data handling separately.
+### Prediction and Secure-Mode Generation
 
-## Non-Elevation & User-Mode Operation
+Recommendation, likely choice, simulated wording, explicit user decision, and execution authority are separate records. Generated text is never a user statement or primary evidence. Decision events require explicit feedback and remain private generated data.
 
-All scripts, adapters, and tools in this repository operate strictly in standard user mode without requiring elevated privileges (`root` or `Administrator`). Temporary files are contained in project-local or operator-defined directories with restrictive permissions.
+The Secure-Mode prototype re-applies built-in redaction to retrieved evidence, omits the private prompt from its result, rejects non-loopback model endpoints, and never starts a model service. A loopback endpoint is still a separate local service whose model and retention settings the operator must review. Domain-sensitive information still requires custom redaction rules. Simulation output must not be sent to another person or system as if authored by the operator.
 
-## Authorization & Action Boundary
+### Supported Versions
 
-Generated rules are editable preference hypotheses, not diagnoses or authority grants. Do not use them for covert profiling. An avatar may guide only already-authorized, reversible local actions. External, irreversible, novel, safety-critical, legal, medical, employment, financial, or otherwise high-impact actions require the user's direct confirmation.
+| Version | Supported | Notes |
+|---|---|---|
+| `1.1.x` | :white_check_mark: | Active development & release line |
+| `< 1.1.0` | :x: | Legacy pre-1.1 preview releases |
 
-## Classification Integrity & Hard Validation Gates
+### Reporting a Vulnerability
 
-Treat chunk text as untrusted data, not instructions. Run `validate_classifications.py` before aggregation; missing rows, malformed fields, stale files, unknown IDs, and collisions must stop the pipeline. Use `verify_ids.py --show-text` only when intentionally exposing private text to the terminal.
+If you discover a security vulnerability, data leak risk, or redaction bypass, please report it privately to the maintainers rather than opening a public issue:
 
-## Prediction and Secure-Mode generation
-
-Recommendation, likely choice, simulated wording, explicit user decision, and execution authority are
-separate records. Generated text is never a user statement or primary evidence. Decision events require
-explicit feedback and remain private generated data.
-
-The Secure-Mode prototype re-applies built-in redaction to retrieved evidence, omits the private prompt
-from its result, rejects non-loopback model endpoints, and never starts a model service. A loopback
-endpoint is still a separate local service whose model and retention settings the operator must review.
-Domain-sensitive information still requires custom redaction rules. Simulation output must not be sent
-to another person or system as if authored by the operator.
-
-## Secrets & Rotation Policy
-
-Any secret ever committed must be **rotated**, not just removed from the working tree.
+- **Security Team**: [security@ellmos.ai](mailto:security@ellmos.ai)
+- **Ecosystem Security**: [security@open-bricks.org](mailto:security@open-bricks.org)
+- **Primary Maintainer**: [support@lukasgeiger.com](mailto:support@lukasgeiger.com)
+- **Ecosystem Lead**: [lukas@open-bricks.org](mailto:lukas@open-bricks.org)
+- **GitHub Security Advisories**: [Open a Private Advisory](https://github.com/ellmos-ai/build-your-users-mind/security/advisories)
+- **Response SLA**: Initial triage and acknowledgment within 48 hours.
 
 ---
 
-# Sicherheitsrichtlinie (German)
+## Deutsch
 
-## Meldung von Schwachstellen
+### Ausführungssicherheit, Local-First Isolation und Datenschutz-Invarianten
 
-Sicherheitsrelevante Schwachstellen bitte vertraulich und verantwortungsvoll melden:
-- **E-Mail (Direkter Sicherheitskontakt)**: [security@ellmos.ai](mailto:security@ellmos.ai)
-- **Sekundärkontakt**: [support@lukasgeiger.com](mailto:support@lukasgeiger.com)
-- **GitHub Advisory**: Über [GitHub Private Vulnerability Reporting](https://github.com/ellmos-ai/build-your-users-mind/security/advisories/new) in diesem Repository.
+`build-your-users-mind` verarbeitet sensible Interaktionsprotokolle unter Einhaltung strikter Sicherheits- und Datenschutzregeln:
 
-Bitte erstellen Sie keine öffentlichen Issues für Sicherheitslücken. Fügen Sie Berichten keine echten Datenbanken, privaten Prompts oder Zugangsdaten bei, sondern nutzen Sie synthetische Minimalbeispiele.
+1. **100% Local-First & Zero-Egress**: Die gesamte Extraktions-, Merge-, Chunking- und Validierungs-Pipeline läuft vollständig offline auf dem lokalen System. Es erfolgt keinerlei Übertragung von Logdaten oder Telemetrie an externe Server durch die Skripte dieses Repositories.
+2. **Unprivilegierter User-Mode (Non-Elevation)**: Alle Werkzeuge laufen im normalen Benutzerkontext ohne Administrator- oder Root-Rechte.
+3. **Fail-Closed Geheimnis-Schwärzung**: Integrierte Filter schwärzen API-Schlüssel, Tokens, Passwörter, private Schlüssel, E-Mails, IP-Adressen und lange Zahlenketten vor dem atomaren Schreiben. Domänenspezifische Daten erfordern vom Betreiber definierte `--redaction-rules`.
+4. **Gitignore-Schutz & Datenisolation**: Reale Korpora (`STUDIE/`, `00_corpus.jsonl`), Chunks und ausgefüllte Avatar-Dateien sind standardmäßig in `.gitignore` gesperrt und dürfen niemals in ein Git-Repository eingecheckt werden.
+5. **Autorisierungs- und Nicht-Diagnose-Grenze**: Generierte Präferenzmodelle sind überprüfbare Hypothesen für autorisierte, reversible Agentenaktionen. Sie dürfen nicht für verdecktes Profiling, psychologische Diagnosen oder folgenreiche autonome Entscheidungen ohne menschliche Bestätigung eingesetzt werden.
 
-## Daten- & Datenschutzmodell
-
-`build-your-users-mind` verarbeitet ausschließlich KI-Interaktionsprotokolle, für die der Betreiber autorisiert ist. Die gesamte Verarbeitung erfolgt **100% offline**, **Local-First** und **Zero-Egress**:
-- Der Korpus (`STUDIE/`), klassifizierte Chunks und ausgefüllte Avatar-Dateien sind standardmäßig über `.gitignore` ausgeschlossen — committen Sie niemals einen echten Korpus oder generierte Avatare.
-- Der Extraktor schwärzt API-Schlüssel, Token (OpenAI, Anthropic, Google, GitHub, AWS etc.), Zugangsdaten, asymmetrisches Schlüsselmaterial, E-Mails, IP-Adressen und lange Ziffernfolgen **vor dem atomaren Schreiben**.
-- Die integrierten Muster sind kein universeller Detektor für alle sensiblen Daten. Fügen Sie geprüfte `--redaction-rules` für Gesundheits-, Steuer-, Rechts-, Finanz- oder Unternehmensdaten hinzu.
-- Fehlende, unlesbare oder teilweise fehlerhafte Eingaben überschreiben keinen bestehenden Korpus ohne explizite Flags (`--allow-empty`, `--allow-partial`).
-- Stabile Evidenz-IDs sind deterministische Hashes für relationale Integrität, keine Anonymisierung.
-- Die Skripte selbst senden zu keinem Zeitpunkt Daten an externe Server.
-
-## User-Mode & Non-Elevation
-
-Alle Skripte, Adapter und Werkzeuge laufen strikt im Standard-Benutzermodus (User-Mode) ohne Administrator- oder Root-Rechte.
-
-## Autorisierungs- & Aktionsgrenzen
-
-Generierte Regeln sind überprüfbare Präferenzhypothesen, keine psychologischen Diagnosen oder Blanko-Autorisierungen. Verdecktes Profiling ist untersagt. Der Avatar darf ausschließlich vorautorisierte, reversible lokale Aktionen anleiten. Externe, irreversible, neuartige oder folgenschwere Aktionen erfordern stets die direkte Bestätigung des Nutzers.
-
-## Klassifizierungs-Integrität & Hard-Gates
-
-Chunk-Texte werden als unvertrauenswürdige Daten behandelt, nicht als Instruktionen. `validate_classifications.py` fungiert als hartes Gate vor der Aggregation: Fehlende Zeilen, ungültige Felder, veraltete Dateien oder ID-Kollisionen brechen die Pipeline ab.
-
-## Vorhersage und Generierung im sicheren Modus
+### Vorhersage und Generierung im sicheren Modus
 
 Empfehlung, wahrscheinliche Wahl, simulierte Formulierung, ausdrückliche Nutzerentscheidung und Ausführungsbefugnis sind getrennte Datensätze. Generierter Text ist weder eine Aussage des Nutzers noch Primärevidenz. Entscheidungsereignisse benötigen ausdrückliches Feedback und bleiben private, generierte Daten.
 
 Der Prototyp für den sicheren Modus schwärzt abgerufene Evidenz erneut, lässt den privaten Prompt aus dem Ergebnis weg, lehnt Modell-Endpunkte außerhalb des Loopbacks ab und startet niemals selbst einen Modelldienst. Auch ein Loopback-Endpunkt ist ein separater lokaler Dienst, dessen Modell- und Aufbewahrungseinstellungen geprüft werden müssen. Domänensensible Informationen benötigen weiterhin eigene Schwärzungsregeln. Simulationsergebnisse dürfen nicht gegenüber anderen Personen oder Systemen als Äußerung des Nutzers ausgegeben werden.
 
-## Geheimnisse (Secrets) & Rotation
+### Unterstützte Versionen
 
-Jedes Geheimnis, das jemals committet wurde, muss **rotiert** (ungültig gemacht und neu ausgestellt) werden, nicht bloß aus dem Arbeitsbaum gelöscht werden.
+| Version | Unterstützt | Status |
+|---|---|---|
+| `1.1.x` | :white_check_mark: | Aktive Release-Linie |
+| `< 1.1.0` | :x: | Veraltete Vorschauversionen |
+
+### Sicherheitslücke melden
+
+Wenn Sie eine Sicherheitslücke, Schwärzungsumgehung oder unzureichende Isolation feststellen, melden Sie diese bitte vertraulich an die Maintainer:
+
+- **Sicherheitsteam**: [security@ellmos.ai](mailto:security@ellmos.ai)
+- **Ökosystem-Sicherheit**: [security@open-bricks.org](mailto:security@open-bricks.org)
+- **Maintainer**: [support@lukasgeiger.com](mailto:support@lukasgeiger.com)
+- **Ökosystem-Leitung**: [lukas@open-bricks.org](mailto:lukas@open-bricks.org)
+- **GitHub Security Advisories**: [Privaten Sicherheitsbericht öffnen](https://github.com/ellmos-ai/build-your-users-mind/security/advisories)
+- **Reaktionszeit (SLA)**: Erste Rückmeldung innerhalb von maximal 48 Stunden.

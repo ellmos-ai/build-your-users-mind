@@ -2,7 +2,14 @@
 
 All notable changes to `build-your-users-mind` are documented here.
 
-## [1.1.0-dev] - 2026-08-21
+## [1.1.0-dev] - 2026-08-26
+
+- **Post-Hold Integration**: Integrated the decision-prediction and Secure-Mode text-avatar work, the simulation-channel concept, and both post-competition quarantine branches after the Build Week judging hold ended.
+- **Multi-OS CI Matrix**: Added concurrency cancellation, Ubuntu/Windows/macOS coverage, Python 3.10-3.13, compilation, Ruff, and test gates.
+- **Repository Hygiene**: Expanded `.gitignore` for build artifacts, sync-conflict copies, generated data, and lock files.
+- **Security Contract**: Added supported-version and 48-hour response commitments plus the ellmos-ai/open-bricks security contacts while retaining the prediction and Secure-Mode authorization boundary in both languages.
+- **PEP 621 Metadata**: Added the complete project URL set, security and utility classifiers, and development dependencies.
+- **Contract Tests**: Added checks for CI-matrix integrity, manifest boundaries, zero-egress imports, feature schemas, public-contract visibility, and bilingual documentation.
 
 - **Marketing & Discoverability**: Synchronized Shields.io badges across `README.md` and `README_de.md` (CI status, 86 passed tests, Python 3.10-3.13, Platform support, 100% Offline / Zero-Egress Privacy, Local-First / Redaction-Bound Security, Ecosystem & Umbrella badges).
 - **Quick Navigation**: Integrated bilingual quick navigation headers in `README.md` and `README_de.md`.
