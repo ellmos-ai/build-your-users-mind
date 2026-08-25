@@ -1,0 +1,5 @@
+{"type":"turn.prompt","origin":{"kind":"user"},"input":[{"type":"text","text":"Use UTF-8"},{"type":"text","text":"fixtures"}],"time":1700000000000}
+{"type":"turn.steer","origin":{"kind":"user"},"input":"Actually, use SQLite","time":1700000000500}
+{"type":"turn.prompt","origin":{"kind":"assistant"},"input":"ignored assistant event","time":1700000001000}
+{"type":"turn.prompt","origin":{"kind":"user"},"input":[{"type":"image","url":"not-real"}],"time":1700000001500}
+{"type":"turn.prompt","origin":{"kind":"user"},"input":"<system-reminder> synthetic fixture only","time":1700000002000}

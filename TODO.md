@@ -37,7 +37,15 @@
   🟢/🟡/🔴 tier + 🔴 escalation rate; tested in `tests/test_score_predictions.py`).
 - [x] One-command offline demo of the deterministic build, feedback scoring, and tamper gate.
   → `examples/synthetic-demo/run_demo.py`.
-- [ ] Add more synthetic source-schema fixtures as upstream log formats evolve.
+- [x] Add synthetic source-schema fixtures for Claude, Codex, Gemini/agy, and Kimi adapters; extend them as upstream log formats evolve. *(verified 2026-08-13)*
+- [x] Add an append-only decision-prediction event contract that separates recommendation, likely
+  choice, explicit decision and execution authority; report top-1/Brier/log-loss independently from
+  the 0–10 advice-process score, recovery events and explicit user bonuses.
+- [x] Add a Secure-Mode-only text-avatar prototype with deterministic evidence retrieval, repeated
+  redaction, privacy-minimized output, fail-closed novelty escalation and optional loopback Ollama.
+- [ ] Run a private operator acceptance round against a real local model and authorized corpus;
+  evaluate style resemblance separately from decision calibration and advice quality. Do not publish
+  prompts, generated text or private evidence.
 
 ## STATUS — current gate
 

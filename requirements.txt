@@ -1,3 +1,5 @@
 # Runtime: Python 3.10+ standard library only.
-# No LLM SDK or network client is installed by this module.
+# No LLM SDK or external network client is installed by this module.
+# The optional Secure-Mode prototype uses urllib only for an explicit loopback
+# Ollama endpoint; it rejects non-loopback URLs.
 # Development/CI pins Ruff separately; tests use unittest from the standard library.

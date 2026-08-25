@@ -1,15 +1,18 @@
 # build-your-users-mind
 
-Last-checked: 2026-07-15
+Last-checked: 2026-08-20
 Version: 1.1.0-dev (development, not stable)
+Tests: 101 passed
 Canonical repository: https://github.com/ellmos-ai/build-your-users-mind
 Primary language: English
-Translations: locales/de, locales/es, locales/ja, locales/ru, locales/zh
+Translations: README_de.md, locales/de, locales/es, locales/ja, locales/ru, locales/zh
 License: MIT
+Ecosystem: ellmos-ai
+Umbrella: open-bricks
 
 ## Summary
 
-`build-your-users-mind` is a local-first method, script set and template library for AI agents that need an evidence-backed model of their own user. It turns private interaction logs into a small "theory of us" documentation set that helps agents predict likely user feedback, act conservatively when the user is away, and improve those predictions after real feedback arrives.
+`build-your-users-mind` is a local-first method, script set and template library for AI agents that need an evidence-backed model of their own user. It turns private interaction logs into a small "theory of us" documentation set, separates recommendations from calibrated decision predictions, and can simulate clearly labelled user wording through an optional loopback-only local model.
 
 ## Audience
 
@@ -18,9 +21,23 @@ License: MIT
 - Researchers comparing theory-of-mind, prompt archaeology and personalization methods.
 - Teams that need private, inspectable decision-support memory rather than opaque SaaS profiling.
 
+## Sibling Tools & Ecosystem
+
+- [ellmos-ai/coma](https://github.com/ellmos-ai/coma) — Context manager and local-first memory backbone
+- [ellmos-ai/swarm-ai](https://github.com/ellmos-ai/swarm-ai) — Multi-agent swarm orchestration and consensus
+- [ellmos-ai/memoryhooker](https://github.com/ellmos-ai/memoryhooker) — Reactive hook triggers for local agent memory
+- [ellmos-ai/workflowhooker](https://github.com/ellmos-ai/workflowhooker) — Workflow automation and lifecycle events
+- [ellmos-ai/system-explorer](https://github.com/ellmos-ai/system-explorer) — Fleet discovery and inspection infrastructure
+- [ellmos-ai/policy-registry](https://github.com/ellmos-ai/policy-registry) — Canonical policy distribution and contract verification
+- [ellmos-ai/sqlite-transit-sync](https://github.com/ellmos-ai/sqlite-transit-sync) — Transactional SQLite replication and backup
+- [ellmos-ai/ellmos-delegation-authority](https://github.com/ellmos-ai/ellmos-delegation-authority) — Dynamic task delegation and role routing
+- [research-line/prompt-archaeology-casestudy2](https://github.com/research-line/prompt-archaeology-casestudy2) — Empirical prompt archaeology research
+- [open-bricks](https://github.com/open-bricks) — Modular open-source tool ecosystem
+
 ## Important files
 
 - `README.md` - authoritative overview, runtime loop, privacy boundaries and search phrases.
+- `README_de.md` - comprehensive German documentation.
 - `SKILL.md` - full implementation recipe for building an avatar/user model.
 - `SOURCE-ADAPTERS.md` - adapter notes for Claude, Codex, Gemini/agy and Kimi logs.
 - `TAXONOMY.md` - prompt-archaeology classification categories.
@@ -33,6 +50,12 @@ License: MIT
 - `scripts/validate_classifications.py` - strict Stage-2 completeness/collision gate.
 - `schemas/classification.schema.json` - executable classification row contract.
 - `scripts/aggregate_stats.py` - aggregate report helper.
+- `scripts/score_predictions.py` - prediction scoring and escalation rate evaluator.
+- `scripts/decision_prediction.py` - append-only decision prediction, validation, recovery scoring and calibration.
+- `scripts/secure_text_avatar.py` - evidence-gated Secure-Mode text simulation with plan-only and loopback Ollama providers.
+- `schemas/decision-prediction-event.schema.json` - versioned decision-event contract.
+- `schemas/secure-text-avatar-output.schema.json` - safe simulated-text output contract.
+- `docs/DECISION-PREDICTION-AND-SECURE-TEXT.md` - architecture, scoring and registry-integration notes.
 - `.gitignore` - excludes private corpora, generated avatar files, logs and local data.
 
 ## Search phrases

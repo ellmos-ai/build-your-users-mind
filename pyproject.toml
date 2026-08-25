@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "build-your-users-mind"
+version = "1.1.0-dev"
+description = "Local-first, evidence-backed user preference and decision-support workflow with deterministic private-log adapters."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "ellmos-ai", email = "oss@ellmos.ai"}
+]
+keywords = [
+    "theory-of-mind",
+    "llm",
+    "user-modeling",
+    "personalization",
+    "ai-agents",
+    "prompt-analysis",
+    "feedback",
+    "decision-support",
+    "agent-memory",
+    "ellmos-ai",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/ellmos-ai/build-your-users-mind"
+Repository = "https://github.com/ellmos-ai/build-your-users-mind.git"
+Issues = "https://github.com/ellmos-ai/build-your-users-mind/issues"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

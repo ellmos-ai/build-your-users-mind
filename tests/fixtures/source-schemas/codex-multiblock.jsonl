@@ -1,0 +1,7 @@
+{"timestamp":"2026-02-01T00:00:00Z","type":"session_meta","payload":{"cwd":"C:\\synthetic\\codex","git_branch":"fixture/schema"}}
+{"timestamp":"2026-02-01T00:00:01Z","type":"response_item","payload":{"role":"assistant","content":[{"type":"output_text","text":"ignored assistant event"}]}}
+{"timestamp":"2026-02-01T00:00:02Z","type":"response_item","payload":{"role":"user","content":[{"type":"input_image","image_url":"not-real"},{"type":"input_text","text":"Use UTF-8 fixtures"}]}}
+{"type":"turn_context","payload":{"cwd":"C:\\synthetic\\codex-next","gitBranch":"feature/schema"}}
+{"ts":"2026-02-01T00:00:03Z","type":"response_item","payload":{"role":"user","content":[{"type":"input_text","text":"Actually, use SQLite"}]}}
+{"timestamp":"2026-02-01T00:00:04Z","type":"response_item","payload":{"role":"user","content":[{"type":"input_image","image_url":"not-real"}]}}
+{"timestamp":"2026-02-01T00:00:05Z","type":"response_item","payload":{"role":"user","content":[]}}

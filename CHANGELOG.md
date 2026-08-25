@@ -4,6 +4,21 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## Unreleased — 1.1.0-dev
 
+- Added an append-only decision-prediction event architecture that keeps recommendation, likely
+  choice, explicit user feedback, recovery scoring and execution authority separate.
+- Added top-1 accuracy, multiclass Brier score and log loss alongside the operator-defined 0–10
+  advice-process score with later adoption credits and explicit bonus events.
+- Added a Secure-Mode-only text-avatar prototype with deterministic evidence retrieval, repeated
+  redaction, privacy-minimized outputs, novelty escalation and optional loopback-only Ollama use.
+- Added executable JSON schemas, synthetic examples and regression tests for both new contracts.
+
+- Synchronized discovery metadata, Shields.io badges, and test status across `README.md`, `README_de.md`, and `llms.txt`.
+- Added interactive bilingual Mermaid diagrams for system architecture and feedback-precognition runtime loop.
+- Added comprehensive German documentation in `README_de.md` with complete parity.
+- Added sibling tools matrix linking related repositories in `ellmos-ai`, `dev-bricks`, `research-line`, and `open-bricks`.
+- Configured PEP 621 `pyproject.toml` with project metadata, pytest options, and `[tool.ruff]` lint settings.
+- Added automated metadata, schema, and manifest parity testsuite in `tests/test_metadata.py` (5 assertions, 82 total passed).
+
 - Hardened all adapters to fail closed, validate timestamps/dates, and write atomically.
 - Filtered Codex internal-context/plugin artifacts and carried turn-level project context.
 - Expanded secret redaction, added operator-defined sensitive-data rules, and private file modes.
@@ -28,6 +43,8 @@ All notable changes to `build-your-users-mind` are documented here.
   model-unspecified Codex adapter implementation.
 - Synchronized the adapter implementation briefs with stable IDs, read-only sources, current CLI
   flags, and fail-closed output semantics.
+- Added reviewable synthetic source-schema fixtures for all four adapters, including multi-block
+  JSONL events and hex-encoded Gemini protobuf fields.
 
 ## 2026-06-17
 
