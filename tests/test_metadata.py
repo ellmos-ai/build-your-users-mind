@@ -71,7 +71,7 @@ class TestMetadataParity(unittest.TestCase):
         self.assertIn("type_code", schema["properties"])
         prediction = json.loads(self.prediction_schema.read_text(encoding="utf-8"))
         secure_avatar = json.loads(self.secure_avatar_schema.read_text(encoding="utf-8"))
-        self.assertEqual(prediction["properties"]["schema"]["const"], "byum.decision-prediction.v1")
+        self.assertEqual(prediction["properties"]["schema"]["const"], "byum.decision-prediction.v2")
         self.assertEqual(secure_avatar["properties"]["mode"]["const"], "secure")
         self.assertFalse(secure_avatar["properties"]["execution_authorized"]["const"])
 

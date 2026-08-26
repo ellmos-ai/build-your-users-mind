@@ -8,8 +8,10 @@ append-only JSONL and contain references to evidence, never authority grants.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import math
+import re
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -17,7 +19,7 @@ from typing import Any
 
 from pipeline_common import atomic_write_text, load_jsonl, validate_timestamp
 
-SCHEMA = "byum.decision-prediction.v1"
+SCHEMA = "byum.decision-prediction.v2"
 EVENT_TYPES = {
     "prediction.created",
     "decision.observed",
@@ -26,6 +28,23 @@ EVENT_TYPES = {
     "user.bonus",
 }
 CONFIDENCE = {"high", "medium", "low"}
+FORBIDDEN_PRIVATE_OR_EXECUTION_FIELDS = {
+    "action_receipt",
+    "action_payload",
+    "avatar_content",
+    "decision_text",
+    "execution_payload",
+    "execution_receipt",
+    "payload",
+    "prompt",
+    "private_prompt",
+    "raw_decision_text",
+    "raw_prompt",
+    "receipt",
+    "secure_text",
+    "secure_text_payload",
+}
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 def _string(value: object, field: str) -> str:
@@ -38,6 +57,48 @@ def _integer(value: object, field: str, low: int, high: int) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high:
         raise ValueError(f"{field} must be an integer from {low} to {high}")
     return value
+
+
+def _reject_forbidden_fields(value: object, prefix: str) -> None:
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            if isinstance(key, str) and key.casefold() in FORBIDDEN_PRIVATE_OR_EXECUTION_FIELDS:
+                raise ValueError(f"{prefix}: forbidden private or execution field {key!r}")
+            _reject_forbidden_fields(nested, prefix)
+    elif isinstance(value, list):
+        for nested in value:
+            _reject_forbidden_fields(nested, prefix)
+
+
+def _validate_decision_ref(event: dict[str, Any], prefix: str) -> None:
+    decision_ref = event.get("decision_ref")
+    if not isinstance(decision_ref, dict):
+        raise ValueError(f"{prefix}: decision_ref must be an object")
+    expected = {"decision_id", "index_key", "scope", "source_locator", "source_sha256"}
+    if set(decision_ref) != expected:
+        missing = sorted(expected - set(decision_ref))
+        unexpected = sorted(set(decision_ref) - expected)
+        raise ValueError(
+            f"{prefix}: decision_ref must contain exactly {sorted(expected)!r}; "
+            f"missing={missing!r}, unexpected={unexpected!r}"
+        )
+    _string(decision_ref.get("decision_id"), f"{prefix}: decision_ref.decision_id")
+    _string(decision_ref.get("index_key"), f"{prefix}: decision_ref.index_key")
+    reference_scope = _string(decision_ref.get("scope"), f"{prefix}: decision_ref.scope")
+    if reference_scope != event["scope"]:
+        raise ValueError(f"{prefix}: decision_ref.scope must match scope")
+
+    locator = decision_ref.get("source_locator")
+    if not isinstance(locator, dict):
+        raise ValueError(f"{prefix}: decision_ref.source_locator must be an object")
+    if set(locator) != {"path", "block_id"}:
+        raise ValueError(f"{prefix}: decision_ref.source_locator must contain exactly path and block_id")
+    _string(locator.get("path"), f"{prefix}: decision_ref.source_locator.path")
+    _string(locator.get("block_id"), f"{prefix}: decision_ref.source_locator.block_id")
+
+    source_sha256 = _string(decision_ref.get("source_sha256"), f"{prefix}: decision_ref.source_sha256")
+    if not SHA256_RE.fullmatch(source_sha256):
+        raise ValueError(f"{prefix}: decision_ref.source_sha256 must be 64 lowercase hexadecimal characters")
 
 
 def _event_base(event: dict[str, Any], line_number: int) -> tuple[str, str]:
@@ -59,6 +120,7 @@ def _event_base(event: dict[str, Any], line_number: int) -> tuple[str, str]:
 def _validate_prediction(event: dict[str, Any], prefix: str) -> None:
     _string(event.get("decision_type"), f"{prefix}: decision_type")
     _string(event.get("scope"), f"{prefix}: scope")
+    _validate_decision_ref(event, prefix)
     if event.get("execution_authorized") is not False:
         raise ValueError(f"{prefix}: a prediction must set execution_authorized=false")
 
@@ -121,6 +183,11 @@ def _validate_prediction(event: dict[str, Any], prefix: str) -> None:
 def _validate_event_payload(event: dict[str, Any], line_number: int) -> None:
     prefix = f"line {line_number}"
     event_type = event["event_type"]
+    _reject_forbidden_fields(event, prefix)
+    if event_type != "prediction.created" and "decision_ref" in event:
+        raise ValueError(f"{prefix}: decision_ref is only allowed on prediction.created")
+    if event_type != "prediction.created" and "execution_authorized" in event:
+        raise ValueError(f"{prefix}: execution_authorized is only allowed on prediction.created")
     if event_type == "prediction.created":
         _validate_prediction(event, prefix)
     elif event_type == "decision.observed":
@@ -230,16 +297,36 @@ def project(events: list[dict[str, Any]]) -> dict[str, Any]:
         validation = by_type["validation.scored"][0] if by_type["validation.scored"] else None
         item: dict[str, Any] = {
             "prediction_id": prediction_id,
+            "decision_ref": copy.deepcopy(prediction["decision_ref"]),
             "recommended_option": prediction["recommendation"]["option_id"],
             "likely_option": prediction["prediction"]["likely_option"],
             "confidence": prediction["prediction"]["confidence"],
             "status": "pending",
             "selected_option": decision.get("selected_option") if decision else None,
+            "recommended_match": None,
+            "chosen_option_was_offered": None,
+            "no_option_fit": None,
+            "correction_burden": None,
+            "correction_deduction": None,
+            "harm_penalty": None,
             "initial_score": None,
+            "validation_events": [],
+            "recovery_deltas": [],
             "recovery_points": 0,
+            "bonus_events": [],
             "bonus_points": 0,
             "current_score": None,
+            "final_score": None,
+            "execution_authorized": False,
         }
+        if decision:
+            selected = decision.get("selected_option")
+            option_ids = {option["id"] for option in prediction["options"]}
+            item.update({
+                "recommended_match": selected == prediction["recommendation"]["option_id"],
+                "chosen_option_was_offered": selected in option_ids if selected is not None else False,
+                "no_option_fit": selected is None,
+            })
         if decision and decision.get("selected_option") is not None:
             probability_rows.append(
                 (prediction["prediction"]["probabilities"], decision["selected_option"],
@@ -247,15 +334,54 @@ def project(events: list[dict[str, Any]]) -> dict[str, Any]:
             )
         if decision and validation:
             base, initial = _initial_advice_score(prediction, decision, validation)
-            recovery = len(by_type["advice.adopted"])
+            validation_events = [
+                {
+                    "event_id": row["event_id"],
+                    "occurred_at": row["occurred_at"],
+                    "correction_burden": row["correction_deduction"],
+                    "correction_deduction": row["correction_deduction"],
+                    "harm_penalty": row["harm_penalty"],
+                    "reason": row["reason"],
+                }
+                for row in by_type["validation.scored"]
+            ]
+            recovery_deltas = [
+                {
+                    "event_id": row["event_id"],
+                    "occurred_at": row["occurred_at"],
+                    "element_id": row["element_id"],
+                    "source": row["source"],
+                    "points": row["points"],
+                    "reason": row["reason"],
+                }
+                for row in by_type["advice.adopted"]
+            ]
+            bonus_events = [
+                {
+                    "event_id": row["event_id"],
+                    "occurred_at": row["occurred_at"],
+                    "points": row["points"],
+                    "reason": row["reason"],
+                }
+                for row in by_type["user.bonus"]
+            ]
+            recovery = sum(row["points"] for row in by_type["advice.adopted"])
             bonus = sum(row["points"] for row in by_type["user.bonus"])
+            final = min(10, initial + recovery + bonus)
             item.update({
                 "status": "validated",
                 "base_score": base,
+                "correction_burden": validation["correction_deduction"],
+                "correction_deduction": validation["correction_deduction"],
+                "harm_penalty": validation["harm_penalty"],
                 "initial_score": initial,
+                "validation_events": validation_events,
+                "recovery_deltas": recovery_deltas,
                 "recovery_points": recovery,
+                "bonus_events": bonus_events,
                 "bonus_points": bonus,
-                "current_score": min(10, initial + recovery + bonus),
+                "current_score": final,
+                "final_score": final,
             })
         elif decision:
             item["status"] = "decision-observed"
@@ -275,7 +401,7 @@ def project(events: list[dict[str, Any]]) -> dict[str, Any]:
                        for probabilities, actual, _ in probability_rows) / len(probability_rows)
     scores = [item["current_score"] for item in projections if item["current_score"] is not None]
     return {
-        "schema": "byum.decision-prediction-report.v1",
+        "schema": "byum.decision-prediction-report.v2",
         "predictions": projections,
         "summary": {
             "count": len(projections),

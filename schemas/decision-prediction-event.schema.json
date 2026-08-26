@@ -5,7 +5,7 @@
   "type": "object",
   "required": ["schema", "event_id", "prediction_id", "event_type", "occurred_at"],
   "properties": {
-    "schema": {"const": "byum.decision-prediction.v1"},
+    "schema": {"const": "byum.decision-prediction.v2"},
     "event_id": {"type": "string", "minLength": 1},
     "prediction_id": {"type": "string", "minLength": 1},
     "event_type": {
@@ -20,6 +20,26 @@
     "occurred_at": {"type": "string", "format": "date-time"},
     "decision_type": {"type": "string"},
     "scope": {"type": "string"},
+    "decision_ref": {
+      "type": "object",
+      "required": ["decision_id", "index_key", "scope", "source_locator", "source_sha256"],
+      "properties": {
+        "decision_id": {"type": "string", "minLength": 1},
+        "index_key": {"type": "string", "minLength": 1},
+        "scope": {"type": "string", "minLength": 1},
+        "source_locator": {
+          "type": "object",
+          "required": ["path", "block_id"],
+          "properties": {
+            "path": {"type": "string", "minLength": 1},
+            "block_id": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        },
+        "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    },
     "evidence_ids": {
       "type": "array",
       "items": {"type": "string", "minLength": 1},
@@ -85,5 +105,47 @@
     "points": {"type": "integer", "minimum": 1, "maximum": 10},
     "reason": {"type": "string"}
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"event_type": {"const": "prediction.created"}},
+        "required": ["event_type"]
+      },
+      "then": {
+        "required": [
+          "decision_type", "scope", "decision_ref", "evidence_ids", "options",
+          "recommendation", "prediction", "model", "execution_authorized"
+        ]
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            {"required": ["decision_ref"]},
+            {"required": ["execution_authorized"]}
+          ]
+        }
+      }
+    },
+    {
+      "not": {
+        "anyOf": [
+          {"required": ["raw_prompt"]},
+          {"required": ["prompt"]},
+          {"required": ["raw_decision_text"]},
+          {"required": ["decision_text"]},
+          {"required": ["private_prompt"]},
+          {"required": ["secure_text"]},
+          {"required": ["secure_text_payload"]},
+          {"required": ["payload"]},
+          {"required": ["action_payload"]},
+          {"required": ["execution_payload"]},
+          {"required": ["avatar_content"]},
+          {"required": ["receipt"]},
+          {"required": ["action_receipt"]},
+          {"required": ["execution_receipt"]}
+        ]
+      }
+    }
+  ],
   "additionalProperties": true
 }
