@@ -11,14 +11,14 @@
 |---|---|
 | Python 3.10+ standard-library runtime | PASS |
 | `python -m compileall -q scripts tests` | PASS |
-| Synthetic adapter/pipeline regression suite | PASS — 107 tests |
+| Synthetic adapter/pipeline regression suite | PASS — 116 tests plus 22 subtests |
 | Ruff 0.15.18 | PASS |
 | ELLMOS module manifest schema | PASS |
 | Classification JSON contract and collision/completeness gate | PASS on fixtures |
 | Missing/empty input preserves existing output | PASS on fixtures |
 | Recursive private corpus/avatar Git exclusions | PASS |
 | Root repository hygiene final gate | PASS |
-| GitHub Ubuntu/Windows/macOS, Python 3.10-3.13 CI matrix | PENDING REMOTE — the post-hold integration must pass after push |
+| GitHub Ubuntu/Windows/macOS, Python 3.10-3.13 CI matrix | PENDING REMOTE — this ticket revision requires a pull-request run |
 
 ## Honest release decision
 

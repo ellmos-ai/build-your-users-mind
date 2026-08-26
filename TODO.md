@@ -40,7 +40,8 @@
 - [x] Add synthetic source-schema fixtures for Claude, Codex, Gemini/agy, and Kimi adapters; extend them as upstream log formats evolve. *(verified 2026-08-13)*
 - [x] Add an append-only decision-prediction event contract that separates recommendation, likely
   choice, explicit decision and execution authority; report top-1/Brier/log-loss independently from
-  the 0–10 advice-process score, recovery events and explicit user bonuses.
+  the 0–10 advice-process score, recovery events and explicit user bonuses. The v2 contract adds a
+  closed, SHA-256-bound `decision_ref` and lossless validation/recovery/bonus projections.
 - [x] Add a Secure-Mode-only text-avatar prototype with deterministic evidence retrieval, repeated
   redaction, privacy-minimized output, fail-closed novelty escalation and optional loopback Ollama.
 - [ ] Run a private operator acceptance round against a real local model and authorized corpus;

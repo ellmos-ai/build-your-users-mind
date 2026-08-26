@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/ellmos-ai/build-your-users-mind/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ellmos-ai/build-your-users-mind/ci.yml?branch=master&label=CI&logo=github" alt="CI"></a>
-  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-107%20passed-brightgreen" alt="Tests"></a>
+  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-116%20passed-brightgreen" alt="Tests"></a>
   <a href="https://github.com/ellmos-ai/build-your-users-mind/releases"><img src="https://img.shields.io/badge/version-1.1.0--dev-blue" alt="Version"></a>
   <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Python"></a>
   <a href="#"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Platform"></a>
@@ -110,13 +110,15 @@ sequenceDiagram
 
 ## Decision prediction and Secure-Mode text simulation
 
-The optional v1 prediction layer keeps five records deliberately separate: **best recommendation**,
+The optional v2 prediction layer keeps five records deliberately separate: **best recommendation**,
 **likely operator choice**, **simulated wording**, **the later explicit decision**, and **permission to
 act**. A prediction never grants the last one.
 
 `scripts/decision_prediction.py` validates an append-only JSONL event stream before projecting it.
 Each prediction carries offered options, a recommendation with rationale, an independently predicted
-probability distribution, model/version and evidence IDs. Explicit later decisions produce ordinary
+probability distribution, model/version and evidence IDs. A closed `decision_ref` anchors the
+prediction to a stable decision/index key, scope, source path and block ID, plus the source SHA-256;
+it contains no raw decision text. Explicit later decisions produce ordinary
 top-1/Brier/log-loss calibration metrics and a separate advice-process score:
 
 - 10: recommendation selected without correction;
@@ -128,6 +130,12 @@ top-1/Brier/log-loss calibration metrics and a separate advice-process score:
 Previously documented advice elements earn one recovery point when the operator explicitly adopts
 them immediately or in a later correction. Explicit operator bonus points are supported; the score
 history remains event-sourced and the total is capped at 10.
+
+The v2 projection explicitly retains recommendation match, whether the selected option was offered,
+whether no option fit, correction/harm deductions, every validation/recovery/bonus event and both
+`initial_score` and `final_score`. `current_score` is a compatibility alias for `final_score`.
+Predictions always retain `execution_authorized=false`; action receipts belong to a separate
+permission/execution system and are rejected from this journal.
 
 `scripts/secure_text_avatar.py` is a **Secure-Mode-only prototype**. It retrieves relevant rows from
 an already authorized and redacted corpus, re-applies built-in redaction, and either emits a

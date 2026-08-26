@@ -84,7 +84,7 @@ The ToM model must **actually be used**, not just exist:
   `WHAT-<USER>-SAID-ABOUT` feedback) and reports hit rate overall and per 🟢/🟡/🔴 tier plus the
   🔴 escalation rate — the empirical measure of whether the precognition actually works.
 
-### Optional v1: Decision-prediction events and Secure-Mode text simulation
+### Optional v2: Decision-prediction events and Secure-Mode text simulation
 
 - Use `scripts/decision_prediction.py` when a briefing needs an auditable split between the best
   recommendation, the likely operator choice, probability calibration, the later explicit decision,
@@ -93,6 +93,9 @@ The ToM model must **actually be used**, not just exist:
   `templates/DECISION-PREDICTION-EVENTS.jsonl`.
 - Only explicit user feedback can create `decision.observed`, `advice.adopted`, or `user.bonus`
   events. Never infer them from silence, agent text, or a generated simulation.
+- Every `prediction.created` event carries a closed, content-hashed `decision_ref`. Keep raw decision
+  text, private prompts, avatar content, Secure-Mode payloads, action receipts, and execution payloads
+  outside this journal.
 - Use `scripts/secure_text_avatar.py` only with an authorized, already redacted local corpus. Its
   default `plan` provider discloses no raw evidence. The optional `ollama` provider accepts HTTP
   loopback endpoints only and does not start a model service itself.

@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/ellmos-ai/build-your-users-mind/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ellmos-ai/build-your-users-mind/ci.yml?branch=master&label=CI&logo=github" alt="CI"></a>
-  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-107%20passed-brightgreen" alt="Tests"></a>
+  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-116%20passed-brightgreen" alt="Tests"></a>
   <a href="https://github.com/ellmos-ai/build-your-users-mind/releases"><img src="https://img.shields.io/badge/version-1.1.0--dev-blue" alt="Version"></a>
   <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Python"></a>
   <a href="#"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Plattform"></a>
@@ -104,14 +104,17 @@ sequenceDiagram
 
 ## Entscheidungsprognose und Secure-Mode-Textsimulation
 
-Die optionale v1-Prognoseebene hält fünf Datensätze bewusst getrennt: **beste Empfehlung**,
+Die optionale v2-Prognoseebene hält fünf Datensätze bewusst getrennt: **beste Empfehlung**,
 **wahrscheinliche Nutzerentscheidung**, **simulierte Formulierung**, **spätere ausdrückliche
 Entscheidung** und **Handlungserlaubnis**. Eine Prognose erteilt niemals die letzte.
 
 `scripts/decision_prediction.py` validiert einen unveränderlich fortgeschriebenen JSONL-Ereignisstrom,
 bevor daraus der aktuelle Stand projiziert wird. Jede Prognose enthält angebotene Optionen, eine
 begründete Empfehlung, eine davon unabhängige Wahrscheinlichkeitsverteilung, Modell/Version und
-Evidenz-IDs. Spätere ausdrückliche Entscheidungen erzeugen normale Top-1-, Brier- und Log-Loss-
+Evidenz-IDs. Ein geschlossener `decision_ref` verankert die Prognose über einen stabilen
+Entscheidungs-/Indexschlüssel, Scope, Quellpfad und Block-ID sowie den SHA-256-Hash der Quelle; er
+enthält keinen rohen Entscheidungstext. Spätere ausdrückliche Entscheidungen erzeugen normale
+Top-1-, Brier- und Log-Loss-
 Kalibrierungswerte sowie einen getrennten Prozessscore für die Beratungsqualität:
 
 - 10: Empfehlung ohne Korrektur gewählt;
@@ -123,6 +126,13 @@ Kalibrierungswerte sowie einen getrennten Prozessscore für die Beratungsqualit�
 Vorher dokumentierte Beratungselemente erhalten jeweils einen Recovery-Punkt, wenn der Nutzer sie
 unmittelbar oder bei einer späteren Korrektur ausdrücklich übernimmt. Ausdrückliche Nutzerbonuspunkte
 sind möglich; die Scorehistorie bleibt ereignisbasiert und der Gesamtwert ist auf 10 begrenzt.
+
+Die v2-Projektion bewahrt ausdrücklich die Übereinstimmung mit der Empfehlung, ob die gewählte
+Option angeboten war, ob keine Option passte, Korrektur- und Schadensabzüge, jedes Validierungs-,
+Recovery- und Bonusereignis sowie `initial_score` und `final_score`. `current_score` bleibt ein
+Kompatibilitätsalias für `final_score`. Prognosen behalten stets `execution_authorized=false`;
+Action-Receipts gehören in ein getrenntes Rechte-/Ausführungssystem und werden in diesem Journal
+abgewiesen.
 
 `scripts/secure_text_avatar.py` ist ausschließlich ein **Secure-Mode-Prototyp**. Er sucht relevante
 Zeilen in einem bereits autorisierten und geschwärzten Korpus, wendet die eingebaute Schwärzung erneut

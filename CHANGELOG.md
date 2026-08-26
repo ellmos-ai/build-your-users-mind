@@ -4,6 +4,10 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## [1.1.0-dev] - 2026-08-26
 
+- **Decision Prediction v2**: Added a closed, source-hashed `decision_ref`; explicit match, offered-
+  option and no-fit outcomes; complete validation/recovery/bonus projections; and `final_score` with
+  a tested `current_score` compatibility alias. Raw/private payload and action-receipt fields now fail
+  closed, while execution authority remains outside the journal.
 - **Post-Hold Integration**: Integrated the decision-prediction and Secure-Mode text-avatar work, the simulation-channel concept, and both post-competition quarantine branches after the Build Week judging hold ended.
 - **Multi-OS CI Matrix**: Added concurrency cancellation, Ubuntu/Windows/macOS coverage, Python 3.10-3.13, compilation, Ruff, and test gates.
 - **Repository Hygiene**: Expanded `.gitignore` for build artifacts, sync-conflict copies, generated data, and lock files.

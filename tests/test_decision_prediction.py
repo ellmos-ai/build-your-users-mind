@@ -26,6 +26,16 @@ def prediction(*, probabilities: dict[str, float] | None = None,
         "occurred_at": "2026-08-20T10:00:00Z",
         "decision_type": "test.choice",
         "scope": "test",
+        "decision_ref": {
+            "decision_id": "D-20260820-001",
+            "index_key": "D-20260820-001/E01",
+            "scope": "test",
+            "source_locator": {
+                "path": ".TOPICS/_control-center/_DECISIONS/TO-DECIDE-USER_4.txt",
+                "block_id": "E01",
+            },
+            "source_sha256": "a" * 64,
+        },
         "evidence_ids": ["H-1"],
         "options": [{"id": "A", "label": "Alpha"}, {"id": "B", "label": "Beta"}],
         "recommendation": {"option_id": recommended, "rationale": "Best supported option."},
@@ -82,6 +92,57 @@ def adopted(event_id: str, element_id: str, source: str = "immediate") -> dict[s
 
 
 class ValidationAndScoring(unittest.TestCase):
+    def test_prediction_requires_structured_decision_ref(self) -> None:
+        missing = prediction()
+        del missing["decision_ref"]
+        with self.assertRaisesRegex(ValueError, "decision_ref must be an object"):
+            dp.project([missing])
+
+        malformed_hash = prediction()
+        malformed_hash["decision_ref"]["source_sha256"] = "not-a-sha256"  # type: ignore[index]
+        with self.assertRaisesRegex(ValueError, "source_sha256 must be 64 lowercase hexadecimal"):
+            dp.project([malformed_hash])
+
+        mismatched_scope = prediction()
+        mismatched_scope["decision_ref"]["scope"] = "another-scope"  # type: ignore[index]
+        with self.assertRaisesRegex(ValueError, "decision_ref.scope must match scope"):
+            dp.project([mismatched_scope])
+
+    def test_decision_ref_is_owned_only_by_prediction_created(self) -> None:
+        observed = decision("A")
+        observed["decision_ref"] = prediction()["decision_ref"]
+        with self.assertRaisesRegex(ValueError, "decision_ref is only allowed on prediction.created"):
+            dp.project([prediction(), observed])
+
+    def test_private_or_execution_payload_fields_are_rejected(self) -> None:
+        for field in (
+            "prompt", "raw_prompt", "decision_text", "raw_decision_text", "private_prompt", "secure_text",
+            "secure_text_payload", "payload", "action_payload", "execution_payload", "avatar_content", "receipt",
+            "action_receipt", "execution_receipt",
+        ):
+            with self.subTest(field=field):
+                event = prediction()
+                event[field] = "must not enter the prediction journal"
+                with self.assertRaisesRegex(ValueError, "forbidden private or execution field"):
+                    dp.project([event])
+
+    def test_followup_events_cannot_claim_execution_authority(self) -> None:
+        observed = decision("A")
+        observed["execution_authorized"] = False
+        with self.assertRaisesRegex(ValueError, "execution_authorized is only allowed on prediction.created"):
+            dp.project([prediction(), observed])
+
+    def test_duplicate_prediction_cannot_replace_reference_or_options_snapshot(self) -> None:
+        replacement = prediction(recommended="B")
+        replacement["event_id"] = "EV-replacement"
+        replacement["decision_ref"]["source_sha256"] = "b" * 64  # type: ignore[index]
+        with self.assertRaisesRegex(ValueError, "duplicate prediction.created"):
+            dp.project([prediction(), replacement])
+
+    def test_recovery_event_requires_observation_and_validation_first(self) -> None:
+        with self.assertRaisesRegex(ValueError, "recovery events require validation.scored first"):
+            dp.project([prediction(), adopted("EV-4", "privacy-gate")])
+
     def test_recommended_option_without_correction_scores_ten(self) -> None:
         report = dp.project([prediction(), decision("A"), validation()])
         self.assertEqual(report["predictions"][0]["current_score"], 10)
@@ -122,6 +183,57 @@ class ValidationAndScoring(unittest.TestCase):
         self.assertEqual(item["recovery_points"], 2)
         self.assertEqual(item["bonus_points"], 6)
         self.assertEqual(item["current_score"], 10)
+        self.assertEqual(item["final_score"], 10)
+
+    def test_projection_exposes_decision_scoring_and_event_provenance(self) -> None:
+        bonus = {
+            "schema": dp.SCHEMA,
+            "event_id": "EV-5",
+            "prediction_id": "DP-1",
+            "event_type": "user.bonus",
+            "occurred_at": "2026-08-20T10:04:00Z",
+            "points": 2,
+            "reason": "Explicit operator bonus.",
+        }
+        events = [
+            prediction(), decision("B"), validation(correction=2, harm=1),
+            adopted("EV-4", "privacy-gate", "later_correction"), bonus,
+        ]
+        item = dp.project(events)["predictions"][0]
+
+        self.assertEqual(item["decision_ref"], prediction()["decision_ref"])
+        self.assertFalse(item["recommended_match"])
+        self.assertTrue(item["chosen_option_was_offered"])
+        self.assertFalse(item["no_option_fit"])
+        self.assertEqual(item["correction_burden"], 2)
+        self.assertEqual(item["correction_deduction"], 2)
+        self.assertEqual(item["harm_penalty"], 1)
+        self.assertEqual(item["initial_score"], 4)
+        self.assertEqual(item["final_score"], 7)
+        self.assertEqual(item["current_score"], item["final_score"])
+        self.assertFalse(item["execution_authorized"])
+        self.assertNotIn("action_receipt", item)
+        self.assertEqual(
+            item["validation_events"],
+            [{
+                "event_id": "EV-3",
+                "occurred_at": "2026-08-20T10:02:00Z",
+                "correction_burden": 2,
+                "correction_deduction": 2,
+                "harm_penalty": 1,
+                "reason": "Explicit operator evaluation.",
+            }],
+        )
+        self.assertEqual(item["recovery_deltas"][0]["event_id"], "EV-4")
+        self.assertEqual(item["recovery_deltas"][0]["points"], 1)
+        self.assertEqual(item["bonus_events"][0]["event_id"], "EV-5")
+        self.assertEqual(item["bonus_events"][0]["points"], 2)
+
+    def test_custom_decision_explicitly_records_that_no_option_fit(self) -> None:
+        item = dp.project([prediction(), decision(None, "A different solution"), validation()])["predictions"][0]
+        self.assertFalse(item["recommended_match"])
+        self.assertFalse(item["chosen_option_was_offered"])
+        self.assertTrue(item["no_option_fit"])
 
     def test_duplicate_advice_element_cannot_be_double_counted(self) -> None:
         events = [
@@ -169,6 +281,24 @@ class Cli(unittest.TestCase):
                 rc = dp.main(["--events", str(path), "--json"])
             self.assertEqual(rc, 0)
             self.assertEqual(json.loads(output.getvalue())["summary"]["mean_advice_score"], 10.0)
+
+
+class JsonSchemaContract(unittest.TestCase):
+    def test_schema_requires_closed_structured_decision_ref(self) -> None:
+        schema = json.loads((ROOT / "schemas" / "decision-prediction-event.schema.json").read_text(encoding="utf-8"))
+        self.assertEqual(dp.SCHEMA, "byum.decision-prediction.v2")
+        self.assertEqual(schema["properties"]["schema"]["const"], dp.SCHEMA)
+        self.assertIn("decision_ref", schema["properties"])
+        decision_ref = schema["properties"]["decision_ref"]
+        self.assertEqual(
+            set(decision_ref["required"]),
+            {"decision_id", "index_key", "scope", "source_locator", "source_sha256"},
+        )
+        self.assertFalse(decision_ref["additionalProperties"])
+        self.assertEqual(decision_ref["properties"]["source_sha256"]["pattern"], "^[0-9a-f]{64}$")
+        locator = decision_ref["properties"]["source_locator"]
+        self.assertEqual(set(locator["required"]), {"path", "block_id"})
+        self.assertFalse(locator["additionalProperties"])
 
 
 if __name__ == "__main__":
