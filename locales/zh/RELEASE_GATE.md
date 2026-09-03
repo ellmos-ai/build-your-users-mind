@@ -3,7 +3,6 @@
 # RELEASE_GATE —— build-your-users-mind
 
 **日期：** 2026-06-17
-**脚本：** `.MODULES/_scripts/final_gate_check.py`
 **结果：** **10 PASS / 0 FAIL / 0 WARN → 准备好进行公开分发**
 **目标仓库：** `ellmos-ai/build-your-users-mind`（首先为**私有**）
 **提交：** 本地初始化，尚未推送（等待明确的 Go 指令）。

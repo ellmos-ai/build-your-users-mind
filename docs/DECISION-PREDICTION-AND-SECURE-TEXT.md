@@ -48,7 +48,7 @@ Contract v2 requires every `prediction.created` event to carry one closed `decis
   "index_key": "D-20260820-001/E01",
   "scope": "controlroom",
   "source_locator": {
-    "path": ".TOPICS/_control-center/_DECISIONS/TO-DECIDE-USER_4.txt",
+    "path": "decisions/open-decisions-4.txt",
     "block_id": "E01"
   },
   "source_sha256": "64 lowercase hexadecimal characters"

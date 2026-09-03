@@ -70,7 +70,7 @@ freizugebende Modus (siehe Kap. 5).
 
 ## 6. Bezug zu bestehenden Teilen
 
-- **TOM_lm** (`_control-center/_TOM-lm`): der Entscheidungs-Avatar entscheidet
+- **TOM_lm** (Entscheidungs-Avatar des Betreibers, außerhalb dieses Repos): er entscheidet
   schon heute delegiert im Rahmen; der Simulations-Kanal ergänzt die
   **generative** Seite (Schreiben/Prompten wie der Nutzer) — TOM_lm bleibt die
   Autoritäts-Typisierung, der Kanal ist ihr Sprachrohr.

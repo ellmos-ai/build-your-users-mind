@@ -3,7 +3,6 @@
 # RELEASE_GATE — build-your-users-mind
 
 **Fecha:** 2026-06-17
-**Script:** `.MODULES/_scripts/final_gate_check.py`
 **Resultado:** **10 PASS / 0 FAIL / 0 WARN → READY FOR PUBLIC RELEASE**
 **Repositorio destino:** `ellmos-ai/build-your-users-mind` (inicialmente **privado**)
 **Commit:** Inicializado localmente, sin push (esperando aprobación explícita).
