@@ -16,7 +16,9 @@
 - [x] Executable Stage-2 worker template, JSON schema, completeness/collision validator, and strict
   aggregation/verification exit codes.
 - [x] Recursive Git exclusions for private corpora and filled avatar files.
-- [x] Synthetic fixture suite and Ubuntu/Windows/macOS CI matrix for Python 3.10-3.13 with pinned Ruff.
+- [x] Synthetic fixture suite and Ubuntu/Windows/macOS CI matrix for Python 3.10-3.13 with a pinned
+  Ruff *rule set* (`[tool.ruff.lint] select` in `pyproject.toml`). The Ruff *version* installed in CI
+  is deliberately unpinned; the fixed rule set is what keeps a new release from turning the build red.
 - [x] Authorization, diagnosis, privacy, and irreversible/high-impact action boundaries documented.
 
 ## Open before a stable release
@@ -57,6 +59,25 @@
   counter-evidence, missing information, and escalation reason. It must never be interpreted as
   authorization for an irreversible action.
 
+## Maintenance follow-ups (surface after-care, 2026-09-03)
+
+- [ ] Cut a first real release. The version badge links to `/releases`, which is empty: the only tags
+  are `build-week-2026` and `build-week-2026-submitted`, both event markers rather than releases.
+  Either tag `v1.1.0-dev` (or the first stable version) or point the badge somewhere that exists.
+- [ ] Delete the merged leftover branches `post-competition-quarantine/2026-08-24`,
+  `post-competition-quarantine/2026-08-25` and `post-hold/integration-20260826`. Verified merged into
+  `master` on 2026-09-03. The two older ones, `post-competition-quarantine/2026-08-01` and `/2026-08-07`,
+  are **not** merged, but their content is superseded (badge/`llms.txt` work redone in the 08-24/08-25
+  branches; 08-01 is a banner change plus its own revert, net zero) — confirm once, then delete.
+- [ ] Refresh the five localized `RELEASE_GATE.md` files or retire them. They are 2026-06-17 snapshots
+  claiming "10 PASS → READY FOR PUBLIC RELEASE" and calling the repository "initially private", while
+  the authoritative English gate says the opposite: public development state, not a stable release.
+  The translation banner marks them historical, but a reader who only reads their own language sees a
+  release verdict this project does not make.
+- [ ] Decide what `docs/SIMULATION-CHANNEL-KONZEPT.md` should be. It is the only German-only document
+  in an English-primary repository, and its filename is German too. Either translate it and rename it
+  to `SIMULATION-CHANNEL-CONCEPT.md`, or move it out of `docs/` as an operator note.
+
 ## STATUS — current gate
 
 | Category | Status | Evidence |
@@ -65,7 +86,7 @@
 | Python syntax/lint | PASS | compileall + Ruff |
 | Deterministic behavior | PASS | synthetic unit/CLI suite |
 | Manifest | PASS | `ellmos.module.v2` schema |
-| Cross-platform automation | PENDING REMOTE | CI workflow added; GitHub run required after push |
+| Cross-platform automation | PASS | CI green on `master` since 2026-08-26 (run `32994278714`, 12 jobs) |
 | Semantic classifier quality | OPEN | new representative review not yet run |
 | Stable release | NOT READY | development/public is honest; no stable tag |
 
