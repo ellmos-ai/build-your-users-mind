@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/ellmos-ai/build-your-users-mind/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ellmos-ai/build-your-users-mind/ci.yml?branch=master&label=CI&logo=github" alt="CI"></a>
-  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-116%20passed-brightgreen" alt="Tests"></a>
+  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-117%20passed-brightgreen" alt="Tests"></a>
   <a href="https://github.com/ellmos-ai/build-your-users-mind/releases"><img src="https://img.shields.io/badge/version-1.1.0--dev-blue" alt="Version"></a>
   <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Python"></a>
   <a href="#"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Plattform"></a>
@@ -198,11 +198,9 @@ Sie sehen, wie `extract → merge → chunk → classify → validate → aggreg
 | [system-explorer](https://github.com/ellmos-ai/system-explorer) | Discovery-Engine | Flotten-Inspektion und Stack-Kompositionswerkzeuge |
 | [policy-registry](https://github.com/ellmos-ai/policy-registry) | Policy-Verträge | Deklarative Sicherheitsrichtlinien und Validierungsregeln |
 | [sqlite-transit-sync](https://github.com/ellmos-ai/sqlite-transit-sync) | SQLite-Transit | Verschlüsselte SQLite-Replikation und Snapshot-Synchronisation |
-| [ellmos-delegation-authority](https://github.com/ellmos-ai/ellmos-delegation-authority) | Delegation | Dynamisches Rollen-Routing und Aufgabenzuweisung |
 | [ellmos-controlcenter-mcp](https://github.com/ellmos-ai/ellmos-controlcenter-mcp) | MCP-Steuerung | Zentrale Fähigkeits- und Profil-Routenführung |
 | [ellmos-filecommander-mcp](https://github.com/ellmos-ai/ellmos-filecommander-mcp) | Dateisystem | Atomare dateibasierte MCP-Dateiverwaltung |
 | [ellmos-codecommander-mcp](https://github.com/ellmos-ai/ellmos-codecommander-mcp) | Code-Intelligenz | AST-Parsing, Code-Diagnostik & Preview-Safe-Edits |
-| [prompt-archaeology-casestudy2](https://github.com/research-line/prompt-archaeology-casestudy2) | Prompt-Archäologie | Empirische Fallstudie zu langfristigen Interaktionsmustern |
 | [DevCenter](https://github.com/dev-bricks/DevCenter) | Entwickler-Hub | Zentrales Entwicklerportal aller open-bricks Produkte |
 | [CodeBox](https://github.com/dev-bricks/CodeBox) | Code-Utilities | Entwickler-Werkzeuge, Syntax-Parser und Packaging-Tools |
 | [MethodenAnalyser](https://github.com/dev-bricks/MethodenAnalyser) | Methoden-Analyse | AST-basierte Python-Codeanalyse & strukturelle Inspektion |

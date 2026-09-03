@@ -1,8 +1,8 @@
 # build-your-users-mind
 
-Last-checked: 2026-08-26
+Last-checked: 2026-09-03
 Version: 1.1.0-dev (development, not stable)
-Tests: 116 passed
+Tests: 117 passed
 Canonical repository: https://github.com/ellmos-ai/build-your-users-mind
 Primary language: English
 Translations: README_de.md, locales/de, locales/es, locales/ja, locales/ru, locales/zh
@@ -30,11 +30,9 @@ Umbrella: open-bricks
 - [ellmos-ai/system-explorer](https://github.com/ellmos-ai/system-explorer) — Fleet discovery and inspection infrastructure
 - [ellmos-ai/policy-registry](https://github.com/ellmos-ai/policy-registry) — Canonical policy distribution and contract verification
 - [ellmos-ai/sqlite-transit-sync](https://github.com/ellmos-ai/sqlite-transit-sync) — Transactional SQLite replication and backup
-- [ellmos-ai/ellmos-delegation-authority](https://github.com/ellmos-ai/ellmos-delegation-authority) — Dynamic task delegation and role routing
 - [ellmos-ai/ellmos-controlcenter-mcp](https://github.com/ellmos-ai/ellmos-controlcenter-mcp) — Central capability routing and MCP profile lifecycle
 - [ellmos-ai/ellmos-filecommander-mcp](https://github.com/ellmos-ai/ellmos-filecommander-mcp) — Local-first atomic file management MCP server
 - [ellmos-ai/ellmos-codecommander-mcp](https://github.com/ellmos-ai/ellmos-codecommander-mcp) — AST parsing, diagnostics & preview-safe refactoring
-- [research-line/prompt-archaeology-casestudy2](https://github.com/research-line/prompt-archaeology-casestudy2) — Empirical prompt archaeology research
 - [dev-bricks/DevCenter](https://github.com/dev-bricks/DevCenter) — Central developer portal across all open-bricks products
 - [dev-bricks/CodeBox](https://github.com/dev-bricks/CodeBox) — Developer utilities, syntax parsers, and packaging tools
 - [dev-bricks/MethodenAnalyser](https://github.com/dev-bricks/MethodenAnalyser) — AST-based Python code analysis and structural inspection
@@ -65,7 +63,7 @@ Umbrella: open-bricks
 - `schemas/decision-prediction-event.schema.json` - versioned decision-event contract.
 - `schemas/secure-text-avatar-output.schema.json` - safe simulated-text output contract.
 - `docs/DECISION-PREDICTION-AND-SECURE-TEXT.md` - architecture, scoring and registry-integration notes.
-- `docs/SIMULATION-CHANNEL-KONZEPT.md` - bounded concept for a clearly labelled simulation channel.
+- `docs/SIMULATION-CHANNEL-KONZEPT.md` - bounded concept for a clearly labelled simulation channel (German only, concept stage, no implementation).
 - `tests/test_metadata.py` - metadata, CI matrix, security, schema and zero-egress contract tests.
 - `.gitignore` - excludes private corpora, generated avatar files, logs and local data.
 
