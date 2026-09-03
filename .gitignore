@@ -51,6 +51,9 @@ build/
 *.conflict
 LOCK*.txt
 
+# Maintenance run protocol (pipeline material, not repository content)
+_after-care/
+
 # IDE
 .idea/
 .vscode/
