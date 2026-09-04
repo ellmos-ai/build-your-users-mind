@@ -455,7 +455,7 @@ def _digest(path: Path) -> str | None:
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
 
 
-def append_event(path: Path, event: dict[str, Any]) -> dict[str, Any]:
+def append_event(path: Path, event: object) -> dict[str, Any]:
     """Append one event to the journal after revalidating the whole stream.
 
     This is the guarded write seam for the BYUM journal: the journal itself is
@@ -468,7 +468,7 @@ def append_event(path: Path, event: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(event, dict):
         raise ValueError("event must be a JSON object")
     existing = load_events(path) if path.is_file() else []
-    candidate = copy.deepcopy(event)
+    candidate: dict[str, Any] = copy.deepcopy(event)
     validate_events(existing + [candidate])
     if existing and _instant(candidate["occurred_at"]) < _instant(existing[-1]["occurred_at"]):
         raise ValueError(
@@ -498,7 +498,7 @@ def append_event(path: Path, event: dict[str, Any]) -> dict[str, Any]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--events", required=True, help="append-only decision event JSONL")
     parser.add_argument("--json", action="store_true", help="emit JSON")
     parser.add_argument("--out", default="", help="write report to a file")

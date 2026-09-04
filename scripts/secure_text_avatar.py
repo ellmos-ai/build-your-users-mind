@@ -162,7 +162,7 @@ def simulate(records: list[dict[str, Any]], scenario: str, *, provider: str = "p
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--corpus", required=True, help="authorized, redacted BYUM corpus JSONL")
     parser.add_argument("--scenario", required=True, help="current situation to simulate")
     parser.add_argument("--provider", choices=("plan", "ollama"), default="plan")

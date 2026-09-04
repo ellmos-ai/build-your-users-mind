@@ -321,6 +321,16 @@ class GuardedAppend(unittest.TestCase):
             self.assertEqual(second["journal_sha256_before"], receipt["journal_sha256_after"])
             self.assertEqual(len(dp.load_events(path)), 2)
 
+    def test_append_rejects_non_object_event(self) -> None:
+        # The CLI feeds append_event whatever json.loads returns, so the guard is
+        # reachable with a list or scalar; the annotation must not claim otherwise.
+        with contextlib.ExitStack() as stack:
+            path = self.journal(stack)
+            for payload in ([prediction()], "prediction", 7, None):
+                with self.assertRaisesRegex(ValueError, "must be a JSON object"):
+                    dp.append_event(path, payload)
+            self.assertFalse(path.exists())
+
     def test_append_rejects_backdated_event(self) -> None:
         with contextlib.ExitStack() as stack:
             path = self.journal(stack)
