@@ -301,5 +301,83 @@ class JsonSchemaContract(unittest.TestCase):
         self.assertFalse(locator["additionalProperties"])
 
 
+class GuardedAppend(unittest.TestCase):
+    def journal(self, stack: contextlib.ExitStack) -> Path:
+        return Path(stack.enter_context(tempfile.TemporaryDirectory())) / "events.jsonl"
+
+    def test_append_creates_journal_and_returns_receipt(self) -> None:
+        with contextlib.ExitStack() as stack:
+            path = self.journal(stack)
+            receipt = dp.append_event(path, prediction())
+            self.assertTrue(receipt["appended"])
+            self.assertEqual(receipt["event_id"], "EV-1")
+            self.assertEqual(receipt["line_number"], 1)
+            self.assertIsNone(receipt["journal_sha256_before"])
+            self.assertFalse(receipt["execution_authorized"])
+            self.assertEqual(len(dp.load_events(path)), 1)
+
+            second = dp.append_event(path, decision())
+            self.assertEqual(second["events_before"], 1)
+            self.assertEqual(second["journal_sha256_before"], receipt["journal_sha256_after"])
+            self.assertEqual(len(dp.load_events(path)), 2)
+
+    def test_append_rejects_non_object_event(self) -> None:
+        # The CLI feeds append_event whatever json.loads returns, so the guard is
+        # reachable with a list or scalar; the annotation must not claim otherwise.
+        with contextlib.ExitStack() as stack:
+            path = self.journal(stack)
+            for payload in ([prediction()], "prediction", 7, None):
+                with self.assertRaisesRegex(ValueError, "must be a JSON object"):
+                    dp.append_event(path, payload)
+            self.assertFalse(path.exists())
+
+    def test_append_rejects_backdated_event(self) -> None:
+        with contextlib.ExitStack() as stack:
+            path = self.journal(stack)
+            dp.append_event(path, prediction())
+            backdated = decision()
+            backdated["occurred_at"] = "2026-08-20T09:59:00Z"
+            with self.assertRaisesRegex(ValueError, "retroactive"):
+                dp.append_event(path, backdated)
+            self.assertEqual(len(dp.load_events(path)), 1)
+
+    def test_append_rejects_invariant_break_without_touching_the_journal(self) -> None:
+        with contextlib.ExitStack() as stack:
+            path = self.journal(stack)
+            first = dp.append_event(path, prediction())
+            orphan = dict(decision())
+            orphan["prediction_id"] = "DP-unknown"
+            with self.assertRaises(ValueError):
+                dp.append_event(path, orphan)
+            self.assertEqual(dp._digest(path), first["journal_sha256_after"])
+
+    def test_append_rejects_execution_and_private_payload_fields(self) -> None:
+        with contextlib.ExitStack() as stack:
+            path = self.journal(stack)
+            leaky = prediction()
+            leaky["action_receipt"] = "granted"
+            with self.assertRaises(ValueError):
+                dp.append_event(path, leaky)
+            self.assertFalse(path.exists())
+
+    def test_cli_append_prints_receipt_and_reports_errors(self) -> None:
+        with contextlib.ExitStack() as stack:
+            path = self.journal(stack)
+            event_file = path.parent / "event.json"
+            event_file.write_text(json.dumps(prediction()), encoding="utf-8")
+            stream = io.StringIO()
+            with contextlib.redirect_stdout(stream):
+                code = dp.main(["--events", str(path), "--append", str(event_file)])
+            self.assertEqual(code, 0)
+            self.assertEqual(json.loads(stream.getvalue())["event_id"], "EV-1")
+
+            errors = io.StringIO()
+            with contextlib.redirect_stderr(errors):
+                code = dp.main(["--events", str(path), "--append", str(event_file)])
+            self.assertEqual(code, 2)
+            self.assertIn("cannot append", errors.getvalue())
+            self.assertEqual(len(dp.load_events(path)), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -9,15 +9,22 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import math
 import re
 import sys
 from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from pipeline_common import atomic_write_text, load_jsonl, validate_timestamp
+from pipeline_common import (
+    atomic_write_jsonl,
+    atomic_write_text,
+    load_jsonl,
+    validate_timestamp,
+)
 
 SCHEMA = "byum.decision-prediction.v2"
 EVENT_TYPES = {
@@ -437,12 +444,85 @@ def format_report(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _instant(value: object) -> datetime:
+    """Parse an already validated ISO-8601 timestamp for ordering comparisons."""
+    text = validate_timestamp(value)
+    return datetime.fromisoformat(text[:-1] + "+00:00" if text.endswith("Z") else text)
+
+
+def _digest(path: Path) -> str | None:
+    """SHA-256 of the journal file, or None while it does not exist yet."""
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+
+
+def append_event(path: Path, event: object) -> dict[str, Any]:
+    """Append one event to the journal after revalidating the whole stream.
+
+    This is the guarded write seam for the BYUM journal: the journal itself is
+    the audit trail and the returned receipt is its proof of entry, so no second
+    audit store is created.  Beyond the cross-event invariants the batch
+    validator already enforces, an append must additionally reject a backdated
+    ``occurred_at``; within a single file those invariants are checked in line
+    order, which alone would let a later write claim an earlier moment.
+    """
+    if not isinstance(event, dict):
+        raise ValueError("event must be a JSON object")
+    existing = load_events(path) if path.is_file() else []
+    candidate: dict[str, Any] = copy.deepcopy(event)
+    validate_events(existing + [candidate])
+    if existing and _instant(candidate["occurred_at"]) < _instant(existing[-1]["occurred_at"]):
+        raise ValueError(
+            "occurred_at predates the last journal entry; retroactive events are rejected"
+        )
+    line = json.dumps(candidate, ensure_ascii=False)
+    before = _digest(path)
+    # ponytail: single-writer seam.  Two concurrent appends would let the last
+    # one win and drop an event; the receipt hash chain detects that afterwards
+    # but does not prevent it.  Add a file lock once concurrent writers exist.
+    atomic_write_jsonl(path, existing + [candidate])
+    return {
+        "schema": SCHEMA,
+        "appended": True,
+        "event_id": candidate["event_id"],
+        "prediction_id": candidate["prediction_id"],
+        "event_type": candidate["event_type"],
+        "occurred_at": candidate["occurred_at"],
+        "line_number": len(existing) + 1,
+        "events_before": len(existing),
+        "events_after": len(existing) + 1,
+        "line_sha256": hashlib.sha256(line.encode("utf-8")).hexdigest(),
+        "journal_sha256_before": before,
+        "journal_sha256_after": _digest(path),
+        "execution_authorized": False,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--events", required=True, help="append-only decision event JSONL")
     parser.add_argument("--json", action="store_true", help="emit JSON")
     parser.add_argument("--out", default="", help="write report to a file")
+    parser.add_argument(
+        "--append",
+        default="",
+        metavar="EVENT",
+        help="append one JSON event ('-' reads stdin) and print an audit receipt",
+    )
     args = parser.parse_args(argv)
+    if args.append:
+        events_path = Path(args.events).expanduser()
+        try:
+            raw = (
+                sys.stdin.read()
+                if args.append == "-"
+                else Path(args.append).expanduser().read_text(encoding="utf-8")
+            )
+            receipt = append_event(events_path, json.loads(raw))
+        except (OSError, UnicodeDecodeError, ValueError) as exc:
+            print(f"ERROR: cannot append decision event: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps(receipt, ensure_ascii=False, indent=2))
+        return 0
     try:
         events = load_events(Path(args.events).expanduser())
         report = project(events)

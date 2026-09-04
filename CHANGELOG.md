@@ -4,6 +4,10 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## [1.1.0-dev] - 2026-08-26
 
+- **Guarded journal write seam**: `decision_prediction.py --append` adds one event after
+  revalidating the whole stream, rejects backdated `occurred_at`, writes atomically and returns an
+  audit receipt with line and journal hashes. A rejected append leaves the journal unchanged; the
+  journal plus receipt remain the only audit trail (ticket T-20260820-942457158).
 - **Decision Prediction v2**: Added a closed, source-hashed `decision_ref`; explicit match, offered-
   option and no-fit outcomes; complete validation/recovery/bonus projections; and `final_score` with
   a tested `current_score` compatibility alias. Raw/private payload and action-receipt fields now fail
