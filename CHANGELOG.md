@@ -2,6 +2,24 @@
 
 All notable changes to `build-your-users-mind` are documented here.
 
+## [Unreleased] - 2026-09-03 (maintenance)
+
+- **Removed two dead ecosystem links**: `ellmos-ai/ellmos-delegation-authority` and
+  `research-line/prompt-archaeology-casestudy2` are private repositories, so both entries were a 404
+  for every reader of `README.md`, `README_de.md` and `llms.txt`. A contract test had been asserting
+  the presence of the first one; it now asserts the opposite, that no private repository is linked.
+- **Pinned CI actions to full commit SHAs**: `actions/checkout` and `actions/setup-python` ran on
+  floating `@v4`/`@v5` tags (Node 20), and the metadata test asserted those literals — so the test
+  would have failed on the very upgrade it was meant to protect. The test now requires a 40-character
+  SHA pin instead of a specific major version.
+- **Unfroze the `llms.txt` freshness stamp**: the test pinned the literal date `2026-08-26`, which
+  meant any refresh of the "last checked" marker turned the suite red. It now checks the date format.
+- **Removed internal pipeline paths from published documents**: the five localized `RELEASE_GATE.md`
+  files referenced a `.MODULES/_scripts/…` script that does not exist in this repository, and the
+  decision-reference examples in `docs/` and `tests/` used a private `_control-center` folder path.
+- **Corrected stale status claims**: the CI matrix is recorded as green on `master` (since 2026-08-26)
+  instead of "pending remote", and the Ruff claim now says the *rule set* is pinned, not the version.
+
 ## [1.1.0-dev] - 2026-08-26
 
 - **Guarded journal write seam**: `decision_prediction.py --append` adds one event after

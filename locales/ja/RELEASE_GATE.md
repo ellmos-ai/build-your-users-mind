@@ -3,7 +3,6 @@
 # RELEASE_GATE — build-your-users-mind
 
 **日付:** 2026-06-17
-**スクリプト:** `.MODULES/_scripts/final_gate_check.py`
 **結果:** **10 PASS / 0 FAIL / 0 WARN → 一般公開の準備完了**
 **対象リポジトリ:** `ellmos-ai/build-your-users-mind` (最初は **プライベート**)
 **コミット:** ローカルで初期化済み、プッシュ未実行 (明示的な指示待ち)。

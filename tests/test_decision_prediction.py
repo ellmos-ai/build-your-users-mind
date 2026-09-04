@@ -31,7 +31,7 @@ def prediction(*, probabilities: dict[str, float] | None = None,
             "index_key": "D-20260820-001/E01",
             "scope": "test",
             "source_locator": {
-                "path": ".TOPICS/_control-center/_DECISIONS/TO-DECIDE-USER_4.txt",
+                "path": "decisions/open-decisions-4.txt",
                 "block_id": "E01",
             },
             "source_sha256": "a" * 64,

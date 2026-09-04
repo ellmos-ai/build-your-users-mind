@@ -60,7 +60,11 @@ class TestMetadataParity(unittest.TestCase):
 
         llms_text = self.llms_txt.read_text(encoding="utf-8")
         self.assertIn(f"Version: {version}", llms_text)
-        self.assertIn("Last-checked: 2026-08-26", llms_text)
+        # Assert the shape of the freshness stamp, not one frozen day. Pinning
+        # the literal date turned the marker that is supposed to prove a recent
+        # review into something no review may change: every refresh made the
+        # suite red, so the cheapest fix was to leave the stamp stale.
+        self.assertRegex(llms_text, r"Last-checked: \d{4}-\d{2}-\d{2}\b")
 
     def test_schema_validity(self):
         with open(self.classification_schema, "r", encoding="utf-8") as f:
@@ -138,8 +142,16 @@ class TestMetadataParity(unittest.TestCase):
 
     def test_ci_workflow_integrity(self):
         ci_text = self.ci_workflow.read_text(encoding="utf-8")
-        self.assertIn("actions/checkout@v4", ci_text)
-        self.assertIn("actions/setup-python@v5", ci_text)
+        # The contract is supply-chain pinning, not a specific major version.
+        # Asserting "@v4"/"@v5" literally froze the workflow onto the deprecated
+        # Node 20 actions and would have turned this suite red on the very
+        # upgrade it was meant to protect.
+        for action in ("actions/checkout", "actions/setup-python"):
+            self.assertRegex(
+                ci_text,
+                rf"uses: {action}@[0-9a-f]{{40}}\b",
+                f"{action} must be pinned to a full 40-character commit SHA",
+            )
         self.assertIn("ubuntu-latest", ci_text)
         self.assertIn("windows-latest", ci_text)
         self.assertIn("macos-latest", ci_text)
@@ -170,8 +182,26 @@ class TestMetadataParity(unittest.TestCase):
         self.assertIn("system-explorer", readme_en_text)
         self.assertIn("policy-registry", readme_en_text)
         self.assertIn("sqlite-transit-sync", readme_en_text)
-        self.assertIn("ellmos-delegation-authority", readme_en_text)
         self.assertIn("open-bricks", readme_en_text)
+
+    def test_sibling_matrix_links_no_private_repositories(self):
+        # The matrix exists to help readers reach neighbouring projects. A link
+        # to a private repository is a 404 for every reader, so listing one is
+        # worse than omitting it. These two were listed and asserted for months:
+        # ellmos-ai/ellmos-delegation-authority and
+        # research-line/prompt-archaeology-casestudy2 are both private.
+        known_private = (
+            "ellmos-delegation-authority",
+            "prompt-archaeology-casestudy2",
+        )
+        for path in (self.readme_en, self.readme_de, ROOT / "llms.txt"):
+            text = path.read_text(encoding="utf-8")
+            for slug in known_private:
+                self.assertNotIn(
+                    slug,
+                    text,
+                    f"{path.name} links {slug}, which is a private repository (404 for readers)",
+                )
 
 
 if __name__ == "__main__":
