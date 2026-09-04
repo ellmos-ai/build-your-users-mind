@@ -38,6 +38,23 @@ is poorly calibrated. Execution authority is outside all three outputs.
 The original event is never rewritten. A late correction adds an `advice.adopted` event with
 `source=later_correction`; projections expose both the initial and current score.
 
+### Guarded write seam
+
+Events enter the journal through one seam, so a federating surface such as ControlRoom never writes
+the file itself:
+
+```bash
+python scripts/decision_prediction.py --events JOURNAL.jsonl --append event.json   # '-' reads stdin
+```
+
+The append revalidates the entire stream with the new event included, rejects an `occurred_at` that
+predates the last entry, writes atomically, and prints a receipt with the event identity, the line
+number, the line hash and the journal hash before and after. Within one file the cross-event
+invariants are checked in line order, which alone would let a later write claim an earlier moment;
+the timestamp guard closes that gap. A rejected append leaves the journal byte-identical. The
+append-only journal and this receipt are the audit trail — there is no second audit store, and
+`execution_authorized` stays false.
+
 ## Decision reference, projection and privacy contract
 
 Contract v2 requires every `prediction.created` event to carry one closed `decision_ref`:
