@@ -476,6 +476,9 @@ def append_event(path: Path, event: dict[str, Any]) -> dict[str, Any]:
         )
     line = json.dumps(candidate, ensure_ascii=False)
     before = _digest(path)
+    # ponytail: single-writer seam.  Two concurrent appends would let the last
+    # one win and drop an event; the receipt hash chain detects that afterwards
+    # but does not prevent it.  Add a file lock once concurrent writers exist.
     atomic_write_jsonl(path, existing + [candidate])
     return {
         "schema": SCHEMA,
