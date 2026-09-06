@@ -1,0 +1,50 @@
+# TO-DECIDE — open decision chain
+
+State: <YYYY-MM-DD>
+Canonical entry point: <path to this file>
+
+---
+Pointer / predecessor:
+Archived full state: <path>/DECIDED-AND-DONE.template.md (or an earlier dated cut)
+
+Pointer / successor:
+Continuation: <path>/TO-DECIDE_2.txt (created only once this file is cut, see below)
+---
+
+## Binding rule
+
+- Real, open decisions for `<USER>` are tracked in this chain, one entry per decision.
+- Host-specific decisions may live in a separate `TO-DECIDE-<HOST>.txt`; a host also
+  reads the global chain for decisions that are not host-specific.
+- Only a filled-in `DECISION:` line counts as authorization. A captured entry without
+  one stays open, however old.
+- After verified implementation, move the full entry to `DECIDED-AND-DONE.template.md`.
+- Project-specific decisions may additionally and preferentially be tracked in that
+  project's own `DECISIONS.md` / `TO-DECIDE.md` / `DECIDED-AND-DONE.md`. Escalation to
+  this chain is only needed for decisions with cross-project or operator-wide scope.
+- **Cut-and-clue:** once this file exceeds roughly 150 active lines, split sequentially
+  into `TO-DECIDE_2.txt`, `_3.txt`, and so on. Each part carries absolute
+  predecessor/successor pointers so the chain stays walkable end to end.
+
+## Quick index
+
+- D-<YYYYMMDD>-<NNN> — <short title> — <STATUS>; <one-line note>
+
+---
+
+## D-<YYYYMMDD>-<NNN> — <short title>
+
+STATUS: OPEN
+SOURCE: `<where this decision originated — a project file, a briefing, an agent finding>`
+QUESTION: <the concrete question that needs a decision>
+OPTIONS:
+- A — <option A>
+- B — <option B>
+RECOMMENDATION: <the agent's recommendation and why, or "none — genuinely open">
+DECISION: [ ]
+
+---
+
+---
+Pointer / successor:
+Continuation: <path>/TO-DECIDE_2.txt
