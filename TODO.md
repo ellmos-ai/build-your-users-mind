@@ -73,8 +73,8 @@
   because no directly comparable case existed in the corpus; the user's confirmation afterwards
   turned it into a rule. That feedback loop already works — it is just slow, because it waits for
   situations to occur by chance. The wizard would drive the same loop on purpose.
-  Requested by the user; to be picked up once the Build-Week judging hold is lifted
-  (noted on local branch `judging-hold/training-wizard`, 2026-07-25).
+  Requested by the user, 2026-07-25, during the Build-Week judging hold; that hold has since
+  ended (tag `build-week-2026-submitted`), so this item is open work under the normal rules.
 - [ ] **Close the learning loop automatically: scan, classify, file — triggered by the avatar.**
   Today the empirical basis is rebuilt by running the scripts *periodically and by hand*
   (`SKILL.md`: „rerun scripts periodically"). Nothing observes a conversation while it happens, so
@@ -101,7 +101,7 @@
   *Motivation:* in the 2026-07-25 session the user stated three substantive rules in the space of
   an hour. All three had to be carried into the avatar files by hand, and one of them corrected a
   wrong assumption the avatar had been acting on minutes earlier.
-  Requested by the user; same judging-hold conditions as above.
+  Requested by the user, 2026-07-25; the judging hold that deferred it has ended.
 - [ ] **Session-end rating round as the standard close-out (0–10), and scoring that can represent
   it.** New user rule: whenever the avatar was used in a session, that session **ends** with a
   numbered list of every decision the avatar made (question · decision · stated confidence ·
@@ -119,7 +119,7 @@
     was right in direction and only corrected in scope counts as `corrected` — indistinguishable
     from one that was simply wrong. Real case from 2026-07-25: the avatar's split of a release-gate
     document was accepted in principle and corrected only in its target location.
-  Requested by the user; same judging-hold conditions as above.
+  Requested by the user, 2026-07-25; the judging hold that deferred it has ended.
 
 ## STATUS — current gate
 
