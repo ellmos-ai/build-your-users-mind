@@ -60,7 +60,7 @@ class TestMetadataParity(unittest.TestCase):
 
         llms_text = self.llms_txt.read_text(encoding="utf-8")
         self.assertIn(f"Version: {version}", llms_text)
-        self.assertIn("Last-checked: 2026-08-26", llms_text)
+        self.assertIn("Last-checked: 2026-09-06", llms_text)
 
     def test_schema_validity(self):
         with open(self.classification_schema, "r", encoding="utf-8") as f:
