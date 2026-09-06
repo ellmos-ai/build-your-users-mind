@@ -3,7 +3,8 @@
 > **Status:** specification (P0). No implementation is claimed by this document.
 > **Scope:** operator-neutral. This file describes the *shape* of the ledger, never the content of
 > any particular operator's decisions.
-> **Embargo:** local-only until the operator lifts it. Commit locally; do not push, tag, or publish.
+> **Hold status:** written during the Build-Week judging hold (local-only at the time); that hold
+> has ended. No embargo applies to this specification. Generated ledger *data* stays local — see §7.
 
 This specification closes P0 item 3 ("event-sourced decision-trajectory schema") and unifies it with
 the two object types agreed for the ledger: `decision` and `policy` share one store and one

@@ -19,12 +19,13 @@
 - [x] Synthetic fixture suite and Ubuntu/Windows/macOS CI matrix for Python 3.10-3.13 with pinned Ruff.
 - [x] Authorization, diagnosis, privacy, and irreversible/high-impact action boundaries documented.
 
-## Local-only incubation: temporal attention and decision trajectory
+## Incubation: temporal attention and decision trajectory
 
-**Operator embargo:** This work is local-only until the operator explicitly lifts the competition
-embargo. Commit finished local units, but do not push, open a pull request, trigger remote CI,
-publish a release, or create a public issue/tag. Local deterministic tests and local integration are
-allowed and required.
+**Hold status:** This plan was written during the Build-Week judging hold, when it was local-only.
+The hold has since ended (tag `build-week-2026-submitted`; post-hold integration merged through
+PR #5). The items below are therefore open planning work under the normal contribution rules —
+no publication embargo applies to the plan itself. The privacy constraints in the items stay in
+force: they concern generated ledger data, not this document.
 
 ### P0 — model and contracts
 
@@ -104,10 +105,10 @@ allowed and required.
   modes while cold/redundant work is reduced first. Verify separately that valid minimum-model,
   thinking, and mandatory-review constraints are not violated by saving mode. Keep the integration
   local and committed only.
-- [ ] Lift the embargo only after an explicit operator decision. At that point re-audit private-data
-  exclusions, decide what portion is safe to publish, remove the local `.git/hooks/pre-push` embargo
-  guard, run remote CI, and only then consider push, pull request, release notes, or a public
-  version/tag.
+- [x] Lift the embargo only after an explicit operator decision. Done: the Build-Week judging hold
+  ended with the submission tag `build-week-2026-submitted`, the local pre-push guard is gone, and
+  remote CI runs again. Re-auditing private-data exclusions before publishing any *generated*
+  ledger output remains required and is covered by the P0 privacy item above.
 
 ## Open before a stable release
 
