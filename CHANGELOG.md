@@ -4,6 +4,11 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## Unreleased
 
+- **Doc sync**: `llms.txt` still carried its 2026-08-26 `Last-checked` stamp (and 116 passed
+  tests) from before the post-hold integration (PRs #5–#7) landed. Re-verified against a full
+  local test run and updated `llms.txt`, `README.md` and `README_de.md` to `Last-checked:
+  2026-09-06` / 122 passed tests. The `[1.1.0-dev]` entry below still correctly documents the
+  earlier 2026-08-21/86-tests sync as its own historical step and is left unchanged.
 - Added `templates/decision-ledger/` — an operator-neutral, append-only decision chain
   (`D-YYYYMMDD-NNN`) with an open-queue template, a decided-and-done archive template,
   and a multi-option decision-briefing template; linked from the main README.

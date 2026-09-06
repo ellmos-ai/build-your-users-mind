@@ -120,8 +120,10 @@ force: they concern generated ledger data, not this document.
   only non-sensitive aggregate gate evidence.
 - [ ] Decide a stable-release version and tag only after those semantic/manual gates pass.
 - [ ] Propagate the new USER.md (0.5) declared-preferences layer into `SKILL.md` and the localized
-  documents (de/es/ja/ru/zh) once the Build-Week judging hold is lifted (layer added on local
-  branch `judging-hold/user-md`, 2026-07-24).
+  documents (de/es/ja/ru/zh). The Build-Week judging hold that originally deferred this has ended
+  (tag `build-week-2026-submitted`); `USER.md` itself landed on `master` via PR #5 and is already
+  referenced in the authoritative `README.md` (runtime-loop table, step 0.5). Still open:
+  `SKILL.md` and all five locale trees (de/es/ja/ru/zh) do not mention it yet.
 
 ## Optional improvements
 
