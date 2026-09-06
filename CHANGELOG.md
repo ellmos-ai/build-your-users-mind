@@ -43,6 +43,9 @@ All notable changes to `build-your-users-mind` are documented here.
 - Added sibling tools matrix linking related repositories in `ellmos-ai`, `dev-bricks`, `research-line`, and `open-bricks`.
 - Configured PEP 621 `pyproject.toml` with project metadata, pytest options, and `[tool.ruff]` lint settings.
 - Added automated metadata, schema, and manifest parity testsuite in `tests/test_metadata.py` (5 assertions, 82 total passed).
+- Added a declared-preferences layer: `templates/USER.md` at runtime-loop step (0.5) —
+  operator-declared preferences and delivery defaults that outrank older distilled evidence;
+  agent rule files (`CLAUDE.md`, `GPT.md`, `GEMINI.md`, …) act as consumers of it.
 - Hardened all adapters to fail closed, validate timestamps/dates, and write atomically.
 - Filtered Codex internal-context/plugin artifacts and carried turn-level project context.
 - Expanded secret redaction, added operator-defined sensitive-data rules, and private file modes.
