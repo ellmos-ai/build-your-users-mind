@@ -4,6 +4,12 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## Unreleased
 
+- **Security, Dependency & Licensing Audit (2026-09-11)**:
+  - Added `THIRD_PARTY_LICENSES.md` formally certifying the 100% Zero-External-Runtime-Dependency guarantee (`dependencies = []`, Python 3.10+ PSF standard library) and inventorying dev/build tooling (`pytest`, `ruff`, `setuptools`, `build`).
+  - Added PEP 639 standard metadata `license-files = ["LICENSE", "THIRD_PARTY_LICENSES.md"]` to `pyproject.toml`.
+  - Hardened `.gitignore` with cryptographic certificate/key patterns (`*.pem`, `*.key`, `*.pfx`, etc.), package manager credentials (`.npmrc`, `.pypirc`), generic credential files (`credentials.json`, `secrets.json`, `id_rsa*`), patch leftovers (`*.orig`, `*.rej`), and multi-host sync collision tokens (`*-WORKSTATION-LG.*`, `*-ASUS-GEI.*`).
+  - Expanded automated contract testsuite in `tests/test_metadata.py` with 3 new checks for zero-dependency certification, PEP 639 metadata, and gitignore patterns (125 total passing tests).
+  - Synchronized `llms.txt`, `README.md`, and `README_de.md` badges and documentation.
 - **Doc sync**: `llms.txt` still carried its 2026-08-26 `Last-checked` stamp (and 116 passed
   tests) from before the post-hold integration (PRs #5–#7) landed. Re-verified against a full
   local test run and updated `llms.txt`, `README.md` and `README_de.md` to `Last-checked:

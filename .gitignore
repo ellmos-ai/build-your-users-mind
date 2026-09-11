@@ -51,6 +51,32 @@ build/
 *.conflict
 LOCK*.txt
 
+# Security & Credentials
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.cert
+*.token
+*.secret
+.npmrc
+.pypirc
+credentials.json
+secrets.json
+id_rsa*
+id_ed25519*
+
+# Patch & Merge Residues
+*.orig
+*.rej
+
+# Multi-Host Conflict Artifacts
+*-WORKSTATION-LG.*
+*-ASUS-GEI.*
+*-LAPTOP.*
+*-Mac Studio.*
+
 # IDE
 .idea/
 .vscode/
@@ -59,3 +85,4 @@ LOCK*.txt
 .DS_Store
 Thumbs.db
 desktop.ini
+

@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/ellmos-ai/build-your-users-mind/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ellmos-ai/build-your-users-mind/ci.yml?branch=master&label=CI&logo=github" alt="CI"></a>
-  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-122%20passed-brightgreen" alt="Tests"></a>
+  <a href="https://github.com/ellmos-ai/build-your-users-mind/actions"><img src="https://img.shields.io/badge/tests-125%20passed-brightgreen" alt="Tests"></a>
   <a href="https://github.com/ellmos-ai/build-your-users-mind/releases"><img src="https://img.shields.io/badge/version-1.1.0--dev-blue" alt="Version"></a>
   <a href="https://www.python.org"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Python"></a>
   <a href="#"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Plattform"></a>
@@ -259,4 +259,4 @@ Verwenden Sie nur Protokolle, zu deren Verarbeitung der Betreiber autorisiert is
 
 ## Lizenz
 Methode: *Prompt-Archaeology* von Lukas Geiger. Modul & Konzept: Lukas Geiger (+ Claude).
-Gebündelte Abhängigkeit: `swarm-operations` Skill. **MIT** — siehe `LICENSE`.
+Gebündelte Abhängigkeit: `swarm-operations` Skill. **MIT** — siehe [`LICENSE`](LICENSE) und [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md).

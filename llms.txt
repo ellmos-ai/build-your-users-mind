@@ -1,8 +1,8 @@
 # build-your-users-mind
 
-Last-checked: 2026-09-06
+Last-checked: 2026-09-11
 Version: 1.1.0-dev (development, not stable)
-Tests: 122 passed
+Tests: 125 passed
 Canonical repository: https://github.com/ellmos-ai/build-your-users-mind
 Primary language: English
 Translations: README_de.md, locales/de, locales/es, locales/ja, locales/ru, locales/zh
@@ -47,6 +47,7 @@ Umbrella: open-bricks
 - `README.md` - authoritative overview, runtime loop, privacy boundaries and search phrases.
 - `README_de.md` - comprehensive German documentation.
 - `SECURITY.md` - bilingual security and privacy policy (Local-First, Zero-Egress, Redaction boundaries).
+- `THIRD_PARTY_LICENSES.md` - third-party software inventory and zero-runtime-dependency guarantee.
 - `SKILL.md` - full implementation recipe for building an avatar/user model.
 - `SOURCE-ADAPTERS.md` - adapter notes for Claude, Codex, Gemini/agy and Kimi logs.
 - `TAXONOMY.md` - prompt-archaeology classification categories.

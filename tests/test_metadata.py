@@ -19,6 +19,7 @@ class TestMetadataParity(unittest.TestCase):
         self.changelog = ROOT / "CHANGELOG.md"
         self.security = ROOT / "SECURITY.md"
         self.license = ROOT / "LICENSE"
+        self.third_party_licenses = ROOT / "THIRD_PARTY_LICENSES.md"
         self.skill = ROOT / "SKILL.md"
         self.source_adapters = ROOT / "SOURCE-ADAPTERS.md"
         self.taxonomy = ROOT / "TAXONOMY.md"
@@ -36,6 +37,7 @@ class TestMetadataParity(unittest.TestCase):
             self.changelog,
             self.security,
             self.license,
+            self.third_party_licenses,
             self.skill,
             self.source_adapters,
             self.taxonomy,
@@ -60,7 +62,7 @@ class TestMetadataParity(unittest.TestCase):
 
         llms_text = self.llms_txt.read_text(encoding="utf-8")
         self.assertIn(f"Version: {version}", llms_text)
-        self.assertIn("Last-checked: 2026-09-06", llms_text)
+        self.assertIn("Last-checked: 2026-09-11", llms_text)
 
     def test_schema_validity(self):
         with open(self.classification_schema, "r", encoding="utf-8") as f:
@@ -173,6 +175,49 @@ class TestMetadataParity(unittest.TestCase):
         self.assertIn("ellmos-delegation-authority", readme_en_text)
         self.assertIn("open-bricks", readme_en_text)
 
+    def test_third_party_licenses_inventory_and_zero_dependencies(self):
+        """THIRD_PARTY_LICENSES.md must exist and certify zero runtime dependencies."""
+        self.assertTrue(self.third_party_licenses.is_file(), "THIRD_PARTY_LICENSES.md must exist")
+        content = self.third_party_licenses.read_text(encoding="utf-8")
+        self.assertIn("Zero-Runtime-Dependency Guarantee", content)
+        self.assertIn("MIT License", content)
+        self.assertIn("Python Software Foundation License", content)
+        for tool in ("pytest", "ruff", "setuptools", "build"):
+            self.assertIn(tool, content)
+
+        pyproj = self.pyproject.read_text(encoding="utf-8")
+        self.assertIn("dependencies = []", pyproj)
+
+    def test_pep639_license_files_metadata(self):
+        """pyproject.toml must declare PEP 639 license-files."""
+        pyproj = self.pyproject.read_text(encoding="utf-8")
+        self.assertIn('license-files = ["LICENSE", "THIRD_PARTY_LICENSES.md"]', pyproj)
+
+    def test_gitignore_secret_and_credential_patterns(self):
+        """gitignore must exclude secrets, tokens, private keys, and sync artifacts."""
+        gi_file = ROOT / ".gitignore"
+        self.assertTrue(gi_file.is_file(), ".gitignore must exist")
+        content = gi_file.read_text(encoding="utf-8")
+        required_patterns = [
+            "*.pem",
+            "*.key",
+            "*.token",
+            "*.secret",
+            ".npmrc",
+            ".pypirc",
+            "credentials.json",
+            "secrets.json",
+            "id_rsa*",
+            "id_ed25519*",
+            "*.orig",
+            "*.rej",
+            "*-WORKSTATION-LG.*",
+            "*-ASUS-GEI.*",
+        ]
+        for pattern in required_patterns:
+            self.assertIn(pattern, content, f"Pattern '{pattern}' missing in .gitignore")
+
 
 if __name__ == "__main__":
     unittest.main()
+
