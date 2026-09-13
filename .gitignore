@@ -43,3 +43,6 @@ _banner-concepts/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Laufprotokoll der Pflegerunden (Laufmaterial, kein Repo-Inhalt)
+_after-care/

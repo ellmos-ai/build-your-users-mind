@@ -38,6 +38,18 @@
 - [x] One-command offline demo of the deterministic build, feedback scoring, and tamper gate.
   → `examples/synthetic-demo/run_demo.py`.
 - [ ] Add more synthetic source-schema fixtures as upstream log formats evolve.
+- [ ] Add a clarification/contradiction queue: competing evidence-backed user
+  preferences remain visible until a human confirms, rejects, or scopes them;
+  the classifier must not silently merge them into one rule.
+- [ ] Version prediction candidates separately from confirmed evidence and
+  adopted project decisions. Promotion requires an explicit human action and a
+  pointer to the responsible policy/decision record.
+- [ ] Add historical replay cases for changed preferences: evaluate which model
+  version would have predicted the later response, preserve failures, and avoid
+  training/evaluating on the same evidence slice.
+- [ ] Emit a bounded decision-support packet with prediction, confidence,
+  evidence anchors, counter-evidence, missing information and escalation reason.
+  It must never be interpreted as authorization for an irreversible action.
 
 ## STATUS — current gate
 
