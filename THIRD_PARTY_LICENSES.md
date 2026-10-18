@@ -2,7 +2,8 @@
 
 **Project:** `build-your-users-mind`  
 **License:** [MIT License](LICENSE)  
-**Audit Date:** 2026-09-11  
+**Audit Date:** 2026-10-18 (Level 1 SBOM re-audit, prior: 2026-09-11)
+**Text Companion:** [`THIRD_PARTY_LICENSES.txt`](THIRD_PARTY_LICENSES.txt)
 
 ---
 
@@ -108,3 +109,28 @@ limitations under the License.
    DISTRIBUTING, OR OTHERWISE USING PYTHON, OR ANY DERIVATIVE THEREOF, EVEN IF
    ADVISED OF THE POSSIBILITY THEREOF.
 ```
+
+---
+
+## Governance, Unprivileged Operation & Runtime Invariants
+
+### Unprivileged Execution & Legal Disclaimer
+
+- **Unprivileged User-Mode Operation (`RunAsInvoker`)**: All CLI scripts, extraction pipelines, chunking, validation, decision prediction, and scoring tools run strictly in unprivileged user space. No administrative rights, root elevation, sudo, or UAC prompts are ever required.
+- **Statutory Liability Disclaimer**: Unpaid open-source provision under § 521 BGB Gefälligkeitsrecht with liability limited to intent and gross negligence.
+- **Binding Security Response SLA**: Committed 48-hour response for security disclosures via `security@ellmos.ai`, `security@open-bricks.org`, `support@lukasgeiger.com`, and `lukas@open-bricks.org`.
+
+### Invariants Matrix
+
+| Invariant | Description | Status |
+|---|---|---|
+| `INV-LOCAL-01` | Zero-Egress / 100% Offline (all data and logs remain strictly on local disk; zero cloud telemetry) | `VERIFIED` |
+| `INV-LOOPBACK-02` | Strict Loopback Boundary in Secure-Mode (secure_text_avatar only connects to 127.0.0.1/localhost, http only) | `VERIFIED` |
+| `INV-REDACT-03` | Multi-Pass Redaction & Fail-Closed Privacy (heuristic redaction passes, domain sanitization, never commit real logs) | `VERIFIED` |
+| `INV-DETERMINISTIC-04` | Stable Identifiers & Reproducible Scoring (deterministic hashing, stable chunking, calibration metrics) | `VERIFIED` |
+| `INV-SEPARATION-05` | Strict Boundary Between Recommendation and Execution Authority (predictions never authorize execution) | `VERIFIED` |
+| `INV-APPEND-06` | Append-Only Decision Stream (revalidated journal with hash verification and receipt tracking) | `VERIFIED` |
+| `INV-MULTIHOST-07` | Multi-Host Parity & Lock Defense (defense against sync conflicts, lock files, multi-host file collisions) | `VERIFIED` |
+| `INV-UNPRIV-08` | Unprivileged Execution (RunAsInvoker standard user-mode, zero elevation required) | `VERIFIED` |
+| `INV-PORTABLE-09` | Zero Runtime Dependencies (pure Python 3.10+ standard library `dependencies = []`) | `VERIFIED` |
+| `INV-SLA-10` | Transparent Open-Source SLA (permissive MIT license, multi-OS CI matrix, committed 48h security SLA) | `VERIFIED` |

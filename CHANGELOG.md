@@ -4,6 +4,17 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## Unreleased
 
+- **Repository Hygiene, Dependabot Guard, SBOM Companion & Multi-Host Defense (2026-10-18, Pfad A)**:
+  - Maintained strict version-freeze discipline per `T-20260920-167562623` (`version = "1.1.0-dev"` in `pyproject.toml` and `ellmos-module.v2.json` unchanged).
+  - Added automated Dependabot configuration (`.github/dependabot.yml`) for `github-actions` and `pip` (weekly on Monday 06:00 Europe/Berlin, limit 3) and canonical `.github/labels.yml`.
+  - Added automated pull request assignment workflow (`.github/workflows/auto-assign.yml`) and label synchronization workflow (`.github/workflows/label-sync.yml`) with concurrency groups (`cancel-in-progress: true`).
+  - Added Level 1 SBOM text companion `THIRD_PARTY_LICENSES.txt` with Invariant Matrix (`INV-LOCAL-01` to `INV-SLA-10` all `VERIFIED`), unprivileged `RunAsInvoker` mode, statutory liability disclaimer (§ 521 BGB Gefälligkeitsrecht), and committed 48-hour security response SLA (`security@ellmos.ai`, `security@open-bricks.org`, `support@lukasgeiger.com`, `lukas@open-bricks.org`); updated `THIRD_PARTY_LICENSES.md` to Stand 2026-10-18.
+  - Standardized PEP 621 metadata in `pyproject.toml` with `Contributing`, `Plain-Text License`, and `Third-Party Licenses Text` URLs; hardened pytest `norecursedirs` for temporary test artifacts.
+  - Upgraded `CONTRIBUTING.md` to comprehensive bilingual guidelines (EN/DE) with quick-navigation anchors, Plan D clone workflow, quality gates, and version-freeze discipline.
+  - Hardened `.gitignore` against multi-host conflict files (`*-IDEAPAD.*`, `*-IDEAPAD-GEI*`, `*_WORKSTATION*`, `*_WORKSTATION-LG*`, `*conflicted copy*`), OS artifacts (`thumbs.db`, `Desktop.ini`, `ehthumbs.db`, `ehthumbs_vista.db`), test directories (`.pytest_temp/`, `.pytest_tmp*/`), and multi-agent lock patterns (`LOCK.dev.*`, `LOCK.antigravity.*`, `LOCK.bugsearch.*`).
+  - Added 8 new automated contract tests to `tests/test_metadata.py` (total 133 passing tests, 100% green).
+  - Synchronized `llms.txt`, `README.md`, `README_de.md` badges (133 tests passed, Last-checked: 2026-10-18), and created local `MARKETING-LOG.txt`.
+
 - **Security, Dependency & Licensing Audit (2026-09-11)**:
   - Added `THIRD_PARTY_LICENSES.md` formally certifying the 100% Zero-External-Runtime-Dependency guarantee (`dependencies = []`, Python 3.10+ PSF standard library) and inventorying dev/build tooling (`pytest`, `ruff`, `setuptools`, `build`).
   - Added PEP 639 standard metadata `license-files = ["LICENSE", "THIRD_PARTY_LICENSES.md"]` to `pyproject.toml`.

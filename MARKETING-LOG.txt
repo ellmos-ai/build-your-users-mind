@@ -1,0 +1,32 @@
+# MARKETING-LOG.txt — build-your-users-mind
+# Lokales Audit-, Discoverability- und Marketing-Logbuch
+
+## 2026-10-18 — Pfad A: Technische Hygiene, Bilingual CONTRIBUTING, Dependabot Guard, Level 1 SBOM Re-Audit & Multi-Host Lock Defense
+
+### 1. Ausgangslage & Kriterien
+- Repository: `ellmos-ai/build-your-users-mind` (`C:\_Local_DEV\repos\build-your-users-mind`)
+- Remote: `https://github.com/ellmos-ai/build-your-users-mind.git` (Branch: `master`)
+- Version: `1.1.0-dev` (strikte Versionsfreeze-Disziplin nach `T-20260920-167562623`)
+- Kategorie: Local-First User Preference & Decision-Support Model Workflow
+- Status: Arbeitsbaum 100% sauber, 0 aktive Locks (`lock_status.py`: UNLOCKED), Cooldown >24h seit letztem Kontakt eingehalten (877.3h Ruhezeit; Pfad A zuletzt am 2026-08-24, Pfad B am 2026-08-21).
+- Testbasis: 125/125 Tests bestanden (100% grün via pytest vor Erweiterung).
+
+### 2. Technische Hygiene-, Governance- & Härtungsmaßnahmen
+- **Bilinguale CONTRIBUTING Guidelines (EN/DE)**:
+  - `CONTRIBUTING.md` vollständig zweisprachig ausgebaut mit Schnellnavigations-Ankern (`#english`, `#deutsch`): Plan D lokaler Entwicklungs-Workflow (`C:\_Local_DEV\repos\build-your-users-mind`), Qualitäts-Tore (`pytest`, `unittest`, `ruff check`, `compileall`, `git diff --check`, `git diff -G"version = "`), unprivilegierter Benutzermodus (`RunAsInvoker`), alle zehn Governance-Invarianten `INV-LOCAL-01` bis `INV-SLA-10`, kanonische Lock-Disziplin, Versionsfreeze-Regel (`T-20260920-167562623`) und 48h Security Response SLA.
+- **Automatisierte Dependabot Lifecycle & Labels-Synchronisation**:
+  - `.github/dependabot.yml` neu bereitgestellt mit wöchentlichen Updates für `github-actions` und `pip` (Montags 06:00 Berlin Zeit, Open-PRs-Limit: 3, Labels: `dependencies`, `github-actions`, `python`).
+  - `.github/labels.yml` neu angelegt mit Standard-Governance-Labels (§ 4.2) und Dependabot-Label-Set.
+  - `.github/workflows/auto-assign.yml` (automatisierte PR-Zuweisung an Repository-Owner) und `.github/workflows/label-sync.yml` (Label-Synchronisation via EndBug/label-sync@v2 mit `cancel-in-progress: true`) eingerichtet.
+- **Multi-Host Cloud-Sync-, OS- und Lock-Defense in `.gitignore`**:
+  - `.gitignore` gehärtet gegen OS-Dateien (`thumbs.db`, `Desktop.ini`, `ehthumbs.db`, `ehthumbs_vista.db`), Multi-Host-Muster (`*-IDEAPAD.*`, `*-IDEAPAD-GEI*`, `*_WORKSTATION*`, `*_WORKSTATION-LG*`, `*conflicted copy*`, `* (Kopie)*`), temporäre Pytest-Verzeichnisse (`.pytest_temp/`, `.pytest_tmp*/`), Taskpläne (`TASKPLAN_*.md`, `*-TASKPLAN*`) und Multi-Agent-Sperren (`LOCK.dev.*`, `LOCK.antigravity.*`, `LOCK.bugsearch.*`).
+- **Level 1 SBOM Re-Audit & Text-Companion Stand 2026-10-18**:
+  - `THIRD_PARTY_LICENSES.txt` neu angelegt als maschinenlesbarer Plain-Text Level 1 SBOM Begleiter mit Invarianten-Matrix (`INV-LOCAL-01` bis `INV-SLA-10` alle `VERIFIED`), unprivilegiertem `RunAsInvoker` Non-Elevation Modus, gesetzlichem Haftungsausschluss (§ 521 BGB Gefälligkeitsrecht) und verbindlicher 48h Security Response SLA (`security@ellmos.ai`, `security@open-bricks.org`, `support@lukasgeiger.com`, `lukas@open-bricks.org`).
+  - `THIRD_PARTY_LICENSES.md` auf Stand 2026-10-18 re-auditiert mit Bestätigung von 0 externen Runtime-Abhängigkeiten (`dependencies = []`), Standardbibliothek-Inventory, unprivilegierter `RunAsInvoker`-Ausführung, Zero-Copyleft-Garantie, § 521 BGB Haftungsausschluss und allen zehn Invarianten `INV-LOCAL-01` bis `INV-SLA-10`.
+- **PEP 621 Standardisierung in `pyproject.toml`**:
+  - `Contributing`, `Plain-Text License` und `Third-Party Licenses Text` URLs in `[project.urls]` registriert; pytest `norecursedirs` um `.git`, `.pytest_cache`, `.ruff_cache`, `build`, `dist`, `.hypothesis`, `.turbo`, `.nyc_output`, `.tox`, `.pytest_temp*`, `examples/synthetic-demo/_run*` gehärtet; strikte Version-Freeze-Disziplin (`version = "1.1.0-dev"`) gewahrt.
+- **RAG-Kontext & Status-Badges-Synchronisation**:
+  - Shields.io Status-Badges in `README.md` und `README_de.md` auf 133 Tests aktualisiert (`tests-133--passed-brightgreen`).
+  - `llms.txt` auf Stand `Last-checked: 2026-10-18` mit 133 Tests sowie `THIRD_PARTY_LICENSES.txt` und `CONTRIBUTING.md` in der Dateiliste aktualisiert.
+- **Automatisierte Vertragstests**:
+  - `tests/test_metadata.py` um 8 neue Contract-Tests für bilinguale CONTRIBUTING Guidelines, pyproject URLs & norecursedirs, Dependabot Lifecycle, Label Parität, Workflow Concurrency, erweiterte .gitignore Lock-Guards, Level 1 SBOM Text Companion mit 10 Invarianten und Version-Freeze-Disziplin erweitert (Gesamtsuite: 133 Tests, 100% grün).

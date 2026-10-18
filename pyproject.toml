@@ -66,7 +66,10 @@ Documentation = "https://github.com/ellmos-ai/build-your-users-mind#readme"
 Repository = "https://github.com/ellmos-ai/build-your-users-mind.git"
 "Bug Tracker" = "https://github.com/ellmos-ai/build-your-users-mind/issues"
 Changelog = "https://github.com/ellmos-ai/build-your-users-mind/blob/master/CHANGELOG.md"
+Contributing = "https://github.com/ellmos-ai/build-your-users-mind/blob/master/CONTRIBUTING.md"
 Security = "https://github.com/ellmos-ai/build-your-users-mind/blob/master/SECURITY.md"
+"Plain-Text License" = "https://raw.githubusercontent.com/ellmos-ai/build-your-users-mind/master/LICENSE"
+"Third-Party Licenses Text" = "https://raw.githubusercontent.com/ellmos-ai/build-your-users-mind/master/THIRD_PARTY_LICENSES.txt"
 "Parent Organization" = "https://github.com/ellmos-ai"
 "Umbrella Ecosystem" = "https://github.com/open-bricks"
 
@@ -78,6 +81,19 @@ include = ["scripts*"]
 pythonpath = ["scripts"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+norecursedirs = [
+    ".git",
+    ".pytest_cache",
+    ".ruff_cache",
+    "build",
+    "dist",
+    ".hypothesis",
+    ".turbo",
+    ".nyc_output",
+    ".tox",
+    ".pytest_temp*",
+    "examples/synthetic-demo/_run*",
+]
 
 [tool.ruff]
 line-length = 120

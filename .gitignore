@@ -74,8 +74,25 @@ id_ed25519*
 # Multi-Host Conflict Artifacts
 *-WORKSTATION-LG.*
 *-ASUS-GEI.*
+*-IDEAPAD.*
+*-IDEAPAD-GEI*
 *-LAPTOP.*
 *-Mac Studio.*
+*_WORKSTATION*
+*_WORKSTATION-LG*
+*conflicted copy*
+* (Kopie)*
+
+# Temporary Test Runners & Pytest Dirs
+.pytest_temp/
+.pytest_tmp*/
+TASKPLAN_*.md
+*-TASKPLAN*
+
+# Lock Defense
+LOCK.dev.*
+LOCK.antigravity.*
+LOCK.bugsearch.*
 
 # IDE
 .idea/
@@ -84,5 +101,8 @@ id_ed25519*
 # OS
 .DS_Store
 Thumbs.db
+thumbs.db
 desktop.ini
-
+Desktop.ini
+ehthumbs.db
+ehthumbs_vista.db

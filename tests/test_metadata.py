@@ -27,6 +27,12 @@ class TestMetadataParity(unittest.TestCase):
         self.prediction_schema = ROOT / "schemas" / "decision-prediction-event.schema.json"
         self.secure_avatar_schema = ROOT / "schemas" / "secure-text-avatar-output.schema.json"
         self.ci_workflow = ROOT / ".github" / "workflows" / "ci.yml"
+        self.third_party_licenses_txt = ROOT / "THIRD_PARTY_LICENSES.txt"
+        self.dependabot_config = ROOT / ".github" / "dependabot.yml"
+        self.labels_config = ROOT / ".github" / "labels.yml"
+        self.auto_assign_workflow = ROOT / ".github" / "workflows" / "auto-assign.yml"
+        self.label_sync_workflow = ROOT / ".github" / "workflows" / "label-sync.yml"
+        self.contributing = ROOT / "CONTRIBUTING.md"
 
     def test_required_files_exist(self):
         required = [
@@ -38,6 +44,12 @@ class TestMetadataParity(unittest.TestCase):
             self.security,
             self.license,
             self.third_party_licenses,
+            self.third_party_licenses_txt,
+            self.dependabot_config,
+            self.labels_config,
+            self.auto_assign_workflow,
+            self.label_sync_workflow,
+            self.contributing,
             self.skill,
             self.source_adapters,
             self.taxonomy,
@@ -62,7 +74,7 @@ class TestMetadataParity(unittest.TestCase):
 
         llms_text = self.llms_txt.read_text(encoding="utf-8")
         self.assertIn(f"Version: {version}", llms_text)
-        self.assertIn("Last-checked: 2026-09-11", llms_text)
+        self.assertIn("Last-checked: 2026-10-18", llms_text)
 
     def test_schema_validity(self):
         with open(self.classification_schema, "r", encoding="utf-8") as f:
@@ -216,6 +228,111 @@ class TestMetadataParity(unittest.TestCase):
         ]
         for pattern in required_patterns:
             self.assertIn(pattern, content, f"Pattern '{pattern}' missing in .gitignore")
+
+    def test_plain_text_sbom_companion(self):
+        """THIRD_PARTY_LICENSES.txt must exist as a plain-text Level 1 SBOM companion with all 10 invariants."""
+        self.assertTrue(self.third_party_licenses_txt.is_file(), "THIRD_PARTY_LICENSES.txt must exist")
+        text = self.third_party_licenses_txt.read_text(encoding="utf-8")
+        self.assertIn("Audited: 2026-10-18", text)
+        self.assertIn("Zero-Copyleft Guarantee", text)
+        self.assertIn("Unprivileged User-Mode Operation (RunAsInvoker)", text)
+        self.assertIn("§ 521 BGB Gefälligkeitsrecht", text)
+        self.assertIn("security@ellmos.ai", text)
+        self.assertIn("security@open-bricks.org", text)
+        self.assertIn("support@lukasgeiger.com", text)
+        self.assertIn("lukas@open-bricks.org", text)
+        self.assertIn("48-hour response", text)
+        for i in range(1, 11):
+            expected = f"{i:02d}"
+            self.assertTrue(
+                any("INV-" in line and expected in line for line in text.splitlines()),
+                f"Invariant {i} missing in THIRD_PARTY_LICENSES.txt",
+            )
+
+    def test_dependabot_lifecycle_hardening(self):
+        """dependabot.yml must configure weekly github-actions and pip updates with Berlin timezone."""
+        self.assertTrue(self.dependabot_config.is_file(), ".github/dependabot.yml must exist")
+        text = self.dependabot_config.read_text(encoding="utf-8")
+        self.assertIn('package-ecosystem: "github-actions"', text)
+        self.assertIn('package-ecosystem: "pip"', text)
+        self.assertIn('interval: "weekly"', text)
+        self.assertIn('day: "monday"', text)
+        self.assertIn('time: "06:00"', text)
+        self.assertIn('timezone: "Europe/Berlin"', text)
+        self.assertIn("open-pull-requests-limit: 3", text)
+
+    def test_labels_yml_includes_dependabot_labels(self):
+        """labels.yml must define required dependency, python and workflow labels."""
+        self.assertTrue(self.labels_config.is_file(), ".github/labels.yml must exist")
+        text = self.labels_config.read_text(encoding="utf-8")
+        self.assertIn("name: dependencies", text)
+        self.assertIn("name: github-actions", text)
+        self.assertIn("name: python", text)
+        self.assertIn("name: security", text)
+
+    def test_github_workflows_and_labels_hygiene(self):
+        """auto-assign.yml and label-sync.yml must exist with valid concurrency groups."""
+        self.assertTrue(self.auto_assign_workflow.is_file(), "auto-assign.yml must exist")
+        self.assertTrue(self.label_sync_workflow.is_file(), "label-sync.yml must exist")
+        aa_text = self.auto_assign_workflow.read_text(encoding="utf-8")
+        ls_text = self.label_sync_workflow.read_text(encoding="utf-8")
+        self.assertIn("cancel-in-progress: true", aa_text)
+        self.assertIn("cancel-in-progress: true", ls_text)
+        self.assertIn("EndBug/label-sync@v2", ls_text)
+
+    def test_extended_lock_and_cloud_defense_in_gitignore(self):
+        """gitignore must exclude multi-host conflict files, lock files, and temporary pytest dirs."""
+        content = (ROOT / ".gitignore").read_text(encoding="utf-8")
+        patterns = [
+            "*-IDEAPAD.*",
+            "*-IDEAPAD-GEI*",
+            "*_WORKSTATION*",
+            "*_WORKSTATION-LG*",
+            "*conflicted copy*",
+            "* (Kopie)*",
+            ".pytest_temp/",
+            ".pytest_tmp*/",
+            "TASKPLAN_*.md",
+            "LOCK.dev.*",
+            "LOCK.antigravity.*",
+            "LOCK.bugsearch.*",
+            "thumbs.db",
+            "Desktop.ini",
+            "ehthumbs.db",
+            "ehthumbs_vista.db",
+        ]
+        for p in patterns:
+            self.assertIn(p, content, f"Pattern '{p}' missing in .gitignore")
+
+    def test_contributing_guide_bilingual_parity(self):
+        """CONTRIBUTING.md must provide bilingual parity (EN/DE) with quick navigation anchors."""
+        self.assertTrue(self.contributing.is_file(), "CONTRIBUTING.md must exist")
+        text = self.contributing.read_text(encoding="utf-8")
+        self.assertIn('<a id="english"></a>', text)
+        self.assertIn('<a id="deutsch"></a>', text)
+        self.assertIn("RunAsInvoker", text)
+        self.assertIn("T-20260920-167562623", text)
+        self.assertIn("§ 521 BGB", text)
+        self.assertIn("Plan D", text)
+
+    def test_pyproject_contributing_url_and_norecursedirs(self):
+        """pyproject.toml must declare Contributing, plain-text license URLs and norecursedirs."""
+        pyproj = self.pyproject.read_text(encoding="utf-8")
+        self.assertIn("Contributing = ", pyproj)
+        self.assertIn('"Plain-Text License" = ', pyproj)
+        self.assertIn('"Third-Party Licenses Text" = ', pyproj)
+        self.assertIn("norecursedirs = [", pyproj)
+        self.assertIn(".hypothesis", pyproj)
+        self.assertIn(".turbo", pyproj)
+
+    def test_version_freeze_discipline(self):
+        """version must remain frozen at 1.1.0-dev across pyproject.toml, module manifest, and llms.txt."""
+        pyproj = self.pyproject.read_text(encoding="utf-8")
+        manifest = json.loads(self.module_manifest.read_text(encoding="utf-8"))
+        llms = self.llms_txt.read_text(encoding="utf-8")
+        self.assertIn('version = "1.1.0-dev"', pyproj)
+        self.assertEqual(manifest.get("version"), "1.1.0-dev")
+        self.assertIn("Version: 1.1.0-dev", llms)
 
 
 if __name__ == "__main__":

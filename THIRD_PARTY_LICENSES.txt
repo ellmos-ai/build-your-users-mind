@@ -1,0 +1,53 @@
+# Third-Party Licenses & Software Inventory
+Project: build-your-users-mind (Local-first, evidence-backed user preference and decision-support workflow)
+Audited: 2026-10-18 against Level 1 SBOM and runtime invariants (Prior audit: 2026-09-11).
+License: MIT License (see LICENSE)
+Repository: https://github.com/ellmos-ai/build-your-users-mind
+Umbrella Collective: open-bricks (https://github.com/open-bricks)
+
+## Project License
+
+build-your-users-mind is licensed under the MIT License. See `LICENSE`.
+
+## Core Runtime
+
+The base package declares ZERO external runtime dependencies (`dependencies = []`).
+The entire runtime execution relies strictly on the official Python Standard Library (Python 3.10+).
+
+| Package / Module | Scope | Version Spec | License | Purpose |
+|---|---|---|---|---|
+| Python Standard Library | Runtime | >=3.10 | PSF-2.0 | Core runtime: argparse, collections, contextlib, copy, csv, datetime, hashlib, json, math, os, pathlib, random, re, sqlite3, subprocess, sys, tempfile, typing, urllib (loopback only) |
+
+Zero third-party telemetry, analytics, cloud synchronization, or remote networking services are packaged or contacted.
+
+## Direct Build and Development Dependencies
+
+The following tools are utilized exclusively for offline automated testing, code quality auditing, packaging, and linting:
+
+| Package | Declared Use | Constraint | License | Source |
+|---|---|---|---|---|
+| pytest | Development test runner | >=7.0.0 | MIT | https://pytest.org/ |
+| ruff | Development linter | >=0.5.0 | MIT / Apache-2.0 | https://github.com/astral-sh/ruff |
+| setuptools | Build backend | >=61.0 | MIT | https://github.com/pypa/setuptools |
+| build | PEP 517 build frontend | >=1.0.0 | MIT / Apache-2.0 | https://github.com/pypa/build |
+
+## Zero-Copyleft Guarantee & Unprivileged Execution
+
+- Zero-Copyleft Guarantee: All runtime code and development dependencies are governed strictly by permissive, business-friendly open-source licenses (MIT, Apache-2.0, PSF-2.0). The codebase contains zero GPL, AGPL, or viral copyleft components.
+- Unprivileged User-Mode Operation (RunAsInvoker): All extraction, normalization, chunking, validation, decision prediction, and scoring routines execute purely within unprivileged user space. No administrative rights, root elevation, sudo, or UAC prompts are ever required.
+- Statutory Liability Disclaimer: Unpaid open-source provision under § 521 BGB Gefälligkeitsrecht with liability limited to intent and gross negligence.
+- Binding Security Response SLA: Committed 48-hour response for security disclosures via security@ellmos.ai, security@open-bricks.org, support@lukasgeiger.com, and lukas@open-bricks.org.
+
+## Governance & Runtime Invariants
+
+build-your-users-mind strictly enforces ten foundational governance and runtime invariants:
+- INV-LOCAL-01: Zero-Egress / 100% Offline (all interaction logs, extracted corpora, chunks, and predictions stay strictly on local disk; zero cloud telemetry)
+- INV-LOOPBACK-02: Strict Loopback Boundary in Secure-Mode (secure_text_avatar only connects to 127.0.0.1/localhost, http only, never external)
+- INV-REDACT-03: Multi-Pass Redaction & Fail-Closed Privacy (heuristic redaction passes, domain sanitization, never commit real logs)
+- INV-DETERMINISTIC-04: Stable Identifiers & Reproducible Scoring (deterministic hashing, stable chunking, calibration metrics)
+- INV-SEPARATION-05: Strict Boundary Between Recommendation and Execution Authority (predictions never authorize execution)
+- INV-APPEND-06: Append-Only Decision Stream (revalidated journal with hash verification and receipt tracking)
+- INV-MULTIHOST-07: Multi-Host Parity & Lock Defense (defense against sync conflicts, lock files, multi-host file collisions)
+- INV-UNPRIV-08: Unprivileged Execution (RunAsInvoker standard user-mode, zero elevation required)
+- INV-PORTABLE-09: Zero Runtime Dependencies (pure Python 3.10+ standard library)
+- INV-SLA-10: Transparent Open-Source SLA (permissive MIT license, multi-OS CI matrix, committed 48h security SLA)
