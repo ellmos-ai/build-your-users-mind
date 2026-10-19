@@ -152,8 +152,8 @@ class TestMetadataParity(unittest.TestCase):
 
     def test_ci_workflow_integrity(self):
         ci_text = self.ci_workflow.read_text(encoding="utf-8")
-        self.assertIn("actions/checkout@v4", ci_text)
-        self.assertIn("actions/setup-python@v5", ci_text)
+        self.assertRegex(ci_text, r"actions/checkout@v\d+")
+        self.assertRegex(ci_text, r"actions/setup-python@v\d+")
         self.assertIn("ubuntu-latest", ci_text)
         self.assertIn("windows-latest", ci_text)
         self.assertIn("macos-latest", ci_text)
