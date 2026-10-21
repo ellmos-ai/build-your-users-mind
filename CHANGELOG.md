@@ -4,6 +4,8 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## Unreleased
 
+- **CI maintenance**: Update Checkout to v7 in the test and label-sync workflows, retaining Setup-Python v7 and GitHub-Script v9 on the current master branch.
+
 - **Repository Hygiene, Dependabot Guard, SBOM Companion & Multi-Host Defense (2026-10-18, Pfad A)**:
   - Maintained strict version-freeze discipline per `T-20260920-167562623` (`version = "1.1.0-dev"` in `pyproject.toml` and `ellmos-module.v2.json` unchanged).
   - Added automated Dependabot configuration (`.github/dependabot.yml`) for `github-actions` and `pip` (weekly on Monday 06:00 Europe/Berlin, limit 3) and canonical `.github/labels.yml`.
