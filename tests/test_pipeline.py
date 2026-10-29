@@ -672,6 +672,8 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue(any("invalid type_code" in error for error in errors))
 
     def test_generated_avatar_files_are_recursively_ignored(self) -> None:
+        if not (ROOT / ".git").exists():
+            self.skipTest("Git metadata is unavailable in this source projection")
         ignored = subprocess.run(
             ["git", "check-ignore", "--no-index", "profiles/alice/WHAT-ALICE-SAID.md"],
             cwd=ROOT,
