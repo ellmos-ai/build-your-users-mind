@@ -1,6 +1,44 @@
 # MARKETING-LOG.txt — build-your-users-mind
 # Lokales Audit-, Discoverability- und Marketing-Logbuch
 
+## 2026-10-29 — Pfad B: Discoverability, Saturated 20/20 Topics, Canonical NOTICE Attribution, Bilingual 18-Point Navigation Parity & Contract Tests
+
+### 1. Ausgangslage & Kriterien
+- Repository: `ellmos-ai/build-your-users-mind` (`C:\_Local_DEV\repos\build-your-users-mind`)
+- Remote: `https://github.com/ellmos-ai/build-your-users-mind.git` (Branch: `master`)
+- Version: `1.1.0-dev` (strikte Versionsfreeze-Disziplin nach `T-20260920-167562623`)
+- Kategorie: Local-First User Preference & Decision-Support Model Workflow
+- Status: Arbeitsbaum 100% sauber, 0 aktive Locks (`lock_status.py`: UNLOCKED), Cooldown >24h seit letztem Kontakt eingehalten (124h Ruhezeit; Pfad B zuletzt am 2026-08-21 vor 69 Tagen).
+- Testbasis: 133/133 Tests bestanden (100% grün via pytest vor Erweiterung).
+
+### 2. Marketing-, Discoverability- & Design-Maßnahmen
+- **Version-Freeze Disziplin**:
+  - Versionskonstante `version = "1.1.0-dev"` in `pyproject.toml`, Quellcode und Manifesten strikt beibehalten gem. `T-20260920-167562623`; alle Neuerungen unter `## [Unreleased]` in `CHANGELOG.md` dokumentiert.
+- **Live GitHub Discoverability & 20/20 Topics Sättigung**:
+  - Vollständige 20/20 Topics via GitHub CLI gesättigt (`ai-agents`, `decision-support`, `feedback`, `llm`, `personalization`, `prompt-analysis`, `theory-of-mind`, `user-modeling`, `agent-memory`, `claude-code`, `codex-cli`, `gemini-cli`, `llm-agents`, `llm-memory`, `local-first`, `prompt-archaeology`, `open-bricks`, `privacy-first`, `zero-egress`, `feedback-precognition`); kanonische Homepage-URL auf `https://github.com/ellmos-ai/build-your-users-mind#readme` verankert.
+- **Kanonische Attribution (NOTICE)**:
+  - Root `NOTICE`-Datei formalisiert mit Urheberrechtsattribution für Lukas Geiger, ellmos-ai und open-bricks Umbrella unter MIT-Lizenz mit Querverweis auf `THIRD_PARTY_LICENSES.md` und `THIRD_PARTY_LICENSES.txt`.
+- **Zweisprachige 18-Punkte-Navigationsparität (EN/DE)**:
+  - `README.md` und `README_de.md` mit synchroner 18-Punkte-Schnellnavigation und reziproken dualen HTML-Anker-Tags (`<a id="sec-01"></a>` bis `<a id="sec-18"></a>`) vor allen 18 Abschnitten für wechselseitige bilaterale Deeplinks ausgestattet.
+- **Zielgruppen (Target Personas)**:
+  - Section 3 mit 4 detaillierten Personas (`[PERSONA-01]` Autonome KI-Agenten-Entwickler & Multi-Agenten-Architekten, `[PERSONA-02]` Local-First & Datenschutz-fokussierte Desktop-Entwickler, `[PERSONA-03]` Kognitionswissenschaftler, Theory-of-Mind & HCI-Forscher, `[PERSONA-04]` Prompt Engineers & Interaktionsprotokoll-Archäologen) inklusive High-Intent Suchbegriffen verankert.
+- **10-Dimensionale Vergleichsmatrix**:
+  - Section 4 mit 10-dimensionaler Vergleichsmatrix gegen 4 Alternativen (Standard LLM-Prompting, Vektor-RAG / Embeddings, Fine-Tuned Custom Models, Externe Profiling SaaS) gemapped auf Invarianten `INV-LOCAL-01` bis `INV-SLA-10`.
+- **Duale Mermaid-Diagramme & Zero-Egress Lifecycle**:
+  - Pipeline-Topologie (Flowchart) und Feedback-Precognition Schleife (Sequence Diagram) in Section 5 validiert mit `_tools/lint_mermaid.py` (0 Syntaxfehler).
+- **Governance & Laufzeit-Invarianten**:
+  - Zehn Invarianten `INV-LOCAL-01` bis `INV-SLA-10` in Section 6 und Level 1 SBOM formalisiert.
+- **Rechtlicher Haftungshinweis & SLA**:
+  - Gesetzlicher Haftungsausschluss (§ 521 BGB Gefälligkeitsrecht), verbindliche 48h Security Response SLA (5 Tage Triage) und Sibling Ecosystem Matrix in Section 18 verankert.
+- **PEP 621 Standardisierung in `pyproject.toml`**:
+  - 20 gesättigte Keywords synchron mit GitHub-Topics; `license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]`; `Notice` URL in `[project.urls]` registriert.
+- **RAG & `llms.txt` Kontext-Index**:
+  - `llms.txt` Stand 2026-10-29 mit 140 verifizierten Tests Baseline, NOTICE-Verweis, § 521 BGB Hinweis, Level 1 SBOM Notizen und vollständigem 18-Punkte-Navigationsindex aktualisiert.
+- **Shields.io Badges**:
+  - Synchronisiert across EN/DE (`Attribution: NOTICE`, `Verified: 2026-10-29` / `Geprüft: 2026-10-29`, `tests-140--passed--100%--green`).
+- **Automatisierte Vertragstests**:
+  - `tests/test_metadata.py` um 7 neue Contract-Tests erweitert (NOTICE Existenz & Inhalt, PEP 639 license-files, 20/20 Keywords Parität, 18-Punkte Anker Parität sec-01..sec-18, 4 Target Personas, 10-dimensionale Matrix mit INV-Mapping, Mermaid Syntax Validierung; Gesamtsuite: 140 Tests, 100% grün).
+
 ## 2026-10-18 — Pfad A: Technische Hygiene, Bilingual CONTRIBUTING, Dependabot Guard, Level 1 SBOM Re-Audit & Multi-Host Lock Defense
 
 ### 1. Ausgangslage & Kriterien

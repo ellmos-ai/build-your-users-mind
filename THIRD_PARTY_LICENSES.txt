@@ -1,7 +1,8 @@
 # Third-Party Licenses & Software Inventory
 Project: build-your-users-mind (Local-first, evidence-backed user preference and decision-support workflow)
-Audited: 2026-10-18 against Level 1 SBOM and runtime invariants (Prior audit: 2026-09-11).
+Audited: 2026-10-29 against Level 1 SBOM and runtime invariants (Prior audits: 2026-10-18, 2026-09-11).
 License: MIT License (see LICENSE)
+Notice: Canonical Attribution (see NOTICE)
 Repository: https://github.com/ellmos-ai/build-your-users-mind
 Umbrella Collective: open-bricks (https://github.com/open-bricks)
 

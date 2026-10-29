@@ -1,12 +1,13 @@
 # build-your-users-mind
 
-Last-checked: 2026-10-18
+Last-checked: 2026-10-29
 Version: 1.1.0-dev (development, not stable)
-Tests: 133 passed
+Tests: 140 passed
 Canonical repository: https://github.com/ellmos-ai/build-your-users-mind
 Primary language: English
 Translations: README_de.md, locales/de, locales/es, locales/ja, locales/ru, locales/zh
 License: MIT
+Notice: NOTICE
 Ecosystem: ellmos-ai
 Umbrella: open-bricks
 
@@ -20,6 +21,27 @@ Umbrella: open-bricks
 - Developers building user-modeling or agent-memory workflows.
 - Researchers comparing theory-of-mind, prompt archaeology and personalization methods.
 - Teams that need private, inspectable decision-support memory rather than opaque SaaS profiling.
+
+## 18-Point Quick Navigation Index
+
+- [1. Key Features & Highlights](README.md#sec-01) - Local-first user preference model, quick reference & core boundaries.
+- [2. System Architecture & Pipeline Design](README.md#sec-02) - 4-stage pipeline from extraction to theory-of-us synthesis.
+- [3. Target Personas & Discoverability](README.md#sec-03) - 4 personas: Agent developers, desktop engineers, ToM researchers, prompt engineers.
+- [4. Comparative Matrix vs. Alternatives](README.md#sec-04) - 10-dimension comparison mapped to INV-LOCAL-01..INV-SLA-10.
+- [5. Dual Mermaid Diagrams & Zero-Egress Lifecycle](README.md#sec-05) - Topology and sequence diagrams.
+- [6. Governance & Runtime Invariants](README.md#sec-06) - 10 core invariants (INV-LOCAL-01..INV-SLA-10).
+- [7. Deterministic Pipeline & Processing Steps](README.md#sec-07) - Extract, merge, chunk, classify, aggregate, author.
+- [8. Decision Prediction & Feedback Precognition](README.md#sec-08) - v2 prediction layer, Brier/log-loss calibration & advice scores.
+- [9. Secure-Mode Text Simulation & Redaction](README.md#sec-09) - Loopback-only Ollama simulation and privacy-minimized plan.
+- [10. Multi-Agent Source Adapters](README.md#sec-10) - Claude, Codex, Gemini, Kimi source adapters.
+- [11. Theory-of-Us Artifacts & Document Templates](README.md#sec-11) - WHAT-USER-SAID, WHAT-WOULD-USER-SAY, DECISIONS, MY-ACTIONS.
+- [12. Synthetic Demo & 60-Second Quickstart](README.md#sec-12) - Offline synthetic demo and verification fixtures.
+- [13. Operator Workflow & Decision Ledger](README.md#sec-13) - Numbered append-only chain (D-YYYYMMDD-NNN).
+- [14. Repository Layout & Architecture](README.md#sec-14) - Complete tree layout and module responsibilities.
+- [15. Quick Start & CLI Interfaces](README.md#sec-15) - Modular CLI entrypoints for all pipeline stages.
+- [16. Testing & Quality Verification](README.md#sec-16) - 140 passing contract and projection tests.
+- [17. Third-Party Licenses, Level 1 SBOM & Attribution](README.md#sec-17) - NOTICE, Level 1 SBOM and zero-dependency audit.
+- [18. Security Policy, § 521 BGB & Sibling Ecosystem](README.md#sec-18) - 48h SLA, German gratuitous law disclaimer, ecosystem matrix.
 
 ## Sibling Tools & Ecosystem
 
@@ -44,8 +66,9 @@ Umbrella: open-bricks
 
 ## Important files
 
-- `README.md` - authoritative overview, runtime loop, privacy boundaries and search phrases.
-- `README_de.md` - comprehensive German documentation.
+- `README.md` - authoritative overview, 18-point quick navigation, runtime loop, and privacy boundaries.
+- `README_de.md` - comprehensive German documentation with 18-point dual anchor parity.
+- `NOTICE` - canonical copyright attribution notice for Lukas Geiger, ellmos-ai, and open-bricks.
 - `SECURITY.md` - bilingual security and privacy policy (Local-First, Zero-Egress, Redaction boundaries).
 - `THIRD_PARTY_LICENSES.md` - third-party software inventory and zero-runtime-dependency guarantee.
 - `THIRD_PARTY_LICENSES.txt` - plain-text Level 1 SBOM companion with 10 runtime invariants and § 521 BGB disclaimer.
@@ -69,7 +92,7 @@ Umbrella: open-bricks
 - `schemas/secure-text-avatar-output.schema.json` - safe simulated-text output contract.
 - `docs/DECISION-PREDICTION-AND-SECURE-TEXT.md` - architecture, scoring and registry-integration notes.
 - `docs/SIMULATION-CHANNEL-KONZEPT.md` - bounded concept for a clearly labelled simulation channel.
-- `tests/test_metadata.py` - metadata, CI matrix, security, schema and zero-egress contract tests.
+- `tests/test_metadata.py` - metadata, CI matrix, security, schema, discovery and zero-egress contract tests.
 - `.gitignore` - excludes private corpora, generated avatar files, logs and local data.
 
 ## Search phrases

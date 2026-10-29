@@ -33,6 +33,7 @@ class TestMetadataParity(unittest.TestCase):
         self.auto_assign_workflow = ROOT / ".github" / "workflows" / "auto-assign.yml"
         self.label_sync_workflow = ROOT / ".github" / "workflows" / "label-sync.yml"
         self.contributing = ROOT / "CONTRIBUTING.md"
+        self.notice = ROOT / "NOTICE"
 
     def test_required_files_exist(self):
         required = [
@@ -43,6 +44,7 @@ class TestMetadataParity(unittest.TestCase):
             self.changelog,
             self.security,
             self.license,
+            self.notice,
             self.third_party_licenses,
             self.third_party_licenses_txt,
             self.dependabot_config,
@@ -74,7 +76,7 @@ class TestMetadataParity(unittest.TestCase):
 
         llms_text = self.llms_txt.read_text(encoding="utf-8")
         self.assertIn(f"Version: {version}", llms_text)
-        self.assertIn("Last-checked: 2026-10-18", llms_text)
+        self.assertIn("Last-checked: 2026-10-29", llms_text)
 
     def test_schema_validity(self):
         with open(self.classification_schema, "r", encoding="utf-8") as f:
@@ -203,7 +205,7 @@ class TestMetadataParity(unittest.TestCase):
     def test_pep639_license_files_metadata(self):
         """pyproject.toml must declare PEP 639 license-files."""
         pyproj = self.pyproject.read_text(encoding="utf-8")
-        self.assertIn('license-files = ["LICENSE", "THIRD_PARTY_LICENSES.md"]', pyproj)
+        self.assertIn('license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]', pyproj)
 
     def test_gitignore_secret_and_credential_patterns(self):
         """gitignore must exclude secrets, tokens, private keys, and sync artifacts."""
@@ -233,7 +235,8 @@ class TestMetadataParity(unittest.TestCase):
         """THIRD_PARTY_LICENSES.txt must exist as a plain-text Level 1 SBOM companion with all 10 invariants."""
         self.assertTrue(self.third_party_licenses_txt.is_file(), "THIRD_PARTY_LICENSES.txt must exist")
         text = self.third_party_licenses_txt.read_text(encoding="utf-8")
-        self.assertIn("Audited: 2026-10-18", text)
+        self.assertIn("Audited: 2026-10-29", text)
+        self.assertIn("2026-10-18", text)
         self.assertIn("Zero-Copyleft Guarantee", text)
         self.assertIn("Unprivileged User-Mode Operation (RunAsInvoker)", text)
         self.assertIn("§ 521 BGB Gefälligkeitsrecht", text)
@@ -333,6 +336,93 @@ class TestMetadataParity(unittest.TestCase):
         self.assertIn('version = "1.1.0-dev"', pyproj)
         self.assertEqual(manifest.get("version"), "1.1.0-dev")
         self.assertIn("Version: 1.1.0-dev", llms)
+
+    def test_notice_attribution_file_and_content(self):
+        """NOTICE file must exist and contain canonical author, org and umbrella attribution."""
+        self.assertTrue(self.notice.is_file(), "NOTICE file must exist")
+        text = self.notice.read_text(encoding="utf-8")
+        self.assertIn("build-your-users-mind", text)
+        self.assertIn("Lukas Geiger", text)
+        self.assertIn("ellmos-ai", text)
+        self.assertIn("open-bricks", text)
+        self.assertIn("MIT License", text)
+        self.assertIn("THIRD_PARTY_LICENSES.md", text)
+        self.assertIn("THIRD_PARTY_LICENSES.txt", text)
+
+    def test_pep639_license_files_and_notice_url(self):
+        """pyproject.toml must declare Notice URL and all license files."""
+        pyproj = self.pyproject.read_text(encoding="utf-8")
+        self.assertIn('Notice = "https://raw.githubusercontent.com/ellmos-ai/build-your-users-mind/master/NOTICE"', pyproj)
+        self.assertIn('"NOTICE"', pyproj)
+        self.assertIn('"THIRD_PARTY_LICENSES.txt"', pyproj)
+
+    def test_keywords_and_topics_parity(self):
+        """pyproject.toml keywords must contain 20 saturated discoverability terms."""
+        pyproj = self.pyproject.read_text(encoding="utf-8")
+        expected_keywords = [
+            "ai-agents",
+            "decision-support",
+            "feedback",
+            "llm",
+            "personalization",
+            "prompt-analysis",
+            "theory-of-mind",
+            "user-modeling",
+            "agent-memory",
+            "claude-code",
+            "codex-cli",
+            "gemini-cli",
+            "llm-agents",
+            "llm-memory",
+            "local-first",
+            "prompt-archaeology",
+            "open-bricks",
+            "privacy-first",
+            "zero-egress",
+            "feedback-precognition",
+        ]
+        self.assertEqual(len(expected_keywords), 20)
+        for kw in expected_keywords:
+            self.assertIn(f'"{kw}"', pyproj, f"Keyword '{kw}' missing in pyproject.toml")
+
+    def test_bilingual_18_point_quick_navigation_anchors(self):
+        """README.md and README_de.md must both contain dual HTML anchors sec-01 through sec-18."""
+        en_text = self.readme_en.read_text(encoding="utf-8")
+        de_text = self.readme_de.read_text(encoding="utf-8")
+        for i in range(1, 19):
+            anchor = f'<a id="sec-{i:02d}"></a>'
+            self.assertIn(anchor, en_text, f"Anchor {anchor} missing in README.md")
+            self.assertIn(anchor, de_text, f"Anchor {anchor} missing in README_de.md")
+
+    def test_target_personas_coverage(self):
+        """README.md and README_de.md must cover all 4 target personas in Section 3."""
+        en_text = self.readme_en.read_text(encoding="utf-8")
+        de_text = self.readme_de.read_text(encoding="utf-8")
+        for p in ("[PERSONA-01]", "[PERSONA-02]", "[PERSONA-03]", "[PERSONA-04]"):
+            self.assertIn(p, en_text, f"Persona {p} missing in README.md")
+            self.assertIn(p, de_text, f"Persona {p} missing in README_de.md")
+
+    def test_comparative_matrix_invariants_mapping(self):
+        """Comparative matrix in Section 4 must cover all 10 invariants INV-LOCAL-01 through INV-SLA-10."""
+        en_text = self.readme_en.read_text(encoding="utf-8")
+        de_text = self.readme_de.read_text(encoding="utf-8")
+        for i in range(1, 11):
+            expected = f"{i:02d}"
+            self.assertTrue(
+                any("INV-" in line and expected in line for line in en_text.splitlines()),
+                f"Invariant {i} missing in README.md comparative matrix",
+            )
+            self.assertTrue(
+                any("INV-" in line and expected in line for line in de_text.splitlines()),
+                f"Invariant {i} missing in README_de.md comparative matrix",
+            )
+
+    def test_mermaid_diagrams_syntax_clean(self):
+        """Mermaid diagrams in README.md must contain valid flowchart and sequenceDiagram blocks without unquoted tokens."""
+        en_text = self.readme_en.read_text(encoding="utf-8")
+        self.assertIn("```mermaid\nflowchart TD", en_text)
+        self.assertIn("```mermaid\nsequenceDiagram", en_text)
+        self.assertNotIn("-->|", en_text)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,8 @@
 
 **Project:** `build-your-users-mind`  
 **License:** [MIT License](LICENSE)  
-**Audit Date:** 2026-10-18 (Level 1 SBOM re-audit, prior: 2026-09-11)
+**Notice:** [NOTICE](NOTICE)
+**Audit Date:** 2026-10-29 (Pfad B re-audit, prior: 2026-10-18)
 **Text Companion:** [`THIRD_PARTY_LICENSES.txt`](THIRD_PARTY_LICENSES.txt)
 
 ---

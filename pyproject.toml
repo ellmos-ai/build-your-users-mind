@@ -9,28 +9,29 @@ description = "Local-first, evidence-backed user preference and decision-support
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-license-files = ["LICENSE", "THIRD_PARTY_LICENSES.md"]
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]
 authors = [{ name = "Lukas Geiger", email = "support@lukasgeiger.com" }]
 keywords = [
+    "ai-agents",
+    "decision-support",
+    "feedback",
+    "llm",
+    "personalization",
+    "prompt-analysis",
     "theory-of-mind",
     "user-modeling",
-    "personalization",
-    "ai-agents",
-    "prompt-analysis",
-    "feedback",
-    "prompt-archaeology",
     "agent-memory",
-    "decision-support",
-    "feedback-precognition",
+    "claude-code",
+    "codex-cli",
+    "gemini-cli",
+    "llm-agents",
+    "llm-memory",
     "local-first",
-    "zero-egress",
-    "privacy",
-    "codex",
-    "claude",
-    "gemini",
-    "kimi",
-    "ellmos",
+    "prompt-archaeology",
     "open-bricks",
+    "privacy-first",
+    "zero-egress",
+    "feedback-precognition",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -69,6 +70,7 @@ Changelog = "https://github.com/ellmos-ai/build-your-users-mind/blob/master/CHAN
 Contributing = "https://github.com/ellmos-ai/build-your-users-mind/blob/master/CONTRIBUTING.md"
 Security = "https://github.com/ellmos-ai/build-your-users-mind/blob/master/SECURITY.md"
 "Plain-Text License" = "https://raw.githubusercontent.com/ellmos-ai/build-your-users-mind/master/LICENSE"
+Notice = "https://raw.githubusercontent.com/ellmos-ai/build-your-users-mind/master/NOTICE"
 "Third-Party Licenses Text" = "https://raw.githubusercontent.com/ellmos-ai/build-your-users-mind/master/THIRD_PARTY_LICENSES.txt"
 "Parent Organization" = "https://github.com/ellmos-ai"
 "Umbrella Ecosystem" = "https://github.com/open-bricks"

@@ -4,6 +4,19 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## Unreleased
 
+- **Marketing, Discoverability, Visual Architecture & Contract Tests (2026-10-29, Pfad B)**:
+  - Maintained strict version-freeze discipline per `T-20260920-167562623` (`version = "1.1.0-dev"` in `pyproject.toml` and `ellmos-module.v2.json` unchanged).
+  - Saturated 20/20 live GitHub repository topics via GitHub CLI (`ai-agents`, `decision-support`, `feedback`, `llm`, `personalization`, `prompt-analysis`, `theory-of-mind`, `user-modeling`, `agent-memory`, `claude-code`, `codex-cli`, `gemini-cli`, `llm-agents`, `llm-memory`, `local-first`, `prompt-archaeology`, `open-bricks`, `privacy-first`, `zero-egress`, `feedback-precognition`) and anchored canonical homepage URL (`https://github.com/ellmos-ai/build-your-users-mind#readme`).
+  - Added canonical root `NOTICE` file formalizing copyright attribution for Lukas Geiger, ellmos-ai, and open-bricks umbrella under the MIT License with cross-reference to `THIRD_PARTY_LICENSES.md` and `THIRD_PARTY_LICENSES.txt`.
+  - Upgraded `README.md` and `README_de.md` to comprehensive 18-point bilingual navigation parity with reciprocal dual HTML anchor tags (`<a id="sec-01"></a>` to `<a id="sec-18"></a>`) across all sections.
+  - Added Section 3 Target Personas covering 4 profiles (`[PERSONA-01]` Autonomous AI Agent Developers & Multi-Agent Architects, `[PERSONA-02]` Local-First & Privacy-Focused Desktop Engineers, `[PERSONA-03]` Cognitive Science, Theory-of-Mind & HCI Researchers, `[PERSONA-04]` Prompt Engineers & Interaction Log Archaeologists) with high-intent search keywords.
+  - Added Section 4 10-dimensional comparative matrix contrasting against 4 alternatives (Vanilla LLM Prompting, Vector RAG / Embeddings, Fine-Tuned Custom Models, External Profiling SaaS) mapped to invariants `INV-LOCAL-01` through `INV-SLA-10`.
+  - Validated dual Mermaid diagrams (Pipeline Architecture Topology flowchart and Feedback Precognition sequence diagram) with `_tools/lint_mermaid.py` (0 syntax issues).
+  - Formalized Section 6 Governance & Runtime Invariants (`INV-LOCAL-01` to `INV-SLA-10`), Level 1 SBOM transparency, and Section 18 statutory German gratuitous contract law (§ 521 BGB Gefälligkeitsrecht) disclaimer and 48-hour security response SLA.
+  - Standardized PEP 621 metadata in `pyproject.toml` with 20 saturated keywords, `license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]`, and `Notice` URL in `[project.urls]`.
+  - Updated `llms.txt` Stand 2026-10-29 with test baseline (140 passed), full 18-point navigation index, and NOTICE references.
+  - Expanded automated test suite in `tests/test_metadata.py` with 7 new contract tests for NOTICE, PEP 639 license-files, 20/20 topics parity, 18-point dual anchors, personas, comparative matrix invariant mapping, and clean Mermaid diagrams (140 total tests passing, 100% green).
+
 - **CI maintenance**: Update Checkout to v7 in the test and label-sync workflows, retaining Setup-Python v7 and GitHub-Script v9 on the current master branch.
 
 - **Repository Hygiene, Dependabot Guard, SBOM Companion & Multi-Host Defense (2026-10-18, Pfad A)**:
