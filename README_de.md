@@ -343,6 +343,15 @@ Die 0→4 Laufzeitschleife erzeugt transparente, editierbare Dokumente:
 | **3** | `WHAT-I-DID…` + `MY-ACTIONS.txt` | Protokoll der ausgeführten Aktionen |
 | **4** | `WHAT-<USER>-SAID-ABOUT…` | **Evaluation** — Vorhersage vs. Realität |
 
+### Bewertungsseite & optionale lokale Spracheingabe
+
+Für die gebündelte Rückbewertung von Avatar-Entscheidungen (Stufe 4) erzeugen [`templates/AVATAR-RATING.template.html`](templates/AVATAR-RATING.template.html) und [`scripts/rating_form.py`](scripts/rating_form.py) eine eigenständige HTML-Seite ohne externe Abhängigkeiten (hell/dunkel, mobil nutzbar, `localStorage`-Zwischenstand, Massenabnahme auf 8, JSON-Export):
+
+- **Eingabe-Schema**: [`schemas/avatar-rating-input.schema.json`](schemas/avatar-rating-input.schema.json) (`entries` mit `id`, `kontext`, `entscheidung`, `konfidenz`, `ziel`).
+- **Antwort-Schema**: [`schemas/avatar-rating-response.schema.json`](schemas/avatar-rating-response.schema.json) (`ratings` mit `score` 0–10 oder `null` und editierbarer `note`).
+- **Feedback-Übernahme**: `python scripts/rating_form.py import-feedback --response <datei.json> --out WHAT-USER-SAID-ABOUT.md` überführt die Bewertungen direkt in das von [`scripts/score_predictions.py`](scripts/score_predictions.py) gelesene Format.
+- **Optionale lokale Sprachnotiz (Standard: aus)**: Über `voice` in `config.local.json` (gitignored, Vorlage [`templates/avatar-rating.config.example.json`](templates/avatar-rating.config.example.json)) steuerbar. Nur wenn `voice.enabled: true` **und** `ellmos-voice-io` lokal mit STT installiert ist, erscheint pro Notiz ein Mikrofonsymbol für den reinen Loopback-Dienst (`python scripts/rating_form.py serve`); Audiodaten verlassen den Rechner nie. Fehlt das Modul bei aktivem Schalter, erscheint ein sichtbarer Hinweis und das Formular funktioniert normal weiter.
+
 ---
 
 <a id="sec-12"></a>

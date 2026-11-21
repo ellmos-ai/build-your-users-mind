@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ellmos-ai/build-your-users-mind/schemas/avatar-rating-response.schema.json",
+  "title": "BYUM avatar decision rating response",
+  "type": "object",
+  "required": ["schema", "run_id", "saved_at", "ratings"],
+  "properties": {
+    "schema": {"const": "byum.avatar-rating-response.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "saved_at": {"type": "string", "format": "date-time"},
+    "ratings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["nr", "id", "entscheidung", "score", "note"],
+        "properties": {
+          "nr": {"type": "integer", "minimum": 1},
+          "id": {"type": "string", "minLength": 1},
+          "entscheidung": {"type": "string", "minLength": 1},
+          "score": {"type": ["integer", "null"], "minimum": 0, "maximum": 10},
+          "note": {"type": "string"},
+          "note_source": {"enum": ["text", "voice"]}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
