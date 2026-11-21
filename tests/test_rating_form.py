@@ -300,6 +300,11 @@ class BridgeRequestFilterTests(unittest.TestCase):
         self.assertFalse(rf.is_allowed_bridge_origin("file://localhost"))
         self.assertFalse(rf.is_allowed_bridge_origin("http://localhost.evil.example"))
         self.assertFalse(rf.is_allowed_bridge_origin(""))
+        self.assertFalse(rf.is_allowed_bridge_origin("http://localhost/path"))
+        self.assertFalse(rf.is_allowed_bridge_origin("http://LOCALHOST:80"))
+        self.assertFalse(rf.is_allowed_bridge_origin("http://localhost:80\r\nX-Evil: 1"))
+        self.assertEqual(rf.canonical_bridge_origin("http://[::1]:8000"), "http://[::1]:8000")
+        self.assertEqual(rf.canonical_bridge_origin("https://127.0.0.1"), "https://127.0.0.1")
 
 
 if __name__ == "__main__":

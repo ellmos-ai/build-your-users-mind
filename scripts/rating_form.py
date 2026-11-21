@@ -647,16 +647,34 @@ def is_loopback_host_header(host_header: str | None) -> bool:
     return hostname in _LOOPBACK_HOSTS
 
 
-def is_allowed_bridge_origin(origin: str) -> bool:
-    """Allow ``null`` (``file://`` pages) and ``http(s)`` loopback origins only."""
+_ORIGIN_SCHEMES = {"http": "http", "https": "https"}
+_ORIGIN_HOSTS = {"127.0.0.1": "127.0.0.1", "localhost": "localhost", "::1": "[::1]"}
+
+
+def canonical_bridge_origin(origin: str) -> str | None:
+    """Return a rebuilt allowed origin (``null`` or http(s) loopback), else ``None``.
+
+    The result is assembled from fixed literals plus an integer port, never from the raw
+    header text, so a CR/LF or other stray character can never reach a response header.
+    """
     if origin == "null":
-        return True
+        return "null"
     try:
         parsed = urlparse(origin)
-        _ = parsed.port
+        port = parsed.port
     except ValueError:
-        return False
-    return parsed.scheme in {"http", "https"} and parsed.hostname in _LOOPBACK_HOSTS
+        return None
+    scheme = _ORIGIN_SCHEMES.get(parsed.scheme)
+    host = _ORIGIN_HOSTS.get(parsed.hostname or "")
+    if scheme is None or host is None or parsed.path or parsed.query or parsed.fragment or parsed.username:
+        return None
+    canonical = f"{scheme}://{host}" if port is None else f"{scheme}://{host}:{int(port)}"
+    return canonical if canonical == origin else None
+
+
+def is_allowed_bridge_origin(origin: str) -> bool:
+    """Allow ``null`` (``file://`` pages) and ``http(s)`` loopback origins only."""
+    return canonical_bridge_origin(origin) is not None
 
 
 def make_bridge_handler(
@@ -672,9 +690,9 @@ def make_bridge_handler(
             return
 
         def _cors_headers(self) -> None:
-            origin = (self.headers.get("Origin") or "").strip()
-            if origin and is_allowed_bridge_origin(origin):
-                self.send_header("Access-Control-Allow-Origin", origin)
+            allowed_origin = canonical_bridge_origin((self.headers.get("Origin") or "").strip())
+            if allowed_origin is not None:
+                self.send_header("Access-Control-Allow-Origin", allowed_origin)
             self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Voice-Language")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 
