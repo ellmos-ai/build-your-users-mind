@@ -285,12 +285,29 @@ class BridgeRequestFilterTests(unittest.TestCase):
         self.assertIn("forbidden origin", body.decode("utf-8"))
         self.assertNotIn("Access-Control-Allow-Origin", headers)
 
-    def test_null_and_loopback_origins_are_allowed(self) -> None:
-        for origin in ("null", f"http://localhost:{self.port}", "http://[::1]:8000"):
+    def test_null_and_own_loopback_origins_are_allowed(self) -> None:
+        for origin in ("null", f"http://localhost:{self.port}", f"http://127.0.0.1:{self.port}"):
             with self.subTest(origin=origin):
                 status, headers, _ = self._request("OPTIONS", "/transcribe", {"Host": self._host(), "Origin": origin})
                 self.assertEqual(status, 204)
                 self.assertEqual(headers.get("Access-Control-Allow-Origin"), origin)
+
+    def test_loopback_origin_on_other_port_is_rejected(self) -> None:
+        # Another local web app (e.g. a dashboard on :8000) must not drive the transcriber.
+        status, headers, _ = self._request(
+            "OPTIONS", "/transcribe", {"Host": self._host(), "Origin": "http://127.0.0.1:8000"}
+        )
+        self.assertEqual(status, 403)
+        self.assertNotIn("Access-Control-Allow-Origin", headers)
+
+    def test_page_is_reread_per_request(self) -> None:
+        page = Path(self._tmp.name) / "page.html"
+        page.write_text("<html>rating v2</html>", encoding="utf-8")
+        try:
+            _, _, body = self._request("GET", "/", {"Host": self._host()})
+            self.assertIn(b"rating v2", body)
+        finally:
+            page.write_text("<html>rating</html>", encoding="utf-8")
 
     def test_host_and_origin_helpers(self) -> None:
         for good in ("127.0.0.1", "127.0.0.1:8765", "localhost:1", "[::1]:8765"):
@@ -305,6 +322,60 @@ class BridgeRequestFilterTests(unittest.TestCase):
         self.assertFalse(rf.is_allowed_bridge_origin("http://localhost:80\r\nX-Evil: 1"))
         self.assertEqual(rf.canonical_bridge_origin("http://[::1]:8000"), "http://[::1]:8000")
         self.assertEqual(rf.canonical_bridge_origin("https://127.0.0.1"), "https://127.0.0.1")
+
+
+class MicStreamReuseTests(unittest.TestCase):
+    def test_voice_script_reuses_one_stream_and_never_stops_it(self) -> None:
+        html_out = rf.render_rating_html(
+            sample_input(),
+            {"voice": {"enabled": True}},
+            voice_probe=lambda _cfg: {"installed": True, "stt_available": True, "stt_engine": "vosk", "reason": ""},
+        )
+        # Stopping the tracks after each note forced a fresh getUserMedia (and prompt) per click.
+        self.assertNotIn("t.stop()", html_out)
+        self.assertEqual(html_out.count("getUserMedia({audio:true})"), 1)
+        self.assertIn("sharedStream", html_out)
+
+
+class RemoteSttTests(unittest.TestCase):
+    def test_remote_url_must_stay_on_loopback(self) -> None:
+        for bad in ("http://100.119.69.90:8766/transcribe", "http://192.168.1.5:8766/transcribe"):
+            cfg = rf._merge_voice_config({"voice": {"enabled": True, "engine": "remote", "remote_url": bad}})
+            with self.subTest(url=bad):
+                with self.assertRaisesRegex(ValueError, "loopback"):
+                    rf.probe_voice_module(cfg)
+                with self.assertRaisesRegex(ValueError, "loopback"):
+                    rf._transcribe_wav_bytes(b"RIFF", cfg, "de")
+
+    def test_bridge_forwards_audio_to_remote_worker(self) -> None:
+        import stt_server
+
+        seen: list[tuple[bytes, str]] = []
+
+        def fake(path: Path, lang: str) -> str:
+            seen.append((path.read_bytes(), lang))
+            return "hallo welt"
+
+        worker = ThreadingHTTPServer(("127.0.0.1", 0), stt_server.make_handler(fake, "fake-model"))
+        threading.Thread(target=worker.serve_forever, daemon=True).start()
+        try:
+            cfg = {"voice": {"enabled": True, "engine": "remote",
+                             "remote_url": f"http://127.0.0.1:{worker.server_address[1]}/transcribe"}}
+            self.assertTrue(rf.probe_voice_module(rf._merge_voice_config(cfg))["stt_available"])
+            text = rf._transcribe_wav_bytes(b"RIFFfake", rf._merge_voice_config(cfg), "de")
+        finally:
+            worker.shutdown()
+            worker.server_close()
+        self.assertEqual(text, "hallo welt")
+        self.assertEqual(seen, [(b"RIFFfake", "de")])
+
+    def test_worker_rejects_public_clients(self) -> None:
+        import stt_server
+
+        self.assertTrue(stt_server.is_loopback_client("127.0.0.1"))
+        self.assertTrue(stt_server.is_loopback_client("::1"))
+        for addr in ("100.64.0.7", "192.168.1.5", "8.8.8.8", "0.0.0.0", "nonsense"):
+            self.assertFalse(stt_server.is_loopback_client(addr), addr)
 
 
 if __name__ == "__main__":

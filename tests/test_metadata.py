@@ -173,6 +173,13 @@ class TestMetadataParity(unittest.TestCase):
                 self.assertIn('parsed.hostname not in {"127.0.0.1", "localhost", "::1"}', text)
                 self.assertIn('parsed.scheme != "http"', text)
                 continue
+            if path.name == "rating_form.py":
+                # Its only HTTP client is the opt-in remote STT engine, gated to loopback URLs.
+                self.assertIn('parsed.hostname not in _LOOPBACK_HOSTS', text)
+                self.assertIn('_LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}', text)
+                self.assertEqual(text.count("urllib.request.urlopen("), 2)
+                self.assertEqual(text.count("validate_loopback_endpoint(str(voice_cfg.get(\"remote_url\")"), 2)
+                continue
             for module in forbidden:
                 self.assertNotIn(f"import {module}", text, f"Forbidden network import {module} in {path}")
                 self.assertNotIn(f"from {module}", text, f"Forbidden network import {module} in {path}")

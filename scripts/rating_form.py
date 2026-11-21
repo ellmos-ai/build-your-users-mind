@@ -17,6 +17,7 @@ import os
 import re
 import subprocess
 import sys
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Callable
@@ -66,6 +67,14 @@ _VOICE_CLIENT_JS = r"""
   if(!vcfg.active||!vcfg.endpoint)return;
   const MIC_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
   let activeRec=null;
+  // One MediaStream for the whole page: re-calling getUserMedia per click re-prompts
+  // wherever the browser does not persist the grant (e.g. Edge on file://).
+  let sharedStream=null;
+  async function micStream(){
+    if(sharedStream&&sharedStream.getAudioTracks().some(t=>t.readyState==="live"))return sharedStream;
+    sharedStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    return sharedStream;
+  }
   function resampleMono(samples,fromRate,toRate){
     if(fromRate===toRate)return samples;
     const ratio=fromRate/toRate;
@@ -119,7 +128,6 @@ _VOICE_CLIENT_JS = r"""
     rec.btn.innerHTML=MIC_SVG;
     rec.status.textContent="Transkribiere lokal …";
     try{rec.proc.disconnect();rec.src.disconnect();}catch(e){}
-    try{rec.stream.getTracks().forEach(t=>t.stop());}catch(e){}
     try{await rec.ctx.close();}catch(e){}
     try{
       const wav=encodeWav16k(rec.chunks,rec.sampleRate);
@@ -174,7 +182,7 @@ _VOICE_CLIENT_JS = r"""
         return;
       }
       try{
-        const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+        const stream=await micStream();
         const AudioCtx=window.AudioContext||window.webkitAudioContext;
         const ctx=new AudioCtx();
         const src=ctx.createMediaStreamSource(stream);
@@ -373,7 +381,18 @@ def _merge_voice_config(config: dict[str, Any] | None) -> dict[str, Any]:
 
 def probe_voice_module(voice_cfg: dict[str, Any]) -> dict[str, Any]:
     """Read-only probe for local ``ellmos-voice-io`` and STT engine availability."""
-    provider = str(voice_cfg.get("provider") or "ellmos-voice-io").strip()
+    if str(voice_cfg.get("engine") or "").strip() == "remote":
+        # Loopback only (zero-egress): an operator may tunnel this port to a bigger STT host.
+        remote = urlparse(validate_loopback_endpoint(str(voice_cfg.get("remote_url") or "")))
+        try:
+            with urllib.request.urlopen(f"{remote.scheme}://{remote.netloc}/health", timeout=3) as resp:
+                ok = bool(json.loads(resp.read().decode("utf-8")).get("ok"))
+        except (OSError, ValueError) as exc:
+            return {"installed": False, "stt_available": False, "stt_engine": "remote",
+                    "reason": f"Remote-STT-Dienst nicht erreichbar ({exc})."}
+        return {"installed": ok, "stt_available": ok, "stt_engine": "remote",
+                "reason": "" if ok else "Remote-STT-Dienst meldet keinen Bereitschaftsstatus."}
+    provider =str(voice_cfg.get("provider") or "ellmos-voice-io").strip()
     if provider != "ellmos-voice-io":
         return {
             "installed": False,
@@ -596,6 +615,19 @@ def _transcribe_wav_bytes(wav_bytes: bytes, voice_cfg: dict[str, Any], language:
     engine = str(voice_cfg.get("engine") or "auto").strip() or "auto"
     model_path = str(voice_cfg.get("model_path") or "").strip() or None
 
+    if engine == "remote":
+        req = urllib.request.Request(
+            validate_loopback_endpoint(str(voice_cfg.get("remote_url") or "")),
+            data=wav_bytes,
+            headers={"Content-Type": "audio/wav", "X-Voice-Language": language},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        if not data.get("ok"):
+            raise RuntimeError(str(data.get("error") or "remote transcription failed"))
+        return str(data.get("text") or "").strip()
+
     if importlib.util.find_spec("ellmos_voice_io") is not None:
         from ellmos_voice_io import SpeechToText, VoiceIO  # type: ignore[import-not-found]
 
@@ -683,14 +715,20 @@ def make_bridge_handler(
 ) -> type[BaseHTTPRequestHandler]:
     """Build the request handler class for the loopback voice bridge."""
     voice_cfg = _merge_voice_config(config)
-    page_bytes = html_path.read_bytes() if html_path and html_path.is_file() else None
 
     class BridgeHandler(BaseHTTPRequestHandler):
         def log_message(self, fmt: str, *args: object) -> None:  # noqa: A002
             return
 
+        def _own_origin(self) -> str | None:
+            """Canonical Origin if it is ``null`` (file:// page) or this bridge's own loopback port."""
+            allowed = canonical_bridge_origin((self.headers.get("Origin") or "").strip())
+            if allowed is None or allowed == "null":
+                return allowed
+            return allowed if urlparse(allowed).port == self.server.server_address[1] else None
+
         def _cors_headers(self) -> None:
-            allowed_origin = canonical_bridge_origin((self.headers.get("Origin") or "").strip())
+            allowed_origin = self._own_origin()
             if allowed_origin is not None:
                 self.send_header("Access-Control-Allow-Origin", allowed_origin)
             self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Voice-Language")
@@ -712,7 +750,7 @@ def make_bridge_handler(
                 self._send_json({"ok": False, "error": "forbidden host"}, status=403)
                 return True
             origin = self.headers.get("Origin")
-            if origin is not None and not is_allowed_bridge_origin(origin.strip()):
+            if origin is not None and self._own_origin() is None:
                 self._send_json({"ok": False, "error": "forbidden origin"}, status=403)
                 return True
             return False
@@ -732,6 +770,8 @@ def make_bridge_handler(
             if path == "/health":
                 self._send_json({"ok": True, "voice": resolve_voice_state(config)})
                 return
+            # Read per request so a re-rendered page is served without restarting the bridge.
+            page_bytes = html_path.read_bytes() if html_path and html_path.is_file() else None
             if path == "/" and page_bytes is not None:
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
