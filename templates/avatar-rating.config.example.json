@@ -1,0 +1,11 @@
+{
+  "schema": "byum.avatar-rating-config.v1",
+  "voice": {
+    "enabled": false,
+    "provider": "ellmos-voice-io",
+    "endpoint": "http://127.0.0.1:8765/transcribe",
+    "engine": "auto",
+    "language": "de",
+    "model_path": ""
+  }
+}

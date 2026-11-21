@@ -352,6 +352,15 @@ The 0→4 runtime loop produces a cohesive set of inspectable, editable markdown
 | **3** | `WHAT-I-DID…` + `MY-ACTIONS.txt` | Log of actions taken on the prediction |
 | **4** | `WHAT-<USER>-SAID-ABOUT…` | **Evaluation** — prediction vs. reality → improves (1) and (2) |
 
+### Operator Rating Form & Optional Local Voice Input
+
+For batch evaluation of avatar decisions (step 4), [`templates/AVATAR-RATING.template.html`](templates/AVATAR-RATING.template.html) and [`scripts/rating_form.py`](scripts/rating_form.py) generate a standalone, zero-dependency HTML review page (light/dark, mobile-ready, `localStorage` draft persistence, bulk-accept at 8, JSON export):
+
+- **Input schema**: [`schemas/avatar-rating-input.schema.json`](schemas/avatar-rating-input.schema.json) (`entries` with `id`, `kontext`, `entscheidung`, `konfidenz`, `ziel`).
+- **Response schema**: [`schemas/avatar-rating-response.schema.json`](schemas/avatar-rating-response.schema.json) (`ratings` with `score` 0–10 or `null` and editable `note`).
+- **Feedback import**: `python scripts/rating_form.py import-feedback --response <file.json> --out WHAT-USER-SAID-ABOUT.md` converts rated entries directly into the format parsed by [`scripts/score_predictions.py`](scripts/score_predictions.py).
+- **Optional local voice notes (disabled by default)**: Configure `voice` in `config.local.json` (gitignored, see [`templates/avatar-rating.config.example.json`](templates/avatar-rating.config.example.json)). Only when `voice.enabled` is `true` **and** [`ellmos-voice-io`](https://github.com/ellmos-ai/ellmos-voice-io) is installed locally with STT available does each note render a microphone button targeting the loopback-only bridge (`python scripts/rating_form.py serve`); audio never leaves the local machine. If enabled while the module is absent, a visible notice is shown and the rating form keeps working unchanged.
+
 ---
 
 <a id="sec-12"></a>

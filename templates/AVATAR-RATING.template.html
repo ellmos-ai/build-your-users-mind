@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>__PAGE_TITLE__</title>
+<style>
+:root{--bg:#fafaf7;--fg:#1d1d1b;--mut:#6b6b66;--line:#ddd9cf;--acc:#2f6f4f;--card:#fff;--warn-bg:#fdf3e0;--warn-fg:#7a4f01;--warn-line:#e2c07d;--rec:#b42318}
+@media (prefers-color-scheme:dark){:root{--bg:#1a1a18;--fg:#eceae4;--mut:#a3a199;--line:#3a3934;--acc:#7fc29b;--card:#23231f;--warn-bg:#2a2317;--warn-fg:#f0c36d;--warn-line:#6e5626;--rec:#f97066}}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,sans-serif;margin:0;padding:16px;max-width:1000px;margin-inline:auto}
+h1{font-size:22px;margin:0 0 6px}
+p.mut{color:var(--mut);margin:0 0 14px}
+.mut{color:var(--mut)}
+.bar{position:sticky;top:0;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center;z-index:2}
+button{background:var(--acc);color:#fff;border:0;border-radius:6px;padding:8px 14px;font:inherit;cursor:pointer}
+button.sec{background:transparent;color:var(--acc);border:1px solid var(--acc)}
+__VOICE_NOTICE_CSS__
+.row{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0}
+.meta{color:var(--mut);font-size:12px;word-break:break-word}
+.c{margin:6px 0 3px}
+.d{margin:3px 0 10px}
+.sc{display:flex;gap:5px;flex-wrap:wrap}
+.sc label{border:1px solid var(--line);border-radius:5px;padding:4px 9px;cursor:pointer;min-width:28px;text-align:center;user-select:none}
+.sc input{display:none}
+.sc input:checked+span{font-weight:700;color:var(--acc)}
+.sc label:has(input:checked){border-color:var(--acc)}
+.note-area{margin-top:8px}
+.note-controls{display:flex;gap:8px;align-items:flex-start}
+textarea{width:100%;flex:1;min-width:0;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:6px 8px;font:inherit;min-height:38px;resize:vertical}
+__VOICE_CSS__
+@media (max-width:600px){body{padding:12px}.sc label{padding:6px 10px;min-width:34px}button{padding:9px 13px}}
+</style>
+</head>
+<body>
+<h1 id="page-title"></h1>
+<p class="mut" id="page-desc"></p>
+__VOICE_NOTICE__
+<div class="bar">
+  <button type="button" id="save">Speichern</button>
+  <button type="button" class="sec" id="bulk">Alle unbewerteten auf 8</button>
+  <span class="mut" id="cnt"></span>
+</div>
+<div id="list"></div>
+<script>
+const PAYLOAD=__RATING_PAYLOAD__;
+const rows=PAYLOAD.entries||[];
+const KEY="byum-avatar-rating:"+(PAYLOAD.run_id||"default");
+let st={};
+try{st=JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){st={};}
+document.getElementById("page-title").textContent=PAYLOAD.title||"Avatar-Entscheidungen bewerten";
+document.getElementById("page-desc").textContent=PAYLOAD.description||"Bewerte jede Entscheidung von 0 bis 10 (10 = genau so entschieden, 0 = völlig daneben). Notizen sind optional. Mit „Alle unbewerteten auf 8“ übernimmst du offene Einträge und passt nur Abweichungen an. „Speichern“ lädt die Antwortdatei als JSON herunter.";
+const L=document.getElementById("list");
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+rows.forEach((r,idx)=>{
+  const nr=r.nr??(idx+1);
+  const d=document.createElement("div");
+  d.className="row";
+  let sc="";
+  for(let i=0;i<=10;i++){
+    sc+=`<label><input type="radio" name="s_${esc(r.id)}" data-id="${esc(r.id)}" value="${i}"><span>${i}</span></label>`;
+  }
+  const metaParts=[String(nr),esc(r.id)];
+  if(r.ebene)metaParts.push(esc(r.ebene));
+  metaParts.push(esc(r.konfidenz));
+  metaParts.push("→ "+esc(r.ziel));
+  if(r.date)metaParts.push(esc(r.date));
+  d.innerHTML=`<div class="meta">${metaParts.join(" · ")}</div>`
+    +(r.kontext?`<div class="c"><b>Worum ging es:</b> ${esc(r.kontext)}</div>`:"")
+    +`<div class="d"><b>Entschieden:</b> ${esc(r.entscheidung)}</div>`
+    +`<div class="sc">${sc}</div>`
+    +`<div class="note-area"><div class="note-controls"><textarea placeholder="Notiz (optional)" data-id="${esc(r.id)}"></textarea></div></div>`;
+  L.appendChild(d);
+});
+function persist(){
+  try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}
+  cnt();
+}
+function cnt(){
+  const rated=rows.filter(r=>st[r.id]&&st[r.id].s!==undefined&&st[r.id].s!==null).length;
+  document.getElementById("cnt").textContent=rated+" von "+rows.length+" bewertet";
+}
+rows.forEach(r=>{
+  const v=st[r.id]||{};
+  if(v.s!==undefined&&v.s!==null){
+    const input=L.querySelector(`input[type="radio"][data-id="${CSS.escape(r.id)}"][value="${v.s}"]`);
+    if(input)input.checked=true;
+  }
+  if(v.note){
+    const ta=L.querySelector(`textarea[data-id="${CSS.escape(r.id)}"]`);
+    if(ta)ta.value=v.note;
+  }
+});
+L.addEventListener("change",e=>{
+  if(e.target.type==="radio"&&e.target.dataset.id){
+    const id=e.target.dataset.id;
+    st[id]=Object.assign(st[id]||{},{s:Number(e.target.value)});
+    persist();
+  }
+});
+L.addEventListener("input",e=>{
+  if(e.target.tagName==="TEXTAREA"&&e.target.dataset.id){
+    const id=e.target.dataset.id;
+    const prev=st[id]||{};
+    st[id]=Object.assign(prev,{note:e.target.value,note_source:prev.note_source||"text"});
+    persist();
+  }
+});
+document.getElementById("bulk").onclick=()=>{
+  rows.forEach(r=>{
+    if(!st[r.id]||st[r.id].s===undefined||st[r.id].s===null){
+      st[r.id]=Object.assign(st[r.id]||{},{s:8});
+      const input=L.querySelector(`input[type="radio"][data-id="${CSS.escape(r.id)}"][value="8"]`);
+      if(input)input.checked=true;
+    }
+  });
+  persist();
+};
+document.getElementById("save").onclick=()=>{
+  const out={
+    schema:"byum.avatar-rating-response.v1",
+    run_id:PAYLOAD.run_id,
+    saved_at:new Date().toISOString(),
+    ratings:rows.map((r,idx)=>{
+      const cur=st[r.id]||{};
+      const entry={
+        nr:r.nr??(idx+1),
+        id:r.id,
+        entscheidung:r.entscheidung,
+        score:(cur.s!==undefined&&cur.s!==null)?cur.s:null,
+        note:cur.note||""
+      };
+      if(cur.note_source==="voice"||cur.note_source==="text"){
+        entry.note_source=cur.note_source;
+      }
+      return entry;
+    })
+  };
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:"application/json"}));
+  a.download=(PAYLOAD.run_id||"avatar-rating")+"-response.json";
+  a.click();
+};
+cnt();
+__VOICE_SCRIPT__
+</script>
+</body>
+</html>

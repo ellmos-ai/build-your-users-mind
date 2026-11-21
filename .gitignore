@@ -20,8 +20,15 @@ STUDIE/
 **/decision-predictions*.jsonl
 **/secure-text-avatar*.json
 **/secure-avatar*.json
+**/config.local.json
+config.local.json
+**/BEWERTUNG*.html
+**/avatar-bewertung*.json
+**/avatar-rating-response*.json
 # Öffentliche Verträge bleiben trotz outputnaher Namen versioniert:
 !schemas/secure-text-avatar-output.schema.json
+!schemas/avatar-rating-input.schema.json
+!schemas/avatar-rating-response.schema.json
 # Die generischen Vorlagen explizit behalten:
 !templates/
 !templates/**
