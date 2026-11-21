@@ -4,6 +4,7 @@ All notable changes to `build-your-users-mind` are documented here.
 
 ## Unreleased
 
+- **Security: loopback voice bridge request filtering (#15)**: `scripts/rating_form.py serve` now answers 403 when the `Host` header is missing or not a loopback host (DNS-rebinding guard) and when an `Origin` header is present but neither `null` nor an `http(s)` loopback origin. The check runs before any body is read, so foreign `text/plain` POSTs no longer reach the transcriber. New tests in `tests/test_rating_form.py::BridgeRequestFilterTests`.
 - **Marketing, Discoverability, Visual Architecture & Contract Tests (2026-10-29, Pfad B)**:
   - Maintained strict version-freeze discipline per `T-20260920-167562623` (`version = "1.1.0-dev"` in `pyproject.toml` and `ellmos-module.v2.json` unchanged).
   - Saturated 20/20 live GitHub repository topics via GitHub CLI (`ai-agents`, `decision-support`, `feedback`, `llm`, `personalization`, `prompt-analysis`, `theory-of-mind`, `user-modeling`, `agent-memory`, `claude-code`, `codex-cli`, `gemini-cli`, `llm-agents`, `llm-memory`, `local-first`, `prompt-archaeology`, `open-bricks`, `privacy-first`, `zero-egress`, `feedback-precognition`) and anchored canonical homepage URL (`https://github.com/ellmos-ai/build-your-users-mind#readme`).

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import http.client
 import json
 import sys
 import tempfile
+import threading
 import unittest
+from http.server import ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -218,6 +221,85 @@ class FeedbackImportAndCliTests(unittest.TestCase):
                 0,
             )
             self.assertIn("verdict: 👍 confirmed", out_md.read_text(encoding="utf-8"))
+
+
+class BridgeRequestFilterTests(unittest.TestCase):
+    """Issue #15: the loopback bridge rejects foreign Origin and non-loopback Host."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls._tmp = tempfile.TemporaryDirectory()
+        html = Path(cls._tmp.name) / "page.html"
+        html.write_text("<html>rating</html>", encoding="utf-8")
+        handler = rf.make_bridge_handler({"voice": {"enabled": False}}, html)
+        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        cls.port = cls.server.server_address[1]
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.server.shutdown()
+        cls.server.server_close()
+        cls._tmp.cleanup()
+
+    def _request(self, method: str, path: str, headers: dict[str, str], body: bytes | None = None):
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        try:
+            conn.putrequest(method, path, skip_host=True)
+            for key, value in headers.items():
+                conn.putheader(key, value)
+            if body is not None:
+                conn.putheader("Content-Length", str(len(body)))
+            conn.endheaders(body)
+            resp = conn.getresponse()
+            return resp.status, dict(resp.getheaders()), resp.read()
+        finally:
+            conn.close()
+
+    def _host(self) -> str:
+        return f"127.0.0.1:{self.port}"
+
+    def test_loopback_host_and_no_origin_serves_page(self) -> None:
+        status, _, body = self._request("GET", "/", {"Host": self._host()})
+        self.assertEqual(status, 200)
+        self.assertIn(b"rating", body)
+
+    def test_rebinding_host_is_rejected(self) -> None:
+        status, _, body = self._request("GET", "/", {"Host": f"attacker.example:{self.port}"})
+        self.assertEqual(status, 403)
+        self.assertNotIn(b"rating", body)
+
+    def test_missing_host_is_rejected(self) -> None:
+        status, _, _ = self._request("GET", "/health", {})
+        self.assertEqual(status, 403)
+
+    def test_foreign_origin_post_is_rejected_before_transcription(self) -> None:
+        status, headers, body = self._request(
+            "POST",
+            "/transcribe",
+            {"Host": self._host(), "Origin": "https://evil.example", "Content-Type": "text/plain"},
+            b"RIFF0000",
+        )
+        self.assertEqual(status, 403)
+        self.assertIn("forbidden origin", body.decode("utf-8"))
+        self.assertNotIn("Access-Control-Allow-Origin", headers)
+
+    def test_null_and_loopback_origins_are_allowed(self) -> None:
+        for origin in ("null", f"http://localhost:{self.port}", "http://[::1]:8000"):
+            with self.subTest(origin=origin):
+                status, headers, _ = self._request("OPTIONS", "/transcribe", {"Host": self._host(), "Origin": origin})
+                self.assertEqual(status, 204)
+                self.assertEqual(headers.get("Access-Control-Allow-Origin"), origin)
+
+    def test_host_and_origin_helpers(self) -> None:
+        for good in ("127.0.0.1", "127.0.0.1:8765", "localhost:1", "[::1]:8765"):
+            self.assertTrue(rf.is_loopback_host_header(good), good)
+        for bad in (None, "", "evil.example", "127.0.0.1.evil.example", "user@127.0.0.1", "127.0.0.1:x", "127.0.0.1/x"):
+            self.assertFalse(rf.is_loopback_host_header(bad), bad)
+        self.assertFalse(rf.is_allowed_bridge_origin("file://localhost"))
+        self.assertFalse(rf.is_allowed_bridge_origin("http://localhost.evil.example"))
+        self.assertFalse(rf.is_allowed_bridge_origin(""))
 
 
 if __name__ == "__main__":
