@@ -406,6 +406,7 @@ class RatingStoreTests(unittest.TestCase):
         self.assertIn("gespeichert um", html_out)
         self.assertIn('const STORE=location.protocol.startsWith("http")?"/ratings":"";', html_out)
         self.assertNotIn("store_endpoint", html_out)
+        self.assertIn("if(!STORE_URL)savedEl.textContent=", html_out)  # file:// says so up front
 
 
 class RemoteSttTests(unittest.TestCase):
