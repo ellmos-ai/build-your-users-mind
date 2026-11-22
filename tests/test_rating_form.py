@@ -337,6 +337,69 @@ class MicStreamReuseTests(unittest.TestCase):
         self.assertIn("sharedStream", html_out)
 
 
+class RatingStoreTests(unittest.TestCase):
+    """Every page change is mirrored to a durable file so a browser reset cannot lose ratings."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self._tmp.name)
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), rf.make_bridge_handler({"voice": {"enabled": False}}, None, self.dir))
+        self.port = self.server.server_address[1]
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def tearDown(self) -> None:
+        self.server.shutdown()
+        self.server.server_close()
+        self._tmp.cleanup()
+
+    def _req(self, method: str, path: str, body: object | None = None, origin: str | None = None):
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        headers = {"Host": f"127.0.0.1:{self.port}", "Content-Type": "application/json"}
+        if origin:
+            headers["Origin"] = origin
+        raw = json.dumps(body).encode("utf-8") if body is not None else None
+        conn.request(method, path, body=raw, headers=headers)
+        resp = conn.getresponse()
+        data = json.loads(resp.read() or b"{}")
+        conn.close()
+        return resp.status, data
+
+    def test_post_writes_file_and_get_returns_latest_with_history(self) -> None:
+        self.assertEqual(self._req("POST", "/ratings/run-1", {"state": {"A": {"s": 3}}})[0], 200)
+        status, data = self._req("POST", "/ratings/run-1", {"state": {"A": {"s": 9, "note": "grün", "note_source": "voice"}}}, origin="null")
+        self.assertEqual(status, 200)
+        saved = json.loads((self.dir / "run-1.json").read_text(encoding="utf-8"))
+        self.assertEqual(saved["state"], {"A": {"s": 9, "note": "grün", "note_source": "voice"}})
+        self.assertEqual(saved["history"][0]["state"], {"A": {"s": 3}})
+        status, got = self._req("GET", "/ratings/run-1")
+        self.assertEqual((status, got["state"]["A"]["s"], got["saved_at"]), (200, 9, data["saved_at"]))
+
+    def test_unknown_run_returns_empty_state(self) -> None:
+        self.assertEqual(self._req("GET", "/ratings/never-saved"), (200, {"ok": True, "saved_at": None, "state": None}))
+
+    def test_history_is_capped(self) -> None:
+        for i in range(rf.STORE_HISTORY + 5):
+            rf.store_rating_state(self.dir, "run-2", {"A": {"s": i % 11}})
+        self.assertEqual(len(rf.load_rating_state(self.dir, "run-2")["history"]), rf.STORE_HISTORY)
+
+    def test_invalid_input_and_foreign_origin_are_rejected(self) -> None:
+        self.assertEqual(self._req("POST", "/ratings/..%2Fevil", {"state": {}})[0], 400)
+        self.assertEqual(self._req("POST", "/ratings/run-3", {"state": {"A": {"s": 11}}})[0], 400)
+        self.assertEqual(self._req("POST", "/ratings/run-3", {"state": {"A": {"x": 1}}})[0], 400)
+        self.assertEqual(self._req("POST", "/ratings/run-3", {"state": {"A": {"s": 1}}}, origin="https://evil.example")[0], 403)
+        self.assertFalse((self.dir / "run-3.json").exists())
+        self.assertEqual(list(self.dir.parent.glob("evil*")), [])
+
+    def test_page_has_import_saved_indicator_and_store_endpoint(self) -> None:
+        cfg = {"voice": {"enabled": False}, "store": {"endpoint": "http://127.0.0.1:8765/ratings"}}
+        html_out = rf.render_rating_html(sample_input(), cfg)
+        self.assertIn('id="import-file"', html_out)
+        self.assertIn("gespeichert um", html_out)
+        self.assertIn('"store_endpoint": "http://127.0.0.1:8765/ratings"', html_out)
+        with self.assertRaisesRegex(ValueError, "loopback"):
+            rf.render_rating_html(sample_input(), {"store": {"endpoint": "https://cloud.example/ratings"}})
+
+
 class RemoteSttTests(unittest.TestCase):
     def test_remote_url_must_stay_on_loopback(self) -> None:
         for bad in ("http://100.119.69.90:8766/transcribe", "http://192.168.1.5:8766/transcribe"):
