@@ -17,6 +17,9 @@ import os
 import re
 import subprocess
 import sys
+import threading
+import urllib.request
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Callable
@@ -66,6 +69,14 @@ _VOICE_CLIENT_JS = r"""
   if(!vcfg.active||!vcfg.endpoint)return;
   const MIC_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
   let activeRec=null;
+  // One MediaStream for the whole page: re-calling getUserMedia per click re-prompts
+  // wherever the browser does not persist the grant (e.g. Edge on file://).
+  let sharedStream=null;
+  async function micStream(){
+    if(sharedStream&&sharedStream.getAudioTracks().some(t=>t.readyState==="live"))return sharedStream;
+    sharedStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    return sharedStream;
+  }
   function resampleMono(samples,fromRate,toRate){
     if(fromRate===toRate)return samples;
     const ratio=fromRate/toRate;
@@ -119,7 +130,6 @@ _VOICE_CLIENT_JS = r"""
     rec.btn.innerHTML=MIC_SVG;
     rec.status.textContent="Transkribiere lokal …";
     try{rec.proc.disconnect();rec.src.disconnect();}catch(e){}
-    try{rec.stream.getTracks().forEach(t=>t.stop());}catch(e){}
     try{await rec.ctx.close();}catch(e){}
     try{
       const wav=encodeWav16k(rec.chunks,rec.sampleRate);
@@ -174,7 +184,7 @@ _VOICE_CLIENT_JS = r"""
         return;
       }
       try{
-        const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+        const stream=await micStream();
         const AudioCtx=window.AudioContext||window.webkitAudioContext;
         const ctx=new AudioCtx();
         const src=ctx.createMediaStreamSource(stream);
@@ -212,6 +222,16 @@ def validate_loopback_endpoint(endpoint: str) -> str:
     if parsed.username or parsed.password or not parsed.path:
         raise ValueError("voice.endpoint must not contain credentials and needs an API path")
     return url
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001, D102
+        return None  # a 3xx becomes an HTTPError instead of being followed
+
+
+# Loopback STT calls must never go through http_proxy/HTTPS_PROXY or follow redirects:
+# either would let audio or the transcript leave/enter from outside the loopback contract.
+_LOOPBACK_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect)
 
 
 def validate_input_payload(payload: object) -> dict[str, Any]:
@@ -373,7 +393,18 @@ def _merge_voice_config(config: dict[str, Any] | None) -> dict[str, Any]:
 
 def probe_voice_module(voice_cfg: dict[str, Any]) -> dict[str, Any]:
     """Read-only probe for local ``ellmos-voice-io`` and STT engine availability."""
-    provider = str(voice_cfg.get("provider") or "ellmos-voice-io").strip()
+    if str(voice_cfg.get("engine") or "").strip() == "remote":
+        # Loopback only (zero-egress): an operator may tunnel this port to a bigger STT host.
+        remote = urlparse(validate_loopback_endpoint(str(voice_cfg.get("remote_url") or "")))
+        try:
+            with _LOOPBACK_OPENER.open(f"{remote.scheme}://{remote.netloc}/health", timeout=3) as resp:
+                ok = bool(json.loads(resp.read().decode("utf-8")).get("ok"))
+        except (OSError, ValueError) as exc:
+            return {"installed": False, "stt_available": False, "stt_engine": "remote",
+                    "reason": f"Remote-STT-Dienst nicht erreichbar ({exc})."}
+        return {"installed": ok, "stt_available": ok, "stt_engine": "remote",
+                "reason": "" if ok else "Remote-STT-Dienst meldet keinen Bereitschaftsstatus."}
+    provider =str(voice_cfg.get("provider") or "ellmos-voice-io").strip()
     if provider != "ellmos-voice-io":
         return {
             "installed": False,
@@ -483,6 +514,62 @@ def resolve_voice_state(
         "language": language,
         "notice": notice,
     }
+
+
+_RUN_ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
+_STATE_ENTRY_KEYS = {"s", "note", "note_source"}
+_MAX_STATE_BYTES = 2 * 1024 * 1024
+STORE_HISTORY = 20
+DEFAULT_RATINGS_DIR = Path.home() / ".byum" / "ratings"
+
+
+def validate_rating_state(state: object) -> dict[str, Any]:
+    """Validate the page's in-browser rating state ``{entry_id: {s, note, note_source}}``."""
+    if not isinstance(state, dict):
+        raise ValueError("state must be an object")
+    for key, value in state.items():
+        if not isinstance(key, str) or not key or len(key) > 200:
+            raise ValueError("state keys must be non-empty strings (max 200 chars)")
+        if not isinstance(value, dict) or set(value) - _STATE_ENTRY_KEYS:
+            raise ValueError(f"state[{key!r}] must be an object with s/note/note_source only")
+        score = value.get("s")
+        if score is not None and (isinstance(score, bool) or not isinstance(score, int) or not 0 <= score <= 10):
+            raise ValueError(f"state[{key!r}].s must be null or an integer in 0..10")
+        if "note" in value and (not isinstance(value["note"], str) or len(value["note"]) > 20000):
+            raise ValueError(f"state[{key!r}].note must be a string (max 20000 chars)")
+        if "note_source" in value and value["note_source"] not in {"text", "voice"}:
+            raise ValueError(f"state[{key!r}].note_source must be 'text' or 'voice'")
+    return state
+
+
+def store_rating_state(ratings_dir: Path, run_id: str, state: object) -> dict[str, Any]:
+    """Atomically write ``<run_id>.json`` with the new state and the previous ``STORE_HISTORY`` versions."""
+    if not _RUN_ID_RE.fullmatch(run_id):
+        raise ValueError("invalid run_id")
+    validated = validate_rating_state(state)
+    path = ratings_dir / f"{run_id}.json"
+    current = load_rating_state(ratings_dir, run_id)
+    history = list(current.get("history") or [])
+    if current.get("state") is not None:
+        history.insert(0, {"saved_at": current["saved_at"], "state": current["state"]})
+    record = {
+        "schema": "byum.avatar-rating-store.v1",
+        "run_id": run_id,
+        "saved_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+        "state": validated,
+        "history": history[:STORE_HISTORY],
+    }
+    atomic_write_text(path, json.dumps(record, ensure_ascii=False, indent=1))
+    return record
+
+
+def load_rating_state(ratings_dir: Path, run_id: str) -> dict[str, Any]:
+    if not _RUN_ID_RE.fullmatch(run_id):
+        raise ValueError("invalid run_id")
+    path = ratings_dir / f"{run_id}.json"
+    if not path.is_file():
+        return {"saved_at": None, "state": None, "history": []}
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def render_rating_html(
@@ -596,6 +683,19 @@ def _transcribe_wav_bytes(wav_bytes: bytes, voice_cfg: dict[str, Any], language:
     engine = str(voice_cfg.get("engine") or "auto").strip() or "auto"
     model_path = str(voice_cfg.get("model_path") or "").strip() or None
 
+    if engine == "remote":
+        req = urllib.request.Request(
+            validate_loopback_endpoint(str(voice_cfg.get("remote_url") or "")),
+            data=wav_bytes,
+            headers={"Content-Type": "audio/wav", "X-Voice-Language": language},
+            method="POST",
+        )
+        with _LOOPBACK_OPENER.open(req, timeout=120) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        if not data.get("ok"):
+            raise RuntimeError(str(data.get("error") or "remote transcription failed"))
+        return str(data.get("text") or "").strip()
+
     if importlib.util.find_spec("ellmos_voice_io") is not None:
         from ellmos_voice_io import SpeechToText, VoiceIO  # type: ignore[import-not-found]
 
@@ -680,17 +780,26 @@ def is_allowed_bridge_origin(origin: str) -> bool:
 def make_bridge_handler(
     config: dict[str, Any] | None = None,
     html_path: Path | None = None,
+    ratings_dir: Path | None = None,
 ) -> type[BaseHTTPRequestHandler]:
     """Build the request handler class for the loopback voice bridge."""
     voice_cfg = _merge_voice_config(config)
-    page_bytes = html_path.read_bytes() if html_path and html_path.is_file() else None
+    store_dir = ratings_dir or DEFAULT_RATINGS_DIR
+    store_lock = threading.Lock()
 
     class BridgeHandler(BaseHTTPRequestHandler):
         def log_message(self, fmt: str, *args: object) -> None:  # noqa: A002
             return
 
+        def _own_origin(self) -> str | None:
+            """Canonical Origin if it is ``null`` (file:// page) or this bridge's own loopback port."""
+            allowed = canonical_bridge_origin((self.headers.get("Origin") or "").strip())
+            if allowed is None or allowed == "null":
+                return allowed
+            return allowed if urlparse(allowed).port == self.server.server_address[1] else None
+
         def _cors_headers(self) -> None:
-            allowed_origin = canonical_bridge_origin((self.headers.get("Origin") or "").strip())
+            allowed_origin = self._own_origin()
             if allowed_origin is not None:
                 self.send_header("Access-Control-Allow-Origin", allowed_origin)
             self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Voice-Language")
@@ -712,7 +821,18 @@ def make_bridge_handler(
                 self._send_json({"ok": False, "error": "forbidden host"}, status=403)
                 return True
             origin = self.headers.get("Origin")
-            if origin is not None and not is_allowed_bridge_origin(origin.strip()):
+            if origin is not None and self._own_origin() is None:
+                self._send_json({"ok": False, "error": "forbidden origin"}, status=403)
+                return True
+            return False
+
+        def _reject_foreign_store_request(self) -> bool:
+            """The ratings store holds private notes: only the bridge's own page may use it.
+
+            ``Origin: null`` (any local HTML file, sandboxed iframes) is refused here, unlike
+            ``/transcribe``; ``file://`` pages keep localStorage plus import/export.
+            """
+            if self.headers.get("Origin") is not None and self._own_origin() in (None, "null"):
                 self._send_json({"ok": False, "error": "forbidden origin"}, status=403)
                 return True
             return False
@@ -732,6 +852,22 @@ def make_bridge_handler(
             if path == "/health":
                 self._send_json({"ok": True, "voice": resolve_voice_state(config)})
                 return
+            if path.startswith("/ratings/"):
+                if self._reject_foreign_store_request():
+                    return
+                try:
+                    with store_lock:
+                        record = load_rating_state(store_dir, path[len("/ratings/"):])
+                except OSError:
+                    self._send_json({"ok": False, "error": "storage error"}, status=500)
+                    return
+                except ValueError as exc:
+                    self._send_json({"ok": False, "error": str(exc)}, status=400)
+                    return
+                self._send_json({"ok": True, "saved_at": record.get("saved_at"), "state": record.get("state")})
+                return
+            # Read per request so a re-rendered page is served without restarting the bridge.
+            page_bytes = html_path.read_bytes() if html_path and html_path.is_file() else None
             if path == "/" and page_bytes is not None:
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -745,13 +881,34 @@ def make_bridge_handler(
         def do_POST(self) -> None:  # noqa: N802
             if self._reject_foreign_request():
                 return
-            if urlparse(self.path).path != "/transcribe":
-                self._send_json({"ok": False, "error": "not found"}, status=404)
-                return
+            path = urlparse(self.path).path
             try:
                 length = int(self.headers.get("Content-Length") or 0)
             except ValueError:
                 self._send_json({"ok": False, "error": "invalid Content-Length"}, status=400)
+                return
+            if path.startswith("/ratings/"):
+                if self._reject_foreign_store_request():
+                    return
+                if length <= 0 or length > _MAX_STATE_BYTES:
+                    self._send_json({"ok": False, "error": "state payload size out of bounds"}, status=400)
+                    return
+                try:
+                    body = json.loads(self.rfile.read(length).decode("utf-8"))
+                    if not isinstance(body, dict):
+                        raise ValueError("body must be a JSON object")
+                    with store_lock:
+                        record = store_rating_state(store_dir, path[len("/ratings/"):], body.get("state"))
+                except OSError:
+                    self._send_json({"ok": False, "error": "storage error"}, status=500)
+                    return
+                except (UnicodeDecodeError, ValueError) as exc:
+                    self._send_json({"ok": False, "error": str(exc)}, status=400)
+                    return
+                self._send_json({"ok": True, "saved_at": record["saved_at"]})
+                return
+            if path != "/transcribe":
+                self._send_json({"ok": False, "error": "not found"}, status=404)
                 return
             if length <= 0 or length > _MAX_AUDIO_BYTES:
                 self._send_json({"ok": False, "error": "audio payload size out of bounds"}, status=400)
@@ -774,11 +931,12 @@ def serve_rating_bridge(
     html_path: Path | None = None,
     host: str = "127.0.0.1",
     port: int = 8765,
+    ratings_dir: Path | None = None,
 ) -> None:
-    """Run a strict loopback-only HTTP bridge for local ``ellmos-voice-io`` STT."""
+    """Run a strict loopback-only HTTP bridge for local STT and the rating autosave store."""
     if host not in _LOOPBACK_HOSTS:
         raise ValueError("bridge host must be a loopback address (127.0.0.1, localhost, ::1)")
-    BridgeHandler = make_bridge_handler(config, html_path)
+    BridgeHandler = make_bridge_handler(config, html_path, ratings_dir)
     server = ThreadingHTTPServer((host, port), BridgeHandler)
     print(f"BYUM local voice bridge listening on http://{host}:{port}")
     try:
@@ -809,6 +967,7 @@ def main(argv: list[str] | None = None) -> int:
     p_serve.add_argument("--html", default="", help="Optional rendered rating HTML to serve at '/'")
     p_serve.add_argument("--host", default="127.0.0.1", help="Loopback bind host (default: 127.0.0.1)")
     p_serve.add_argument("--port", type=int, default=8765, help="Loopback bind port (default: 8765)")
+    p_serve.add_argument("--ratings-dir", default="", help=f"Autosave directory (default: {DEFAULT_RATINGS_DIR})")
 
     args = parser.parse_args(argv)
     try:
@@ -836,7 +995,8 @@ def main(argv: list[str] | None = None) -> int:
             cfg_path = Path(args.config).expanduser() if args.config else None
             cfg = load_config(cfg_path, search_dir=REPO_ROOT if cfg_path is None else None)
             html_file = Path(args.html).expanduser() if args.html else None
-            serve_rating_bridge(config=cfg, html_path=html_file, host=args.host, port=args.port)
+            ratings_dir = Path(args.ratings_dir).expanduser() if args.ratings_dir else None
+            serve_rating_bridge(config=cfg, html_path=html_file, host=args.host, port=args.port, ratings_dir=ratings_dir)
             return 0
     except (OSError, UnicodeDecodeError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

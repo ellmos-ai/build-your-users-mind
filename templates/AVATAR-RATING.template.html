@@ -39,7 +39,10 @@ __VOICE_NOTICE__
 <div class="bar">
   <button type="button" id="save">Speichern</button>
   <button type="button" class="sec" id="bulk">Alle unbewerteten auf 8</button>
+  <button type="button" class="sec" id="import">Antworten laden</button>
+  <input type="file" id="import-file" accept=".json,application/json" hidden>
   <span class="mut" id="cnt"></span>
+  <span class="mut" id="saved" role="status"></span>
 </div>
 <div id="list"></div>
 <script>
@@ -72,25 +75,98 @@ rows.forEach((r,idx)=>{
     +`<div class="note-area"><div class="note-controls"><textarea placeholder="Notiz (optional)" data-id="${esc(r.id)}"></textarea></div></div>`;
   L.appendChild(d);
 });
+// Durable copy: when the page is served by the loopback bridge, every change is also stored
+// there as a file (same origin only). file:// pages keep localStorage plus export/import.
+// On load the newer of both wins.
+const STORE=location.protocol.startsWith("http")?"/ratings":"";
+const STORE_URL=STORE?STORE+"/"+encodeURIComponent(PAYLOAD.run_id||"default"):"";
+const TKEY=KEY+":saved_at";
+let localAt="";
+try{localAt=localStorage.getItem(TKEY)||"";}catch(e){}
+const savedEl=document.getElementById("saved");
+function hhmm(iso){return new Date(iso).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});}
+function showSaved(where,iso){
+  savedEl.textContent=where==="file"?"gespeichert um "+hhmm(iso)
+    :"nur im Browser gespeichert ("+hhmm(iso)+") – zwischendurch „Speichern“ als Sicherung";
+}
+let pushTimer=null;
+async function pushStore(){
+  try{
+    const res=await fetch(STORE_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({state:st})});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok||!data.ok)throw new Error(data.error||("HTTP "+res.status));
+    localAt=data.saved_at;
+    try{localStorage.setItem(TKEY,localAt);}catch(e){}
+    showSaved("file",data.saved_at);
+  }catch(e){showSaved("browser",localAt||new Date().toISOString());}
+}
 function persist(){
-  try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}
+  localAt=new Date().toISOString();
+  try{localStorage.setItem(KEY,JSON.stringify(st));localStorage.setItem(TKEY,localAt);}catch(e){}
   cnt();
+  showSaved("browser",localAt);
+  if(STORE_URL){clearTimeout(pushTimer);pushTimer=setTimeout(pushStore,500);}
 }
 function cnt(){
   const rated=rows.filter(r=>st[r.id]&&st[r.id].s!==undefined&&st[r.id].s!==null).length;
   document.getElementById("cnt").textContent=rated+" von "+rows.length+" bewertet";
 }
-rows.forEach(r=>{
-  const v=st[r.id]||{};
-  if(v.s!==undefined&&v.s!==null){
-    const input=L.querySelector(`input[type="radio"][data-id="${CSS.escape(r.id)}"][value="${v.s}"]`);
-    if(input)input.checked=true;
-  }
-  if(v.note){
-    const ta=L.querySelector(`textarea[data-id="${CSS.escape(r.id)}"]`);
-    if(ta)ta.value=v.note;
-  }
-});
+function applyState(){
+  L.querySelectorAll('input[type="radio"]').forEach(i=>{i.checked=false;});
+  L.querySelectorAll("textarea").forEach(t=>{t.value="";});
+  rows.forEach(r=>{
+    const v=st[r.id]||{};
+    if(v.s!==undefined&&v.s!==null){
+      const input=L.querySelector(`input[type="radio"][data-id="${CSS.escape(r.id)}"][value="${v.s}"]`);
+      if(input)input.checked=true;
+    }
+    if(v.note){
+      const ta=L.querySelector(`textarea[data-id="${CSS.escape(r.id)}"]`);
+      if(ta)ta.value=v.note;
+    }
+  });
+  cnt();
+}
+applyState();
+if(!STORE_URL)savedEl.textContent="Nur im Browser gespeichert. Dauerhaft speichert die Seite, wenn sie über den lokalen Dienst geöffnet ist; sonst zwischendurch „Speichern“.";
+async function loadStore(){
+  if(!STORE_URL)return;
+  try{
+    const res=await fetch(STORE_URL);
+    const data=await res.json();
+    if(!res.ok||!data.ok)throw new Error(data.error||("HTTP "+res.status));
+    if(data.state&&(!localAt||data.saved_at>localAt)){
+      st=data.state;localAt=data.saved_at;
+      try{localStorage.setItem(KEY,JSON.stringify(st));localStorage.setItem(TKEY,localAt);}catch(e){}
+      applyState();
+      showSaved("file",data.saved_at);
+    }else if(Object.keys(st).length){
+      pushStore();
+    }
+  }catch(e){if(localAt)showSaved("browser",localAt);}
+}
+loadStore();
+const importFile=document.getElementById("import-file");
+document.getElementById("import").onclick=()=>importFile.click();
+importFile.onchange=async()=>{
+  const f=importFile.files&&importFile.files[0];
+  if(!f)return;
+  try{
+    const data=JSON.parse(await f.text());
+    const known=new Set(rows.map(r=>r.id));
+    let n=0;
+    for(const r of (data.ratings||[])){
+      if(!r||!known.has(r.id))continue;
+      const cur=Object.assign({},st[r.id]||{});
+      if(Number.isInteger(r.score)&&r.score>=0&&r.score<=10)cur.s=r.score;
+      if(typeof r.note==="string"&&r.note.trim()){cur.note=r.note;if(r.note_source==="voice"||r.note_source==="text")cur.note_source=r.note_source;}
+      st[r.id]=cur;n++;
+    }
+    applyState();persist();
+    savedEl.textContent=n+" Antworten geladen.";
+  }catch(e){savedEl.textContent="Datei nicht lesbar: "+(e&&e.message?e.message:String(e));}
+  importFile.value="";
+};
 L.addEventListener("change",e=>{
   if(e.target.type==="radio"&&e.target.dataset.id){
     const id=e.target.dataset.id;
