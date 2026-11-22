@@ -462,13 +462,15 @@ class RemoteSttTests(unittest.TestCase):
             def _any(self) -> None:
                 proxy_hits.append(self.path)
                 raw = json.dumps({"ok": True, "text": "vom proxy"}).encode()
-                self.send_response(200); self.send_header("Content-Length", str(len(raw))); self.end_headers()
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
                 self.wfile.write(raw)
 
             do_GET = do_POST = _any
 
         proxy = self._serve(Proxy)
-        worker = self._serve(stt_server.make_handler(lambda p, l: "vom worker", "m"))
+        worker = self._serve(stt_server.make_handler(lambda path, lang: "vom worker", "m"))
         cfg = rf._merge_voice_config({"voice": {"enabled": True, "engine": "remote",
                                                 "remote_url": f"http://127.0.0.1:{worker.server_address[1]}/transcribe"}})
         # Fresh process: urllib caches its default opener (and the proxy env it read) per process.
@@ -494,11 +496,16 @@ class RemoteSttTests(unittest.TestCase):
                 return
 
             def do_POST(self) -> None:  # noqa: N802
-                self.send_response(302); self.send_header("Location", "/elsewhere"); self.send_header("Content-Length", "0"); self.end_headers()
+                self.send_response(302)
+                self.send_header("Location", "/elsewhere")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
 
             def do_GET(self) -> None:  # noqa: N802
                 raw = json.dumps({"ok": True, "text": "umgeleitet"}).encode()
-                self.send_response(200); self.send_header("Content-Length", str(len(raw))); self.end_headers()
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
                 self.wfile.write(raw)
 
         srv = self._serve(Redirect)
@@ -511,7 +518,7 @@ class RemoteSttTests(unittest.TestCase):
         # B2: DNS rebinding / browser pages must not reach the STT worker.
         import stt_server
 
-        worker = self._serve(stt_server.make_handler(lambda p, l: "x", "m"))
+        worker = self._serve(stt_server.make_handler(lambda path, lang: "x", "m"))
         port = worker.server_address[1]
 
         def req(method: str, path: str, headers: dict[str, str]) -> int:
