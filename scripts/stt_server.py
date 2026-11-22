@@ -18,6 +18,7 @@ import tempfile
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Callable
+from urllib.parse import urlparse
 
 MAX_AUDIO_BYTES = 15 * 1024 * 1024
 
@@ -27,6 +28,18 @@ def is_loopback_client(addr: str) -> bool:
         return ipaddress.ip_address(addr).is_loopback
     except ValueError:
         return False
+
+
+def is_loopback_host_header(value: str | None) -> bool:
+    """DNS-rebinding guard: ``Host`` must name loopback (optional port)."""
+    try:
+        parsed = urlparse(f"//{(value or '').strip()}")
+        _ = parsed.port
+    except ValueError:
+        return False
+    if not value or parsed.username is not None or parsed.path or parsed.query or parsed.fragment:
+        return False
+    return parsed.hostname in {"127.0.0.1", "localhost", "::1"}
 
 
 def mlx_transcriber(model: str) -> Callable[[Path, str], str]:
@@ -53,9 +66,17 @@ def make_handler(transcribe: Callable[[Path, str], str], model: str) -> type[Bas
             self.wfile.write(raw)
 
         def _foreign(self) -> bool:
-            if is_loopback_client(self.client_address[0]):
+            # Only the bridge calls this worker, server-side and without an Origin header;
+            # any browser request (it always carries Origin on POST/CORS) is refused.
+            if not is_loopback_client(self.client_address[0]):
+                error = "forbidden client"
+            elif not is_loopback_host_header(self.headers.get("Host")):
+                error = "forbidden host"
+            elif self.headers.get("Origin") is not None:
+                error = "forbidden origin"
+            else:
                 return False
-            self._json({"ok": False, "error": "forbidden client"}, 403)
+            self._json({"ok": False, "error": error}, 403)
             return True
 
         def do_GET(self) -> None:  # noqa: N802

@@ -177,7 +177,9 @@ class TestMetadataParity(unittest.TestCase):
                 # Its only HTTP client is the opt-in remote STT engine, gated to loopback URLs.
                 self.assertIn('parsed.hostname not in _LOOPBACK_HOSTS', text)
                 self.assertIn('_LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}', text)
-                self.assertEqual(text.count("urllib.request.urlopen("), 2)
+                self.assertNotIn("urllib.request.urlopen(", text)
+                self.assertIn("urllib.request.ProxyHandler({})", text)
+                self.assertEqual(text.count("_LOOPBACK_OPENER.open("), 2)
                 self.assertEqual(text.count("validate_loopback_endpoint(str(voice_cfg.get(\"remote_url\")"), 2)
                 continue
             for module in forbidden:

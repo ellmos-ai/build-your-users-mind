@@ -224,6 +224,16 @@ def validate_loopback_endpoint(endpoint: str) -> str:
     return url
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001, D102
+        return None  # a 3xx becomes an HTTPError instead of being followed
+
+
+# Loopback STT calls must never go through http_proxy/HTTPS_PROXY or follow redirects:
+# either would let audio or the transcript leave/enter from outside the loopback contract.
+_LOOPBACK_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect)
+
+
 def validate_input_payload(payload: object) -> dict[str, Any]:
     """Validate an avatar rating input JSON object against the v1 schema."""
     if not isinstance(payload, dict):
@@ -387,7 +397,7 @@ def probe_voice_module(voice_cfg: dict[str, Any]) -> dict[str, Any]:
         # Loopback only (zero-egress): an operator may tunnel this port to a bigger STT host.
         remote = urlparse(validate_loopback_endpoint(str(voice_cfg.get("remote_url") or "")))
         try:
-            with urllib.request.urlopen(f"{remote.scheme}://{remote.netloc}/health", timeout=3) as resp:
+            with _LOOPBACK_OPENER.open(f"{remote.scheme}://{remote.netloc}/health", timeout=3) as resp:
                 ok = bool(json.loads(resp.read().decode("utf-8")).get("ok"))
         except (OSError, ValueError) as exc:
             return {"installed": False, "stt_available": False, "stt_engine": "remote",
@@ -506,15 +516,6 @@ def resolve_voice_state(
     }
 
 
-def resolve_store_endpoint(config: dict[str, Any] | None) -> str:
-    """Optional loopback autosave endpoint for ``file://`` pages (pages served by the bridge use ``/ratings``)."""
-    store = (config or {}).get("store") or {}
-    if not isinstance(store, dict):
-        raise ValueError("config.store must be an object")
-    endpoint = str(store.get("endpoint") or "").strip()
-    return validate_loopback_endpoint(endpoint) if endpoint else ""
-
-
 _RUN_ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
 _STATE_ENTRY_KEYS = {"s", "note", "note_source"}
 _MAX_STATE_BYTES = 2 * 1024 * 1024
@@ -592,7 +593,6 @@ def render_rating_html(
         "description": validated.get("description") or "",
         "entries": validated["entries"],
         "voice": voice_state,
-        "store_endpoint": resolve_store_endpoint(config),
     }
     json_blob = json.dumps(payload_for_page, ensure_ascii=False).replace("</", "<\\/")
 
@@ -690,7 +690,7 @@ def _transcribe_wav_bytes(wav_bytes: bytes, voice_cfg: dict[str, Any], language:
             headers={"Content-Type": "audio/wav", "X-Voice-Language": language},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=120) as resp:
+        with _LOOPBACK_OPENER.open(req, timeout=120) as resp:
             data = json.loads(resp.read().decode("utf-8"))
         if not data.get("ok"):
             raise RuntimeError(str(data.get("error") or "remote transcription failed"))
@@ -826,6 +826,17 @@ def make_bridge_handler(
                 return True
             return False
 
+        def _reject_foreign_store_request(self) -> bool:
+            """The ratings store holds private notes: only the bridge's own page may use it.
+
+            ``Origin: null`` (any local HTML file, sandboxed iframes) is refused here, unlike
+            ``/transcribe``; ``file://`` pages keep localStorage plus import/export.
+            """
+            if self.headers.get("Origin") is not None and self._own_origin() in (None, "null"):
+                self._send_json({"ok": False, "error": "forbidden origin"}, status=403)
+                return True
+            return False
+
         def do_OPTIONS(self) -> None:  # noqa: N802
             if self._reject_foreign_request():
                 return
@@ -842,10 +853,15 @@ def make_bridge_handler(
                 self._send_json({"ok": True, "voice": resolve_voice_state(config)})
                 return
             if path.startswith("/ratings/"):
+                if self._reject_foreign_store_request():
+                    return
                 try:
                     with store_lock:
                         record = load_rating_state(store_dir, path[len("/ratings/"):])
-                except (OSError, ValueError) as exc:
+                except OSError:
+                    self._send_json({"ok": False, "error": "storage error"}, status=500)
+                    return
+                except ValueError as exc:
                     self._send_json({"ok": False, "error": str(exc)}, status=400)
                     return
                 self._send_json({"ok": True, "saved_at": record.get("saved_at"), "state": record.get("state")})
@@ -872,6 +888,8 @@ def make_bridge_handler(
                 self._send_json({"ok": False, "error": "invalid Content-Length"}, status=400)
                 return
             if path.startswith("/ratings/"):
+                if self._reject_foreign_store_request():
+                    return
                 if length <= 0 or length > _MAX_STATE_BYTES:
                     self._send_json({"ok": False, "error": "state payload size out of bounds"}, status=400)
                     return
@@ -881,7 +899,10 @@ def make_bridge_handler(
                         raise ValueError("body must be a JSON object")
                     with store_lock:
                         record = store_rating_state(store_dir, path[len("/ratings/"):], body.get("state"))
-                except (OSError, UnicodeDecodeError, ValueError) as exc:
+                except OSError:
+                    self._send_json({"ok": False, "error": "storage error"}, status=500)
+                    return
+                except (UnicodeDecodeError, ValueError) as exc:
                     self._send_json({"ok": False, "error": str(exc)}, status=400)
                     return
                 self._send_json({"ok": True, "saved_at": record["saved_at"]})

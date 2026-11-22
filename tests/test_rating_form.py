@@ -366,7 +366,7 @@ class RatingStoreTests(unittest.TestCase):
 
     def test_post_writes_file_and_get_returns_latest_with_history(self) -> None:
         self.assertEqual(self._req("POST", "/ratings/run-1", {"state": {"A": {"s": 3}}})[0], 200)
-        status, data = self._req("POST", "/ratings/run-1", {"state": {"A": {"s": 9, "note": "grün", "note_source": "voice"}}}, origin="null")
+        status, data = self._req("POST", "/ratings/run-1", {"state": {"A": {"s": 9, "note": "grün", "note_source": "voice"}}}, origin=f"http://127.0.0.1:{self.port}")
         self.assertEqual(status, 200)
         saved = json.loads((self.dir / "run-1.json").read_text(encoding="utf-8"))
         self.assertEqual(saved["state"], {"A": {"s": 9, "note": "grün", "note_source": "voice"}})
@@ -390,14 +390,22 @@ class RatingStoreTests(unittest.TestCase):
         self.assertFalse((self.dir / "run-3.json").exists())
         self.assertEqual(list(self.dir.parent.glob("evil*")), [])
 
-    def test_page_has_import_saved_indicator_and_store_endpoint(self) -> None:
-        cfg = {"voice": {"enabled": False}, "store": {"endpoint": "http://127.0.0.1:8765/ratings"}}
-        html_out = rf.render_rating_html(sample_input(), cfg)
+    def test_null_origin_cannot_read_or_overwrite_the_store(self) -> None:
+        # B3: any local HTML file or sandboxed iframe sends Origin: null; notes are private.
+        rf.store_rating_state(self.dir, "run-4", {"A": {"s": 2, "note": "privat"}})
+        status, data = self._req("GET", "/ratings/run-4", origin="null")
+        self.assertEqual(status, 403)
+        self.assertNotIn("privat", json.dumps(data))
+        self.assertEqual(self._req("POST", "/ratings/run-4", {"state": {}}, origin="null")[0], 403)
+        self.assertEqual(rf.load_rating_state(self.dir, "run-4")["state"], {"A": {"s": 2, "note": "privat"}})
+        self.assertEqual(self._req("GET", "/ratings/run-4", origin=f"http://localhost:{self.port}")[0], 200)
+
+    def test_page_has_import_and_saved_indicator_and_store_only_when_served(self) -> None:
+        html_out = rf.render_rating_html(sample_input(), {"voice": {"enabled": False}})
         self.assertIn('id="import-file"', html_out)
         self.assertIn("gespeichert um", html_out)
-        self.assertIn('"store_endpoint": "http://127.0.0.1:8765/ratings"', html_out)
-        with self.assertRaisesRegex(ValueError, "loopback"):
-            rf.render_rating_html(sample_input(), {"store": {"endpoint": "https://cloud.example/ratings"}})
+        self.assertIn('const STORE=location.protocol.startsWith("http")?"/ratings":"";', html_out)
+        self.assertNotIn("store_endpoint", html_out)
 
 
 class RemoteSttTests(unittest.TestCase):
@@ -431,6 +439,99 @@ class RemoteSttTests(unittest.TestCase):
             worker.server_close()
         self.assertEqual(text, "hallo welt")
         self.assertEqual(seen, [(b"RIFFfake", "de")])
+
+    def _serve(self, handler) -> ThreadingHTTPServer:
+        srv = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        self.addCleanup(srv.server_close)
+        self.addCleanup(srv.shutdown)
+        return srv
+
+    def test_remote_call_ignores_http_proxy_env(self) -> None:
+        # B1: urlopen honours http_proxy, which would ship audio to the proxy.
+        import stt_server
+        from http.server import BaseHTTPRequestHandler
+
+        proxy_hits: list[str] = []
+
+        class Proxy(BaseHTTPRequestHandler):
+            def log_message(self, *a: object) -> None:
+                return
+
+            def _any(self) -> None:
+                proxy_hits.append(self.path)
+                raw = json.dumps({"ok": True, "text": "vom proxy"}).encode()
+                self.send_response(200); self.send_header("Content-Length", str(len(raw))); self.end_headers()
+                self.wfile.write(raw)
+
+            do_GET = do_POST = _any
+
+        proxy = self._serve(Proxy)
+        worker = self._serve(stt_server.make_handler(lambda p, l: "vom worker", "m"))
+        cfg = rf._merge_voice_config({"voice": {"enabled": True, "engine": "remote",
+                                                "remote_url": f"http://127.0.0.1:{worker.server_address[1]}/transcribe"}})
+        # Fresh process: urllib caches its default opener (and the proxy env it read) per process.
+        import os
+        import subprocess
+
+        env = {**os.environ, "http_proxy": f"http://127.0.0.1:{proxy.server_address[1]}", "no_proxy": "", "NO_PROXY": "",
+               "PYTHONIOENCODING": "utf-8"}
+        env["HTTP_PROXY"] = env["http_proxy"]
+        code = ("import json,sys; sys.path.insert(0, sys.argv[1]); import rating_form as rf; "
+                "cfg = json.loads(sys.argv[2]); "
+                "print(rf._transcribe_wav_bytes(b'RIFF', cfg, 'de'), rf.probe_voice_module(cfg)['stt_available'])")
+        out = subprocess.run([sys.executable, "-c", code, str(SCRIPTS), json.dumps(cfg)], env=env,
+                             capture_output=True, text=True, encoding="utf-8", timeout=30, check=True).stdout.strip()
+        self.assertEqual(out, "vom worker True")
+        self.assertEqual(proxy_hits, [])
+
+    def test_remote_redirect_is_not_followed(self) -> None:
+        from http.server import BaseHTTPRequestHandler
+
+        class Redirect(BaseHTTPRequestHandler):
+            def log_message(self, *a: object) -> None:
+                return
+
+            def do_POST(self) -> None:  # noqa: N802
+                self.send_response(302); self.send_header("Location", "/elsewhere"); self.send_header("Content-Length", "0"); self.end_headers()
+
+            def do_GET(self) -> None:  # noqa: N802
+                raw = json.dumps({"ok": True, "text": "umgeleitet"}).encode()
+                self.send_response(200); self.send_header("Content-Length", str(len(raw))); self.end_headers()
+                self.wfile.write(raw)
+
+        srv = self._serve(Redirect)
+        cfg = rf._merge_voice_config({"voice": {"enabled": True, "engine": "remote",
+                                                "remote_url": f"http://127.0.0.1:{srv.server_address[1]}/transcribe"}})
+        with self.assertRaises(OSError):
+            rf._transcribe_wav_bytes(b"RIFF", cfg, "de")
+
+    def test_worker_rejects_foreign_host_and_any_origin(self) -> None:
+        # B2: DNS rebinding / browser pages must not reach the STT worker.
+        import stt_server
+
+        worker = self._serve(stt_server.make_handler(lambda p, l: "x", "m"))
+        port = worker.server_address[1]
+
+        def req(method: str, path: str, headers: dict[str, str]) -> int:
+            conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+            conn.putrequest(method, path, skip_host=True)
+            for k, v in headers.items():
+                conn.putheader(k, v)
+            body = b"RIFF" if method == "POST" else None
+            if body:
+                conn.putheader("Content-Length", str(len(body)))
+            conn.endheaders(body)
+            status = conn.getresponse().status
+            conn.close()
+            return status
+
+        self.assertEqual(req("GET", "/health", {"Host": f"attacker.example:{port}"}), 403)
+        self.assertEqual(req("POST", "/transcribe", {"Host": f"127.0.0.1:{port}", "Origin": "http://attacker.example",
+                                                      "Content-Type": "text/plain"}), 403)
+        self.assertEqual(req("POST", "/transcribe", {"Host": f"127.0.0.1:{port}", "Origin": "null"}), 403)
+        self.assertEqual(req("GET", "/health", {}), 403)
+        self.assertEqual(req("GET", "/health", {"Host": f"127.0.0.1:{port}"}), 200)
 
     def test_worker_rejects_public_clients(self) -> None:
         import stt_server

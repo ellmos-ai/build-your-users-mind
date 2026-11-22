@@ -75,10 +75,10 @@ rows.forEach((r,idx)=>{
     +`<div class="note-area"><div class="note-controls"><textarea placeholder="Notiz (optional)" data-id="${esc(r.id)}"></textarea></div></div>`;
   L.appendChild(d);
 });
-// Durable copy: the loopback bridge stores every change as a file (same origin when the
-// page is served by the bridge, else the configured store endpoint). localStorage stays
-// the fallback; on load the newer of both wins.
-const STORE=location.protocol.startsWith("http")?"/ratings":(PAYLOAD.store_endpoint||"");
+// Durable copy: when the page is served by the loopback bridge, every change is also stored
+// there as a file (same origin only). file:// pages keep localStorage plus export/import.
+// On load the newer of both wins.
+const STORE=location.protocol.startsWith("http")?"/ratings":"";
 const STORE_URL=STORE?STORE+"/"+encodeURIComponent(PAYLOAD.run_id||"default"):"";
 const TKEY=KEY+":saved_at";
 let localAt="";
