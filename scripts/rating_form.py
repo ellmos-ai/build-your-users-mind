@@ -631,16 +631,57 @@ def _transcribe_wav_bytes(wav_bytes: bytes, voice_cfg: dict[str, Any], language:
     raise RuntimeError("ellmos-voice-io is not installed in the configured Python runtime")
 
 
-def serve_rating_bridge(
-    *,
+def is_loopback_host_header(host_header: str | None) -> bool:
+    """Accept only loopback ``Host`` values (optional port), e.g. ``127.0.0.1:8765`` or ``[::1]``."""
+    value = (host_header or "").strip()
+    if not value:
+        return False
+    try:
+        parsed = urlparse(f"//{value}")
+        hostname = parsed.hostname
+        _ = parsed.port
+    except ValueError:
+        return False
+    if parsed.username is not None or parsed.path or parsed.query or parsed.fragment:
+        return False
+    return hostname in _LOOPBACK_HOSTS
+
+
+_ORIGIN_SCHEMES = {"http": "http", "https": "https"}
+_ORIGIN_HOSTS = {"127.0.0.1": "127.0.0.1", "localhost": "localhost", "::1": "[::1]"}
+
+
+def canonical_bridge_origin(origin: str) -> str | None:
+    """Return a rebuilt allowed origin (``null`` or http(s) loopback), else ``None``.
+
+    The result is assembled from fixed literals plus an integer port, never from the raw
+    header text, so a CR/LF or other stray character can never reach a response header.
+    """
+    if origin == "null":
+        return "null"
+    try:
+        parsed = urlparse(origin)
+        port = parsed.port
+    except ValueError:
+        return None
+    scheme = _ORIGIN_SCHEMES.get(parsed.scheme)
+    host = _ORIGIN_HOSTS.get(parsed.hostname or "")
+    if scheme is None or host is None or parsed.path or parsed.query or parsed.fragment or parsed.username:
+        return None
+    canonical = f"{scheme}://{host}" if port is None else f"{scheme}://{host}:{int(port)}"
+    return canonical if canonical == origin else None
+
+
+def is_allowed_bridge_origin(origin: str) -> bool:
+    """Allow ``null`` (``file://`` pages) and ``http(s)`` loopback origins only."""
+    return canonical_bridge_origin(origin) is not None
+
+
+def make_bridge_handler(
     config: dict[str, Any] | None = None,
     html_path: Path | None = None,
-    host: str = "127.0.0.1",
-    port: int = 8765,
-) -> None:
-    """Run a strict loopback-only HTTP bridge for local ``ellmos-voice-io`` STT."""
-    if host not in _LOOPBACK_HOSTS:
-        raise ValueError("bridge host must be a loopback address (127.0.0.1, localhost, ::1)")
+) -> type[BaseHTTPRequestHandler]:
+    """Build the request handler class for the loopback voice bridge."""
     voice_cfg = _merge_voice_config(config)
     page_bytes = html_path.read_bytes() if html_path and html_path.is_file() else None
 
@@ -649,13 +690,9 @@ def serve_rating_bridge(
             return
 
         def _cors_headers(self) -> None:
-            origin = (self.headers.get("Origin") or "").strip()
-            if origin == "null":
-                self.send_header("Access-Control-Allow-Origin", "null")
-            elif origin:
-                parsed = urlparse(origin)
-                if parsed.hostname in _LOOPBACK_HOSTS:
-                    self.send_header("Access-Control-Allow-Origin", origin)
+            allowed_origin = canonical_bridge_origin((self.headers.get("Origin") or "").strip())
+            if allowed_origin is not None:
+                self.send_header("Access-Control-Allow-Origin", allowed_origin)
             self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Voice-Language")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 
@@ -669,13 +706,28 @@ def serve_rating_bridge(
             self.end_headers()
             self.wfile.write(raw)
 
+        def _reject_foreign_request(self) -> bool:
+            """Return True (after sending 403) for non-loopback Host or foreign Origin."""
+            if not is_loopback_host_header(self.headers.get("Host")):
+                self._send_json({"ok": False, "error": "forbidden host"}, status=403)
+                return True
+            origin = self.headers.get("Origin")
+            if origin is not None and not is_allowed_bridge_origin(origin.strip()):
+                self._send_json({"ok": False, "error": "forbidden origin"}, status=403)
+                return True
+            return False
+
         def do_OPTIONS(self) -> None:  # noqa: N802
+            if self._reject_foreign_request():
+                return
             self.send_response(204)
             self._cors_headers()
             self.send_header("Content-Length", "0")
             self.end_headers()
 
         def do_GET(self) -> None:  # noqa: N802
+            if self._reject_foreign_request():
+                return
             path = urlparse(self.path).path
             if path == "/health":
                 self._send_json({"ok": True, "voice": resolve_voice_state(config)})
@@ -691,6 +743,8 @@ def serve_rating_bridge(
             self._send_json({"ok": False, "error": "not found"}, status=404)
 
         def do_POST(self) -> None:  # noqa: N802
+            if self._reject_foreign_request():
+                return
             if urlparse(self.path).path != "/transcribe":
                 self._send_json({"ok": False, "error": "not found"}, status=404)
                 return
@@ -711,6 +765,20 @@ def serve_rating_bridge(
                 return
             self._send_json({"ok": True, "text": text})
 
+    return BridgeHandler
+
+
+def serve_rating_bridge(
+    *,
+    config: dict[str, Any] | None = None,
+    html_path: Path | None = None,
+    host: str = "127.0.0.1",
+    port: int = 8765,
+) -> None:
+    """Run a strict loopback-only HTTP bridge for local ``ellmos-voice-io`` STT."""
+    if host not in _LOOPBACK_HOSTS:
+        raise ValueError("bridge host must be a loopback address (127.0.0.1, localhost, ::1)")
+    BridgeHandler = make_bridge_handler(config, html_path)
     server = ThreadingHTTPServer((host, port), BridgeHandler)
     print(f"BYUM local voice bridge listening on http://{host}:{port}")
     try:
