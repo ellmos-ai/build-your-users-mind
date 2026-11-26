@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""Render, serve, and import feedback from the generic avatar rating form.
+"""Render, prefilter, serve, and import feedback from the generic avatar rating form.
 
-Generates a standalone light/dark HTML rating page from a schema-validated JSON
-input file, gates optional local voice input (`ellmos-voice-io`) behind config
-and module availability, and converts downloaded rating responses into the
-existing Markdown feedback format consumed by ``score_predictions.py``.
+Generates a standalone light/dark HTML rating page (with split-screen dictation
+mode as default plus switchable per-card rating mode) from a schema-validated JSON
+input file, prefilters contextless or already-resolved items via live readback,
+gates optional local voice input (`ellmos-voice-io`) behind config and module
+availability, and converts downloaded rating responses into the existing Markdown
+feedback format consumed by ``score_predictions.py``.
 """
 from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import html
 import importlib.util
 import json
@@ -19,6 +22,7 @@ import subprocess
 import sys
 import threading
 import urllib.request
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -41,17 +45,79 @@ DEFAULT_VOICE_CONFIG: dict[str, Any] = {
     "model_path": "",
     "python_executable": "",
 }
+DEFAULT_PREFILTER_CONFIG: dict[str, Any] = {
+    "enabled": True,
+    "tickets_root": "",
+    "decisions_index": "",
+    "decided_and_done": "",
+    "resolved_ids": [],
+}
 _ALLOWED_INPUT_KEYS = {"schema", "run_id", "title", "description", "entries"}
-_ALLOWED_ENTRY_KEYS = {"nr", "id", "kontext", "entscheidung", "konfidenz", "ziel", "ebene", "date"}
-_ALLOWED_RESPONSE_KEYS = {"schema", "run_id", "saved_at", "ratings"}
+_ALLOWED_ENTRY_KEYS = {
+    "nr",
+    "id",
+    "kontext",
+    "entscheidung",
+    "konfidenz",
+    "ziel",
+    "ebene",
+    "date",
+    "ticket_id",
+    "decision_id",
+}
+_ALLOWED_RESPONSE_KEYS = {"schema", "run_id", "saved_at", "mode", "dictation", "dictation_source", "ratings"}
 _ALLOWED_RATING_KEYS = {"nr", "id", "entscheidung", "score", "note", "note_source"}
 _LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 _MAX_AUDIO_BYTES = 15 * 1024 * 1024
+_MAX_DICTATION_CHARS = 500_000
+
+_TICKET_ID_RE = re.compile(r"\b(T-\d{4,8}-[A-Za-z0-9_-]+)\b")
+_DECISION_ID_RE = re.compile(r"\b(D-\d{8}-\d{2,4}(?:-[A-Za-z0-9]+)*)\b")
+_DECIDED_HEADING_RE = re.compile(
+    r"^(?:#{1,4}\s+|ID\s*:\s*)(D-\d{8}-\d{2,4}(?:-[A-Za-z0-9]+)*|[A-Za-z]+-\d+[A-Za-z0-9_-]*)\b",
+    re.IGNORECASE,
+)
+_PLACEHOLDER_VALUES = {
+    "",
+    "-",
+    "--",
+    "—",
+    "–",
+    "?",
+    "???",
+    "...",
+    "…",
+    "n/a",
+    "na",
+    "none",
+    "null",
+    "tbd",
+    "todo",
+    "offen",
+    "open",
+    "unklar",
+    "missing",
+    "kein kontext",
+    "(kein kontext)",
+    "hier eintragen",
+}
+_PLACEHOLDER_CHOICE_RE = re.compile(r"^[a-d](?:\s*[/|]\s*[a-d])+$", re.IGNORECASE)
+_RESOLVED_DECISION_STATUSES = {
+    "done",
+    "archiviert",
+    "archived",
+    "resolved",
+    "closed",
+    "decided",
+    "erledigt",
+    "entschieden_umsetzung_offen",
+}
+_OPEN_DECISION_STATUSES = {"offen", "open", "pending", "active"}
 
 _VOICE_CSS = (
     ".voice-mic-btn{background:transparent;color:var(--acc);border:1px solid var(--line);"
-    "border-radius:6px;padding:6px 9px;display:inline-flex;align-items:center;justify-content:center;"
-    "gap:4px;flex-shrink:0;min-height:38px}\n"
+    "border-radius:6px;padding:6px 10px;display:inline-flex;align-items:center;justify-content:center;"
+    "gap:4px;flex-shrink:0;min-height:44px;min-width:44px}\n"
     ".voice-mic-btn:hover{border-color:var(--acc)}\n"
     ".voice-mic-btn.recording{color:#fff;background:var(--rec);border-color:var(--rec)}\n"
     ".voice-mic-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"
@@ -144,7 +210,13 @@ _VOICE_CLIENT_JS = r"""
       if(text){
         const cur=rec.textarea.value.trim();
         rec.textarea.value=cur?(cur+" "+text):text;
-        st[rec.id]=Object.assign(st[rec.id]||{},{note:rec.textarea.value,note_source:"voice"});
+        if(rec.isMainDictation){
+          dictationText=rec.textarea.value;
+          dictationSource="voice";
+          updateDictationCounts();
+        }else{
+          st[rec.id]=Object.assign(st[rec.id]||{},{note:rec.textarea.value,note_source:"voice"});
+        }
         persist();
         rec.status.textContent="Transkript übernommen (editierbar).";
       }else{
@@ -154,11 +226,13 @@ _VOICE_CLIENT_JS = r"""
       rec.status.textContent="Lokale Transkription fehlgeschlagen: "+(err&&err.message?err.message:String(err));
     }
   }
-  L.querySelectorAll(".note-area").forEach(area=>{
+  document.querySelectorAll(".note-area").forEach(area=>{
     const ta=area.querySelector("textarea");
     const controls=area.querySelector(".note-controls");
     if(!ta||!controls)return;
-    const id=ta.dataset.id;
+    const isMainDictation=ta.dataset.dictation==="main";
+    const id=isMainDictation?"__dictation__":ta.dataset.id;
+    if(!id)return;
     const btn=document.createElement("button");
     btn.type="button";
     btn.className="voice-mic-btn";
@@ -193,7 +267,7 @@ _VOICE_CLIENT_JS = r"""
         proc.onaudioprocess=e=>{chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));};
         src.connect(proc);
         proc.connect(ctx.destination);
-        activeRec={id,btn,status,textarea:ta,stream,ctx,src,proc,chunks,sampleRate:ctx.sampleRate};
+        activeRec={id,isMainDictation,btn,status,textarea:ta,stream,ctx,src,proc,chunks,sampleRate:ctx.sampleRate};
         btn.classList.add("recording");
         btn.setAttribute("aria-pressed","true");
         btn.textContent="■ Stopp";
@@ -232,6 +306,360 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 # Loopback STT calls must never go through http_proxy/HTTPS_PROXY or follow redirects:
 # either would let audio or the transcript leave/enter from outside the loopback contract.
 _LOOPBACK_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect)
+
+
+def _has_meaningful_text(value: object, *, min_chars: int) -> bool:
+    if not isinstance(value, str):
+        return False
+    stripped = value.strip()
+    if len(stripped) < min_chars:
+        return False
+    lowered = stripped.lower()
+    if lowered in _PLACEHOLDER_VALUES or _PLACEHOLDER_CHOICE_RE.fullmatch(lowered):
+        return False
+    alnum_count = sum(1 for ch in stripped if ch.isalnum())
+    return alnum_count >= 2
+
+
+def _collect_ticket_sets(tickets_root: Path | str | None) -> tuple[dict[str, str], set[str]]:
+    """Scan ``tickets_root`` for resolved (``SOLVED``/``DONE``) and active ticket IDs."""
+    resolved: dict[str, str] = {}
+    open_ids: set[str] = set()
+    if not tickets_root:
+        return resolved, open_ids
+    root = Path(tickets_root).expanduser()
+    if not root.is_dir():
+        return resolved, open_ids
+
+    for child in root.iterdir():
+        if not child.is_dir():
+            continue
+        bucket = child.name.upper()
+        if bucket in {"SOLVED", "DONE"}:
+            for item in child.rglob("*"):
+                if not item.is_file():
+                    continue
+                rel = f"{child.name}/{item.relative_to(child).as_posix()}"
+                stem = item.stem.strip()
+                if stem:
+                    resolved.setdefault(stem.upper(), rel)
+                    prefix = stem.split("_", 1)[0].strip()
+                    if prefix:
+                        resolved.setdefault(prefix.upper(), rel)
+                for match in _TICKET_ID_RE.findall(item.name):
+                    resolved.setdefault(match.upper(), rel)
+        elif bucket in {"OPEN", "USER", "IN_PROGRESS", "ACTIVE"}:
+            for item in child.rglob("*"):
+                if not item.is_file():
+                    continue
+                stem = item.stem.strip()
+                if stem:
+                    open_ids.add(stem.upper())
+                    prefix = stem.split("_", 1)[0].strip()
+                    if prefix:
+                        open_ids.add(prefix.upper())
+                for match in _TICKET_ID_RE.findall(item.name):
+                    open_ids.add(match.upper())
+    return resolved, open_ids
+
+
+def _parse_decided_markdown(md_path: Path, resolved: dict[str, str]) -> None:
+    if not md_path.is_file():
+        return
+    try:
+        text = md_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return
+    label = md_path.name
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        heading_match = _DECIDED_HEADING_RE.match(line)
+        if heading_match:
+            resolved.setdefault(heading_match.group(1).upper(), label)
+
+
+def _ingest_decisions_object(data: object, source_label: str, resolved: dict[str, str], open_ids: set[str]) -> None:
+    if isinstance(data, list):
+        entries = data
+    elif isinstance(data, dict):
+        if isinstance(data.get("entries"), list):
+            entries = data["entries"]
+        elif isinstance(data.get("decisions"), list):
+            entries = data["decisions"]
+        else:
+            # Support compact mapping {"D-20261101-001": "DONE", ...}
+            for key, val in data.items():
+                if not isinstance(key, str) or key in {"schema", "generated_at", "generator", "root", "counts"}:
+                    continue
+                status_str = ""
+                domain_str = ""
+                if isinstance(val, str):
+                    status_str = val.strip().lower()
+                elif isinstance(val, dict):
+                    status_str = str(val.get("status_class") or val.get("status") or "").strip().lower()
+                    domain_str = str(val.get("domain") or "").strip().lower()
+                norm_id = key.strip().upper()
+                if status_str in _OPEN_DECISION_STATUSES or (domain_str == "active" and not status_str):
+                    open_ids.add(norm_id)
+                elif status_str in _RESOLVED_DECISION_STATUSES or domain_str in {"done", "archive"}:
+                    resolved.setdefault(norm_id, f"{source_label} ({status_str or domain_str})")
+            return
+    else:
+        return
+
+    active_open: set[str] = set()
+    candidate_resolved: dict[str, str] = {}
+    for row in entries:
+        if not isinstance(row, dict):
+            continue
+        raw_id = str(row.get("id") or "").strip()
+        if not raw_id:
+            continue
+        norm_id = raw_id.upper()
+        domain = str(row.get("domain") or "").strip().lower()
+        status_class = str(row.get("status_class") or row.get("status") or "").strip().lower()
+        status_raw = str(row.get("status_raw") or "").strip().lower()
+        decision_ready = row.get("decision_ready")
+
+        is_open = (
+            decision_ready is True
+            or status_class in _OPEN_DECISION_STATUSES
+            or (domain == "active" and status_class not in _RESOLVED_DECISION_STATUSES and not row.get("has_decision"))
+        )
+        is_done = (
+            domain in {"done", "archive"}
+            or status_class in _RESOLVED_DECISION_STATUSES
+            or any(status_raw.startswith(tok) for tok in ("done", "erledigt", "resolved", "archiviert", "closed"))
+            or bool(row.get("has_decision"))
+        )
+        if is_open and not is_done:
+            active_open.add(norm_id)
+        elif is_done:
+            tag = status_class or domain or "done"
+            candidate_resolved.setdefault(norm_id, f"{source_label} ({tag})")
+
+    open_ids.update(active_open)
+    for dec_id, detail in candidate_resolved.items():
+        if dec_id not in active_open:
+            resolved.setdefault(dec_id, detail)
+
+
+def _collect_decision_sets(
+    decisions_index: Path | str | dict[str, Any] | list[dict[str, Any]] | None,
+    decided_and_done: Path | str | None,
+) -> tuple[dict[str, str], set[str]]:
+    """Collect resolved and open decision IDs from index JSON and/or ``DECIDED-AND-DONE`` Markdown."""
+    resolved: dict[str, str] = {}
+    open_ids: set[str] = set()
+
+    if isinstance(decisions_index, (dict, list)):
+        _ingest_decisions_object(decisions_index, "decisions_index", resolved, open_ids)
+    elif isinstance(decisions_index, (str, Path)) and str(decisions_index).strip():
+        idx_path = Path(decisions_index).expanduser()
+        if idx_path.is_dir():
+            for rel_json in ("_tools/decisions.index.json", "decisions.index.json"):
+                cand = idx_path / rel_json
+                if cand.is_file():
+                    try:
+                        _ingest_decisions_object(
+                            json.loads(cand.read_text(encoding="utf-8")),
+                            cand.name,
+                            resolved,
+                            open_ids,
+                        )
+                    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+                        pass
+            _parse_decided_markdown(idx_path / "DECIDED-AND-DONE.md", resolved)
+        elif idx_path.is_file():
+            if idx_path.suffix.lower() == ".json":
+                data = json.loads(idx_path.read_text(encoding="utf-8"))
+                _ingest_decisions_object(data, idx_path.name, resolved, open_ids)
+            else:
+                _parse_decided_markdown(idx_path, resolved)
+
+    if isinstance(decided_and_done, (str, Path)) and str(decided_and_done).strip():
+        _parse_decided_markdown(Path(decided_and_done).expanduser(), resolved)
+
+    for open_id in list(open_ids):
+        resolved.pop(open_id, None)
+    return resolved, open_ids
+
+
+def prefilter_items(
+    entries: list[dict[str, Any]],
+    *,
+    tickets_root: Path | str | None = None,
+    decisions_index: Path | str | dict[str, Any] | list[dict[str, Any]] | None = None,
+    decided_and_done: Path | str | None = None,
+    resolved_ids: Iterable[str] | None = None,
+    is_resolved: Callable[[dict[str, Any]], str | bool | None] | None = None,
+    min_context_chars: int = 5,
+    min_decision_chars: int = 3,
+) -> dict[str, Any]:
+    """Filter rating entries before HTML generation via static quality checks and live readback.
+
+    Drops:
+    1. Entries without genuine context (``missing_context``) or without an evaluable
+       avatar statement/decision (``missing_decision``).
+    2. Entries whose own ID, explicit ``ticket_id``/``decision_id``, or referenced
+       ticket/decision token is already resolved in ``tickets_root`` (``SOLVED/`` or
+       ``DONE/``), ``decisions_index`` / ``DECIDED-AND-DONE``, ``resolved_ids``, or
+       ``is_resolved(entry)``.
+
+    Returns ``{"kept": [...], "filtered_out": [...], "counts": {...}}``.
+    """
+    if not isinstance(entries, list):
+        raise ValueError("entries must be a list")
+
+    explicit_resolved = {str(x).strip().upper() for x in (resolved_ids or ()) if str(x).strip()}
+    resolved_tickets, open_tickets = _collect_ticket_sets(tickets_root)
+    resolved_decisions, open_decisions = _collect_decision_sets(decisions_index, decided_and_done)
+
+    kept: list[dict[str, Any]] = []
+    filtered_out: list[dict[str, Any]] = []
+
+    def _record_drop(entry: dict[str, Any], idx: int, reason: str, detail: str) -> None:
+        filtered_out.append(
+            {
+                "id": str(entry.get("id") or f"entry-{idx}"),
+                "nr": entry.get("nr", idx),
+                "reason": reason,
+                "detail": detail,
+                "entry": copy.deepcopy(entry),
+            }
+        )
+
+    for idx, raw_entry in enumerate(entries, 1):
+        if not isinstance(raw_entry, dict):
+            filtered_out.append(
+                {
+                    "id": f"entry-{idx}",
+                    "nr": idx,
+                    "reason": "invalid_entry",
+                    "detail": "Entry is not an object.",
+                    "entry": raw_entry,
+                }
+            )
+            continue
+
+        kontext = raw_entry.get("kontext")
+        if not _has_meaningful_text(kontext, min_chars=min_context_chars):
+            _record_drop(raw_entry, idx, "missing_context", "Kein belastbarer Kontext vorhanden.")
+            continue
+
+        entscheidung = raw_entry.get("entscheidung")
+        if not _has_meaningful_text(entscheidung, min_chars=min_decision_chars):
+            _record_drop(raw_entry, idx, "missing_decision", "Keine bewertbare Avatar-Entscheidung vorhanden.")
+            continue
+
+        entry_id = str(raw_entry.get("id") or "").strip()
+        norm_entry_id = entry_id.upper()
+        explicit_ticket = str(raw_entry.get("ticket_id") or "").strip().upper()
+        explicit_decision = str(raw_entry.get("decision_id") or "").strip().upper()
+
+        direct_ids = [x for x in (norm_entry_id, explicit_ticket, explicit_decision) if x]
+        if any(x in explicit_resolved for x in direct_ids):
+            matched = next(x for x in direct_ids if x in explicit_resolved)
+            _record_drop(raw_entry, idx, "resolved_id", f"ID {matched} ist als bereits erledigt markiert.")
+            continue
+
+        if explicit_ticket and explicit_ticket in resolved_tickets:
+            _record_drop(
+                raw_entry,
+                idx,
+                "ticket_resolved",
+                f"Ticket {explicit_ticket} liegt bereits in {resolved_tickets[explicit_ticket]}.",
+            )
+            continue
+        if norm_entry_id and norm_entry_id in resolved_tickets:
+            _record_drop(
+                raw_entry,
+                idx,
+                "ticket_resolved",
+                f"Ticket {entry_id} liegt bereits in {resolved_tickets[norm_entry_id]}.",
+            )
+            continue
+
+        if explicit_decision and explicit_decision in resolved_decisions:
+            _record_drop(
+                raw_entry,
+                idx,
+                "decision_resolved",
+                f"Entscheidung {explicit_decision} ist bereits abgeschlossen ({resolved_decisions[explicit_decision]}).",
+            )
+            continue
+        if norm_entry_id and norm_entry_id in resolved_decisions:
+            _record_drop(
+                raw_entry,
+                idx,
+                "decision_resolved",
+                f"Entscheidung {entry_id} ist bereits abgeschlossen ({resolved_decisions[norm_entry_id]}).",
+            )
+            continue
+
+        # Unless the item's own primary ID is explicitly known to be an open ticket or open decision,
+        # also inspect ticket/decision tokens referenced inside id/ziel/kontext.
+        primary_known_open = norm_entry_id in open_tickets or norm_entry_id in open_decisions
+        if not primary_known_open:
+            haystack = " ".join(
+                str(raw_entry.get(field) or "") for field in ("id", "ticket_id", "decision_id", "ziel", "kontext")
+            )
+            ref_tickets = [m.upper() for m in _TICKET_ID_RE.findall(haystack)]
+            ref_decisions = [m.upper() for m in _DECISION_ID_RE.findall(haystack)]
+
+            hit_resolved_tok = next((t for t in (*ref_tickets, *ref_decisions) if t in explicit_resolved), None)
+            if hit_resolved_tok:
+                _record_drop(
+                    raw_entry,
+                    idx,
+                    "resolved_id",
+                    f"Referenz {hit_resolved_tok} ist als bereits erledigt markiert.",
+                )
+                continue
+
+            hit_ticket = next((t for t in ref_tickets if t in resolved_tickets and t not in open_tickets), None)
+            if hit_ticket:
+                _record_drop(
+                    raw_entry,
+                    idx,
+                    "ticket_resolved",
+                    f"Referenziertes Ticket {hit_ticket} liegt bereits in {resolved_tickets[hit_ticket]}.",
+                )
+                continue
+
+            hit_decision = next((d for d in ref_decisions if d in resolved_decisions and d not in open_decisions), None)
+            if hit_decision:
+                _record_drop(
+                    raw_entry,
+                    idx,
+                    "decision_resolved",
+                    f"Referenzierte Entscheidung {hit_decision} ist bereits abgeschlossen ({resolved_decisions[hit_decision]}).",
+                )
+                continue
+
+        if is_resolved is not None:
+            verdict = is_resolved(raw_entry)
+            if verdict:
+                detail = verdict if isinstance(verdict, str) else f"Posten {entry_id or idx} durch Readback-Callback ausgefiltert."
+                _record_drop(raw_entry, idx, "custom_resolved", detail)
+                continue
+
+        kept.append(copy.deepcopy(raw_entry))
+
+    return {
+        "kept": kept,
+        "filtered_out": filtered_out,
+        "counts": {
+            "input": len(entries),
+            "kept": len(kept),
+            "filtered_out": len(filtered_out),
+        },
+    }
+
+
+prefilter_entries = prefilter_items
 
 
 def validate_input_payload(payload: object) -> dict[str, Any]:
@@ -291,11 +719,12 @@ def validate_input_payload(payload: object) -> dict[str, Any]:
             "konfidenz": konfidenz,
             "ziel": ziel,
         }
-        if "ebene" in raw_entry:
-            if not isinstance(raw_entry["ebene"], str):
-                raise ValueError(f"{prefix}.ebene must be a string")
-            if raw_entry["ebene"].strip():
-                item["ebene"] = raw_entry["ebene"].strip()
+        for opt_str_key in ("ebene", "ticket_id", "decision_id"):
+            if opt_str_key in raw_entry:
+                if not isinstance(raw_entry[opt_str_key], str):
+                    raise ValueError(f"{prefix}.{opt_str_key} must be a string")
+                if raw_entry[opt_str_key].strip():
+                    item[opt_str_key] = raw_entry[opt_str_key].strip()
         if "date" in raw_entry:
             validate_since(str(raw_entry["date"]))
             if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(raw_entry["date"])):
@@ -366,12 +795,25 @@ def validate_response_payload(payload: object) -> dict[str, Any]:
             item["note_source"] = raw_row["note_source"]
         normalized_ratings.append(item)
 
-    return {
+    result: dict[str, Any] = {
         "schema": RESPONSE_SCHEMA,
         "run_id": run_id,
         "saved_at": saved_at,
         "ratings": normalized_ratings,
     }
+    if "mode" in payload:
+        if payload["mode"] not in {"dictation", "cards"}:
+            raise ValueError("mode must be 'dictation' or 'cards'")
+        result["mode"] = payload["mode"]
+    if "dictation" in payload:
+        if not isinstance(payload["dictation"], str) or len(payload["dictation"]) > _MAX_DICTATION_CHARS:
+            raise ValueError(f"dictation must be a string (max {_MAX_DICTATION_CHARS} chars)")
+        result["dictation"] = payload["dictation"]
+    if "dictation_source" in payload:
+        if payload["dictation_source"] not in {"text", "voice"}:
+            raise ValueError("dictation_source must be 'text' or 'voice'")
+        result["dictation_source"] = payload["dictation_source"]
+    return result
 
 
 def _merge_voice_config(config: dict[str, Any] | None) -> dict[str, Any]:
@@ -391,6 +833,23 @@ def _merge_voice_config(config: dict[str, Any] | None) -> dict[str, Any]:
     return merged
 
 
+def _merge_prefilter_config(config: dict[str, Any] | None) -> dict[str, Any]:
+    merged = copy.deepcopy(DEFAULT_PREFILTER_CONFIG)
+    if config is None:
+        return merged
+    if not isinstance(config, dict):
+        raise ValueError("config must be a JSON object")
+    raw_pf = config.get("prefilter", {})
+    if raw_pf is None:
+        raw_pf = {}
+    if not isinstance(raw_pf, dict):
+        raise ValueError("config.prefilter must be an object")
+    if "enabled" in raw_pf and not isinstance(raw_pf["enabled"], bool):
+        raise ValueError("config.prefilter.enabled must be a boolean")
+    merged.update(raw_pf)
+    return merged
+
+
 def probe_voice_module(voice_cfg: dict[str, Any]) -> dict[str, Any]:
     """Read-only probe for local ``ellmos-voice-io`` and STT engine availability."""
     if str(voice_cfg.get("engine") or "").strip() == "remote":
@@ -404,7 +863,7 @@ def probe_voice_module(voice_cfg: dict[str, Any]) -> dict[str, Any]:
                     "reason": f"Remote-STT-Dienst nicht erreichbar ({exc})."}
         return {"installed": ok, "stt_available": ok, "stt_engine": "remote",
                 "reason": "" if ok else "Remote-STT-Dienst meldet keinen Bereitschaftsstatus."}
-    provider =str(voice_cfg.get("provider") or "ellmos-voice-io").strip()
+    provider = str(voice_cfg.get("provider") or "ellmos-voice-io").strip()
     if provider != "ellmos-voice-io":
         return {
             "installed": False,
@@ -542,23 +1001,37 @@ def validate_rating_state(state: object) -> dict[str, Any]:
     return state
 
 
-def store_rating_state(ratings_dir: Path, run_id: str, state: object) -> dict[str, Any]:
+def store_rating_state(
+    ratings_dir: Path,
+    run_id: str,
+    state: object,
+    *,
+    dictation: object = None,
+) -> dict[str, Any]:
     """Atomically write ``<run_id>.json`` with the new state and the previous ``STORE_HISTORY`` versions."""
     if not _RUN_ID_RE.fullmatch(run_id):
         raise ValueError("invalid run_id")
     validated = validate_rating_state(state)
+    if dictation is not None and (not isinstance(dictation, str) or len(dictation) > _MAX_DICTATION_CHARS):
+        raise ValueError(f"dictation must be a string (max {_MAX_DICTATION_CHARS} chars)")
     path = ratings_dir / f"{run_id}.json"
     current = load_rating_state(ratings_dir, run_id)
     history = list(current.get("history") or [])
     if current.get("state") is not None:
-        history.insert(0, {"saved_at": current["saved_at"], "state": current["state"]})
-    record = {
+        hist_entry: dict[str, Any] = {"saved_at": current["saved_at"], "state": current["state"]}
+        if "dictation" in current and current["dictation"] is not None:
+            hist_entry["dictation"] = current["dictation"]
+        history.insert(0, hist_entry)
+    record: dict[str, Any] = {
         "schema": "byum.avatar-rating-store.v1",
         "run_id": run_id,
         "saved_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
         "state": validated,
         "history": history[:STORE_HISTORY],
     }
+    effective_dictation = dictation if dictation is not None else current.get("dictation")
+    if effective_dictation is not None:
+        record["dictation"] = effective_dictation
     atomic_write_text(path, json.dumps(record, ensure_ascii=False, indent=1))
     return record
 
@@ -572,29 +1045,99 @@ def load_rating_state(ratings_dir: Path, run_id: str) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _render_dictation_items_html(entries: list[dict[str, Any]]) -> str:
+    blocks: list[str] = []
+    for idx, entry in enumerate(entries, 1):
+        nr = entry.get("nr") or idx
+        entry_id = html.escape(str(entry["id"]))
+        meta_parts = [entry_id]
+        if entry.get("ebene"):
+            meta_parts.append(html.escape(str(entry["ebene"])))
+        meta_parts.append(html.escape(str(entry["konfidenz"])))
+        meta_parts.append("→ " + html.escape(str(entry["ziel"])))
+        if entry.get("date"):
+            meta_parts.append(html.escape(str(entry["date"])))
+        kontext_esc = html.escape(str(entry["kontext"]))
+        entscheidung_esc = html.escape(str(entry["entscheidung"]))
+        blocks.append(
+            f'    <article class="dict-item" id="dict-item-{nr}" data-id="{entry_id}" data-nr="{nr}" tabindex="0">'
+            f'<div class="dict-item-head"><span class="dict-nr">#{nr}</span>'
+            f'<span class="meta">{" · ".join(meta_parts)}</span>'
+            f'<button type="button" class="sec mark-btn" data-insert-mark="[#{nr}]" data-id="{entry_id}" '
+            f'aria-label="Positionsmarke [#{nr}] in das Diktatfeld einfügen">[#{nr}] einfügen</button></div>'
+            f'<div class="dict-context"><b>Worum es ging:</b> {kontext_esc}</div>'
+            f'<div class="dict-decision"><b>Entscheidung des Avatars:</b> {entscheidung_esc}</div>'
+            f"</article>"
+        )
+    return "\n".join(blocks)
+
+
 def render_rating_html(
     input_payload: dict[str, Any],
     config: dict[str, Any] | None = None,
     *,
     template_path: Path | None = None,
     voice_probe: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+    prefilter: bool = True,
+    tickets_root: Path | str | None = None,
+    decisions_index: Path | str | dict[str, Any] | list[dict[str, Any]] | None = None,
+    decided_and_done: Path | str | None = None,
+    resolved_ids: Iterable[str] | None = None,
+    is_resolved: Callable[[dict[str, Any]], str | bool | None] | None = None,
+    filter_report_out: dict[str, Any] | None = None,
 ) -> str:
-    """Render the standalone rating HTML document from validated input and config."""
-    validated = validate_input_payload(input_payload)
+    """Render the standalone rating HTML document from validated (and optionally prefiltered) input."""
+    if not isinstance(input_payload, dict):
+        raise ValueError("input payload must be a JSON object")
+
+    pf_cfg = _merge_prefilter_config(config)
+    effective_prefilter = bool(prefilter and pf_cfg.get("enabled", True))
+    working_payload = copy.deepcopy(input_payload)
+
+    if effective_prefilter and isinstance(working_payload.get("entries"), list) and working_payload["entries"]:
+        eff_tickets = tickets_root if tickets_root is not None else (pf_cfg.get("tickets_root") or None)
+        eff_decisions = decisions_index if decisions_index is not None else (pf_cfg.get("decisions_index") or None)
+        eff_done_md = decided_and_done if decided_and_done is not None else (pf_cfg.get("decided_and_done") or None)
+        cfg_resolved = pf_cfg.get("resolved_ids") or []
+        merged_resolved: list[str] = [str(x) for x in cfg_resolved]
+        if resolved_ids is not None:
+            merged_resolved.extend(str(x) for x in resolved_ids)
+
+        report = prefilter_items(
+            working_payload["entries"],
+            tickets_root=eff_tickets,
+            decisions_index=eff_decisions,
+            decided_and_done=eff_done_md,
+            resolved_ids=merged_resolved,
+            is_resolved=is_resolved,
+        )
+        if filter_report_out is not None:
+            filter_report_out.clear()
+            filter_report_out.update(report)
+        if not report["kept"]:
+            raise ValueError("all entries were filtered out by prefilter before HTML generation")
+        working_payload["entries"] = report["kept"]
+
+    validated = validate_input_payload(working_payload)
     voice_state = resolve_voice_state(config, voice_probe=voice_probe)
 
     tpl_file = template_path or DEFAULT_TEMPLATE_PATH
     template = tpl_file.read_text(encoding="utf-8")
 
+    batch_fingerprint_src = validated["run_id"] + "|" + "|".join(e["id"] for e in validated["entries"])
+    batch_hash = hashlib.sha256(batch_fingerprint_src.encode("utf-8")).hexdigest()[:10]
+
     page_title = validated.get("title") or "Avatar-Entscheidungen bewerten"
     payload_for_page = {
         "run_id": validated["run_id"],
+        "batch_hash": batch_hash,
         "title": page_title,
         "description": validated.get("description") or "",
         "entries": validated["entries"],
         "voice": voice_state,
     }
     json_blob = json.dumps(payload_for_page, ensure_ascii=False).replace("</", "<\\/")
+    dictation_items_html = _render_dictation_items_html(validated["entries"])
 
     notice_html = ""
     notice_css = ""
@@ -609,6 +1152,7 @@ def render_rating_html(
     rendered = rendered.replace("__VOICE_NOTICE_CSS__", notice_css)
     rendered = rendered.replace("__VOICE_CSS__", voice_css)
     rendered = rendered.replace("__VOICE_NOTICE__", notice_html)
+    rendered = rendered.replace("__DICTATION_ITEMS__", dictation_items_html)
     rendered = rendered.replace("__RATING_PAYLOAD__", json_blob)
     rendered = rendered.replace("__VOICE_SCRIPT__", voice_script)
     return rendered
@@ -659,6 +1203,13 @@ def response_to_feedback_markdown(
         f"> Imported from `{RESPONSE_SCHEMA}` (`saved_at: {validated['saved_at']}`).",
         "",
     ]
+    dictation_text = (validated.get("dictation") or "").strip()
+    if dictation_text:
+        lines.append(f"## Dictation Feedback ({date_str})")
+        lines.append("")
+        lines.append(dictation_text)
+        lines.append("")
+
     rated_count = 0
     for item in validated["ratings"]:
         score = item["score"]
@@ -671,7 +1222,7 @@ def response_to_feedback_markdown(
         if item["note"].strip():
             lines.append(f"- Note: {item['note'].strip()}")
         lines.append("")
-    if rated_count == 0:
+    if rated_count == 0 and not dictation_text:
         lines.append("_(no rated entries in response)_")
         lines.append("")
     return "\n".join(lines)
@@ -864,7 +1415,14 @@ def make_bridge_handler(
                 except ValueError as exc:
                     self._send_json({"ok": False, "error": str(exc)}, status=400)
                     return
-                self._send_json({"ok": True, "saved_at": record.get("saved_at"), "state": record.get("state")})
+                resp_data: dict[str, Any] = {
+                    "ok": True,
+                    "saved_at": record.get("saved_at"),
+                    "state": record.get("state"),
+                }
+                if "dictation" in record and record["dictation"] is not None:
+                    resp_data["dictation"] = record["dictation"]
+                self._send_json(resp_data)
                 return
             # Read per request so a re-rendered page is served without restarting the bridge.
             page_bytes = html_path.read_bytes() if html_path and html_path.is_file() else None
@@ -898,7 +1456,12 @@ def make_bridge_handler(
                     if not isinstance(body, dict):
                         raise ValueError("body must be a JSON object")
                     with store_lock:
-                        record = store_rating_state(store_dir, path[len("/ratings/"):], body.get("state"))
+                        record = store_rating_state(
+                            store_dir,
+                            path[len("/ratings/"):],
+                            body.get("state"),
+                            dictation=body.get("dictation") if "dictation" in body else None,
+                        )
                 except OSError:
                     self._send_json({"ok": False, "error": "storage error"}, status=500)
                     return
@@ -947,6 +1510,41 @@ def serve_rating_bridge(
         server.server_close()
 
 
+def _add_prefilter_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--tickets-root", default="", help="Optional tickets directory with SOLVED/ and DONE/")
+    parser.add_argument(
+        "--decisions-index",
+        default="",
+        help="Optional decisions.index.json, DECIDED-AND-DONE.md, or decisions directory",
+    )
+    parser.add_argument("--decided-and-done", default="", help="Optional DECIDED-AND-DONE.md path")
+    parser.add_argument(
+        "--resolved-id",
+        action="append",
+        default=[],
+        help="Mark an explicit ticket/decision/entry ID as resolved (repeatable)",
+    )
+    parser.add_argument("--filter-report", default="", help="Optional JSON output path for the prefilter report")
+
+
+def _write_filter_report(report_path: Path, run_id: str, report: dict[str, Any]) -> None:
+    serializable = {
+        "run_id": run_id,
+        "counts": report["counts"],
+        "kept_ids": [str(item.get("id") or "") for item in report["kept"]],
+        "filtered_out": [
+            {
+                "id": item["id"],
+                "nr": item["nr"],
+                "reason": item["reason"],
+                "detail": item["detail"],
+            }
+            for item in report["filtered_out"]
+        ],
+    }
+    atomic_write_text(report_path, json.dumps(serializable, ensure_ascii=False, indent=2) + "\n")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -956,6 +1554,13 @@ def main(argv: list[str] | None = None) -> int:
     p_build.add_argument("--out", required=True, help="Output HTML file path")
     p_build.add_argument("--config", default="", help="Optional config JSON (defaults to config.local.json if present)")
     p_build.add_argument("--template", default="", help="Optional custom HTML template path")
+    p_build.add_argument("--no-prefilter", action="store_true", help="Disable prefilter/readback before HTML build")
+    _add_prefilter_args(p_build)
+
+    p_prefilter = sub.add_parser("prefilter", help="Filter contextless or resolved entries before building")
+    p_prefilter.add_argument("--input", required=True, help="Input JSON with entries")
+    p_prefilter.add_argument("--out", required=True, help="Output path for filtered input JSON")
+    _add_prefilter_args(p_prefilter)
 
     p_import = sub.add_parser("import-feedback", help="Convert rating response JSON to WHAT-USER-SAID-ABOUT Markdown")
     p_import.add_argument("--response", required=True, help="Response JSON downloaded from the rating page")
@@ -977,8 +1582,47 @@ def main(argv: list[str] | None = None) -> int:
             cfg_path = Path(args.config).expanduser() if args.config else None
             cfg = load_config(cfg_path, search_dir=REPO_ROOT if cfg_path is None else None)
             tpl = Path(args.template).expanduser() if args.template else None
-            rendered = render_rating_html(payload, cfg, template_path=tpl)
+            report_box: dict[str, Any] = {}
+            rendered = render_rating_html(
+                payload,
+                cfg,
+                template_path=tpl,
+                prefilter=not args.no_prefilter,
+                tickets_root=args.tickets_root or None,
+                decisions_index=args.decisions_index or None,
+                decided_and_done=args.decided_and_done or None,
+                resolved_ids=args.resolved_id or None,
+                filter_report_out=report_box,
+            )
             atomic_write_text(Path(args.out).expanduser(), rendered)
+            if args.filter_report and report_box:
+                _write_filter_report(
+                    Path(args.filter_report).expanduser(),
+                    str(payload.get("run_id") or ""),
+                    report_box,
+                )
+            return 0
+
+        if args.command == "prefilter":
+            input_path = Path(args.input).expanduser()
+            payload = json.loads(input_path.read_text(encoding="utf-8"))
+            if not isinstance(payload, dict) or not isinstance(payload.get("entries"), list):
+                raise ValueError("input must be a JSON object with an 'entries' list")
+            report = prefilter_items(
+                payload["entries"],
+                tickets_root=args.tickets_root or None,
+                decisions_index=args.decisions_index or None,
+                decided_and_done=args.decided_and_done or None,
+                resolved_ids=args.resolved_id or None,
+            )
+            if args.filter_report:
+                _write_filter_report(Path(args.filter_report).expanduser(), str(payload.get("run_id") or ""), report)
+            if not report["kept"]:
+                raise ValueError("all entries were filtered out by prefilter")
+            out_payload = copy.deepcopy(payload)
+            out_payload["entries"] = report["kept"]
+            validated = validate_input_payload(out_payload)
+            atomic_write_text(Path(args.out).expanduser(), json.dumps(validated, ensure_ascii=False, indent=2) + "\n")
             return 0
 
         if args.command == "import-feedback":

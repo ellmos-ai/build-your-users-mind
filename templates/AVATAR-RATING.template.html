@@ -5,56 +5,149 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>__PAGE_TITLE__</title>
 <style>
-:root{--bg:#fafaf7;--fg:#1d1d1b;--mut:#6b6b66;--line:#ddd9cf;--acc:#2f6f4f;--card:#fff;--warn-bg:#fdf3e0;--warn-fg:#7a4f01;--warn-line:#e2c07d;--rec:#b42318}
-@media (prefers-color-scheme:dark){:root{--bg:#1a1a18;--fg:#eceae4;--mut:#a3a199;--line:#3a3934;--acc:#7fc29b;--card:#23231f;--warn-bg:#2a2317;--warn-fg:#f0c36d;--warn-line:#6e5626;--rec:#f97066}}
+:root{--bg:#fafaf7;--fg:#1d1d1b;--mut:#575650;--line:#d4d0c5;--acc:#1f5c3e;--acc-fg:#ffffff;--card:#ffffff;--active-bg:#edf6f1;--warn-bg:#fdf3e0;--warn-fg:#7a4f01;--warn-line:#e2c07d;--rec:#b42318}
+@media (prefers-color-scheme:dark){:root{--bg:#181816;--fg:#f0eee8;--mut:#b0aea6;--line:#3d3c36;--acc:#7fc29b;--acc-fg:#102419;--card:#22221e;--active-bg:#213229;--warn-bg:#2a2317;--warn-fg:#f0c36d;--warn-line:#6e5626;--rec:#f97066}}
 *,*::before,*::after{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,sans-serif;margin:0;padding:16px;max-width:1000px;margin-inline:auto}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,sans-serif;margin:0;padding:16px;max-width:1320px;margin-inline:auto}
+body[data-mode="cards"]{max-width:1000px}
 h1{font-size:22px;margin:0 0 6px}
-p.mut{color:var(--mut);margin:0 0 14px}
+p.mut{color:var(--mut);margin:0 0 12px}
 .mut{color:var(--mut)}
-.bar{position:sticky;top:0;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center;z-index:2}
-button{background:var(--acc);color:#fff;border:0;border-radius:6px;padding:8px 14px;font:inherit;cursor:pointer}
-button.sec{background:transparent;color:var(--acc);border:1px solid var(--acc)}
+.bar{position:sticky;top:0;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center;z-index:3}
+.mode-switch{display:inline-flex;gap:4px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+button{background:var(--acc);color:var(--acc-fg);border:1px solid var(--acc);border-radius:6px;padding:9px 14px;min-height:44px;min-width:44px;font:inherit;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+button.sec{background:transparent;color:var(--acc);border:1px solid var(--acc);font-weight:500}
+.mode-switch button{border-color:transparent}
+.mode-switch button.sec{color:var(--fg);border-color:transparent}
+.mode-switch button.active{background:var(--acc);color:var(--acc-fg);border-color:var(--acc)}
+button:focus-visible,textarea:focus-visible,.dict-item:focus-visible,.sc label:has(input:focus-visible){outline:2px solid var(--acc);outline-offset:2px}
 __VOICE_NOTICE_CSS__
+.dictation-layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,0.95fr);gap:18px;align-items:start;margin-top:12px}
+.dictation-list{max-height:calc(100vh - 148px);overflow-y:auto;padding-right:6px;display:flex;flex-direction:column;gap:10px}
+.dict-item{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color .12s,background-color .12s}
+.dict-item:hover{border-color:var(--acc)}
+.dict-item.active{border-color:var(--acc);background:var(--active-bg);box-shadow:inset 3px 0 0 var(--acc)}
+.dict-item-head{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:6px}
+.dict-nr{font-weight:700;color:var(--acc);font-size:15px}
+.mark-btn{padding:6px 12px;font-size:13px}
+.dict-context{margin:6px 0 4px}
+.dict-decision{margin:4px 0 0}
+.dictation-pane{position:sticky;top:76px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.dict-label{font-weight:700;font-size:15px;display:block}
+.dict-hint{font-size:13px;color:var(--mut);margin:0}
+#dictation-text{min-height:calc(100vh - 280px);height:440px;font-size:16px;line-height:1.55;padding:10px 12px}
+.dict-status{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;font-size:13px;padding-top:2px}
 .row{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0}
 .meta{color:var(--mut);font-size:12px;word-break:break-word}
 .c{margin:6px 0 3px}
 .d{margin:3px 0 10px}
-.sc{display:flex;gap:5px;flex-wrap:wrap}
-.sc label{border:1px solid var(--line);border-radius:5px;padding:4px 9px;cursor:pointer;min-width:28px;text-align:center;user-select:none}
-.sc input{display:none}
+.sc{display:flex;gap:6px;flex-wrap:wrap}
+.sc label{position:relative;border:1px solid var(--line);border-radius:6px;padding:8px 10px;cursor:pointer;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;text-align:center;user-select:none}
+.sc input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
 .sc input:checked+span{font-weight:700;color:var(--acc)}
-.sc label:has(input:checked){border-color:var(--acc)}
+.sc label:has(input:checked){border-color:var(--acc);background:var(--active-bg)}
 .note-area{margin-top:8px}
 .note-controls{display:flex;gap:8px;align-items:flex-start}
-textarea{width:100%;flex:1;min-width:0;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:6px 8px;font:inherit;min-height:38px;resize:vertical}
+textarea{width:100%;flex:1;min-width:0;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit;min-height:44px;resize:vertical}
 __VOICE_CSS__
-@media (max-width:600px){body{padding:12px}.sc label{padding:6px 10px;min-width:34px}button{padding:9px 13px}}
+@media (max-width:860px){body{padding:12px}.dictation-layout{grid-template-columns:1fr}.dictation-list{max-height:none;overflow-y:visible;padding-right:0}.dictation-pane{position:static}#dictation-text{height:280px;min-height:220px}}
 </style>
 </head>
-<body>
+<body data-mode="dictation">
 <h1 id="page-title"></h1>
 <p class="mut" id="page-desc"></p>
 __VOICE_NOTICE__
 <div class="bar">
+  <div class="mode-switch" role="group" aria-label="Bewertungsmodus">
+    <button type="button" id="mode-dictation" class="active" data-mode="dictation" aria-pressed="true">Diktatmodus</button>
+    <button type="button" id="mode-cards" class="sec" data-mode="cards" aria-pressed="false">Kartenmodus</button>
+  </div>
   <button type="button" id="save">Speichern</button>
-  <button type="button" class="sec" id="bulk">Alle unbewerteten auf 8</button>
+  <button type="button" class="sec" id="save-txt">TXT exportieren</button>
+  <button type="button" class="sec" id="bulk" hidden>Alle unbewerteten auf 8</button>
   <button type="button" class="sec" id="import">Antworten laden</button>
   <input type="file" id="import-file" accept=".json,application/json" hidden>
   <span class="mut" id="cnt"></span>
-  <span class="mut" id="saved" role="status"></span>
+  <span class="mut" id="saved" role="status" aria-live="polite"></span>
 </div>
-<div id="list"></div>
+<section id="dictation-view" class="dictation-layout" aria-label="Diktatmodus">
+  <div id="dictation-items" class="dictation-list" role="region" aria-label="Zu bewertende Posten">
+__DICTATION_ITEMS__
+  </div>
+  <div id="dictation-pane" class="dictation-pane">
+    <label for="dictation-text" class="dict-label">Fortlaufendes Diktat</label>
+    <p class="dict-hint">Links die Posten lesen und rechts frei mit Sprechpausen hineindiktieren. Ein Klick auf einen Posten hebt ihn hervor; „[#Nr] einfügen“ setzt optional eine Positionsmarke.</p>
+    <div class="note-area" id="dictation-note-area">
+      <div class="note-controls">
+        <textarea id="dictation-text" data-dictation="main" placeholder="Hier frei und fortlaufend hineindiktieren oder tippen …"></textarea>
+      </div>
+    </div>
+    <div class="dict-status mut" id="dictation-status">
+      <span id="dictation-counts">0 Wörter · 0 Zeichen</span>
+      <span id="dictation-saved" role="status" aria-live="polite">Automatische lokale Zwischenspeicherung aktiv</span>
+    </div>
+  </div>
+</section>
+<div id="list" aria-label="Kartenmodus" hidden></div>
 <script>
 const PAYLOAD=__RATING_PAYLOAD__;
 const rows=PAYLOAD.entries||[];
-const KEY="byum-avatar-rating:"+(PAYLOAD.run_id||"default");
+const LEGACY_KEY="byum-avatar-rating:"+(PAYLOAD.run_id||"default");
+const BATCH_SCOPE=(PAYLOAD.run_id||"default")+(PAYLOAD.batch_hash?":"+PAYLOAD.batch_hash:"");
+const KEY="byum-avatar-rating:"+BATCH_SCOPE;
+const DKEY="byum-avatar-rating-dictation:"+BATCH_SCOPE;
+const DSRC_KEY=DKEY+":source";
 let st={};
-try{st=JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){st={};}
+let dictationText="";
+let dictationSource="";
+let currentMode="dictation";
+try{
+  const raw=localStorage.getItem(KEY)||localStorage.getItem(LEGACY_KEY)||"{}";
+  st=JSON.parse(raw);
+  if(!st||typeof st!=="object"||Array.isArray(st))st={};
+}catch(e){st={};}
+try{
+  dictationText=localStorage.getItem(DKEY)||"";
+  dictationSource=localStorage.getItem(DSRC_KEY)||"";
+}catch(e){dictationText="";dictationSource="";}
 document.getElementById("page-title").textContent=PAYLOAD.title||"Avatar-Entscheidungen bewerten";
-document.getElementById("page-desc").textContent=PAYLOAD.description||"Bewerte jede Entscheidung von 0 bis 10 (10 = genau so entschieden, 0 = völlig daneben). Notizen sind optional. Mit „Alle unbewerteten auf 8“ übernimmst du offene Einträge und passt nur Abweichungen an. „Speichern“ lädt die Antwortdatei als JSON herunter.";
+document.getElementById("page-desc").textContent=PAYLOAD.description||"Standardmäßig ist der Diktatmodus geöffnet: links alle Posten mit Kontext und Avatar-Entscheidung, rechts ein durchgehendes Diktatfeld. Über den Umschalter wechselst du jederzeit ohne Datenverlust in den Kartenmodus (0–10 je Posten). „Speichern“ (JSON) und „TXT exportieren“ sichern beide Eingabewege gemeinsam.";
 const L=document.getElementById("list");
+const dictView=document.getElementById("dictation-view");
+const dictList=document.getElementById("dictation-items");
+const dictTa=document.getElementById("dictation-text");
+const dictCountsEl=document.getElementById("dictation-counts");
+const dictSavedEl=document.getElementById("dictation-saved");
+const modeDictBtn=document.getElementById("mode-dictation");
+const modeCardsBtn=document.getElementById("mode-cards");
+const bulkBtn=document.getElementById("bulk");
 function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function countWords(s){const t=String(s||"").trim();return t?t.split(/\s+/).length:0;}
+function updateDictationCounts(){
+  const txt=dictTa.value||"";
+  dictCountsEl.textContent=countWords(txt)+" Wörter · "+txt.length+" Zeichen";
+}
+if(!dictList.children.length){
+  rows.forEach((r,idx)=>{
+    const nr=r.nr??(idx+1);
+    const art=document.createElement("article");
+    art.className="dict-item";
+    art.id="dict-item-"+nr;
+    art.dataset.id=r.id;
+    art.dataset.nr=String(nr);
+    art.tabIndex=0;
+    const metaParts=[esc(r.id)];
+    if(r.ebene)metaParts.push(esc(r.ebene));
+    metaParts.push(esc(r.konfidenz));
+    metaParts.push("→ "+esc(r.ziel));
+    if(r.date)metaParts.push(esc(r.date));
+    art.innerHTML=`<div class="dict-item-head"><span class="dict-nr">#${nr}</span><span class="meta">${metaParts.join(" · ")}</span><button type="button" class="sec mark-btn" data-insert-mark="[#${nr}]" data-id="${esc(r.id)}" aria-label="Positionsmarke [#${nr}] in das Diktatfeld einfügen">[#${nr}] einfügen</button></div>`
+      +`<div class="dict-context"><b>Worum es ging:</b> ${esc(r.kontext)}</div>`
+      +`<div class="dict-decision"><b>Entscheidung des Avatars:</b> ${esc(r.entscheidung)}</div>`;
+    dictList.appendChild(art);
+  });
+}
 rows.forEach((r,idx)=>{
   const nr=r.nr??(idx+1);
   const d=document.createElement("div");
@@ -75,6 +168,71 @@ rows.forEach((r,idx)=>{
     +`<div class="note-area"><div class="note-controls"><textarea placeholder="Notiz (optional)" data-id="${esc(r.id)}"></textarea></div></div>`;
   L.appendChild(d);
 });
+function highlightDictItem(id){
+  dictList.querySelectorAll(".dict-item").forEach(el=>{
+    const active=el.dataset.id===id;
+    el.classList.toggle("active",active);
+    if(active)el.setAttribute("aria-current","true");
+    else el.removeAttribute("aria-current");
+  });
+}
+function insertMarkAtCursor(mark){
+  const cur=dictTa.value||"";
+  const start=typeof dictTa.selectionStart==="number"?dictTa.selectionStart:cur.length;
+  const end=typeof dictTa.selectionEnd==="number"?dictTa.selectionEnd:cur.length;
+  const before=cur.slice(0,start);
+  const after=cur.slice(end);
+  const prefix=(before.length>0&&!/\s$/.test(before))?"\n":"";
+  const suffix=(after.length>0&&!/^\s/.test(after))?" ":" ";
+  const token=prefix+mark+suffix;
+  dictTa.value=before+token+after;
+  const nextPos=before.length+token.length;
+  try{dictTa.focus({preventScroll:true});dictTa.setSelectionRange(nextPos,nextPos);}catch(e){}
+  dictationText=dictTa.value;
+  if(!dictationSource)dictationSource="text";
+  updateDictationCounts();
+  persist();
+}
+dictList.addEventListener("click",e=>{
+  const markBtn=e.target.closest("[data-insert-mark]");
+  if(markBtn){
+    e.stopPropagation();
+    highlightDictItem(markBtn.dataset.id||"");
+    insertMarkAtCursor(markBtn.dataset.insertMark);
+    return;
+  }
+  const item=e.target.closest(".dict-item");
+  if(!item)return;
+  const sel=typeof window.getSelection==="function"?String(window.getSelection()||""):"";
+  highlightDictItem(item.dataset.id||"");
+  if(!sel){
+    try{dictTa.focus({preventScroll:true});}catch(err){}
+  }
+});
+dictList.addEventListener("keydown",e=>{
+  if(e.target.classList&&e.target.classList.contains("dict-item")&&(e.key==="Enter"||e.key===" ")){
+    e.preventDefault();
+    highlightDictItem(e.target.dataset.id||"");
+    try{dictTa.focus({preventScroll:true});}catch(err){}
+  }
+});
+function setMode(mode){
+  currentMode=mode==="cards"?"cards":"dictation";
+  document.body.dataset.mode=currentMode;
+  const isDict=currentMode==="dictation";
+  dictView.hidden=!isDict;
+  L.hidden=isDict;
+  bulkBtn.hidden=isDict;
+  modeDictBtn.classList.toggle("active",isDict);
+  modeDictBtn.classList.toggle("sec",!isDict);
+  modeDictBtn.setAttribute("aria-pressed",isDict?"true":"false");
+  modeCardsBtn.classList.toggle("active",!isDict);
+  modeCardsBtn.classList.toggle("sec",isDict);
+  modeCardsBtn.setAttribute("aria-pressed",isDict?"false":"true");
+  cnt();
+}
+modeDictBtn.onclick=()=>setMode("dictation");
+modeCardsBtn.onclick=()=>setMode("cards");
 // Durable copy: when the page is served by the loopback bridge, every change is also stored
 // there as a file (same origin only). file:// pages keep localStorage plus export/import.
 // On load the newer of both wins.
@@ -82,17 +240,20 @@ const STORE=location.protocol.startsWith("http")?"/ratings":"";
 const STORE_URL=STORE?STORE+"/"+encodeURIComponent(PAYLOAD.run_id||"default"):"";
 const TKEY=KEY+":saved_at";
 let localAt="";
-try{localAt=localStorage.getItem(TKEY)||"";}catch(e){}
+try{localAt=localStorage.getItem(TKEY)||localStorage.getItem(LEGACY_KEY+":saved_at")||"";}catch(e){}
 const savedEl=document.getElementById("saved");
 function hhmm(iso){return new Date(iso).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});}
 function showSaved(where,iso){
-  savedEl.textContent=where==="file"?"gespeichert um "+hhmm(iso)
+  const msg=where==="file"?"gespeichert um "+hhmm(iso)
     :"nur im Browser gespeichert ("+hhmm(iso)+") – zwischendurch „Speichern“ als Sicherung";
+  savedEl.textContent=msg;
+  dictSavedEl.textContent=where==="file"?"Gespeichert ("+hhmm(iso)+")"
+    :"Gespeichert im Browser ("+hhmm(iso)+")";
 }
 let pushTimer=null;
 async function pushStore(){
   try{
-    const res=await fetch(STORE_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({state:st})});
+    const res=await fetch(STORE_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({state:st,dictation:dictationText})});
     const data=await res.json().catch(()=>({}));
     if(!res.ok||!data.ok)throw new Error(data.error||("HTTP "+res.status));
     localAt=data.saved_at;
@@ -102,14 +263,21 @@ async function pushStore(){
 }
 function persist(){
   localAt=new Date().toISOString();
-  try{localStorage.setItem(KEY,JSON.stringify(st));localStorage.setItem(TKEY,localAt);}catch(e){}
+  try{
+    localStorage.setItem(KEY,JSON.stringify(st));
+    localStorage.setItem(DKEY,dictationText);
+    if(dictationSource)localStorage.setItem(DSRC_KEY,dictationSource);
+    localStorage.setItem(TKEY,localAt);
+  }catch(e){}
   cnt();
   showSaved("browser",localAt);
   if(STORE_URL){clearTimeout(pushTimer);pushTimer=setTimeout(pushStore,500);}
 }
 function cnt(){
   const rated=rows.filter(r=>st[r.id]&&st[r.id].s!==undefined&&st[r.id].s!==null).length;
-  document.getElementById("cnt").textContent=rated+" von "+rows.length+" bewertet";
+  const words=countWords(dictationText);
+  const base=rated+" von "+rows.length+" bewertet";
+  document.getElementById("cnt").textContent=words>0?(base+" · Diktat: "+words+" Wörter"):base;
 }
 function applyState(){
   L.querySelectorAll('input[type="radio"]').forEach(i=>{i.checked=false;});
@@ -125,9 +293,12 @@ function applyState(){
       if(ta)ta.value=v.note;
     }
   });
+  dictTa.value=dictationText||"";
+  updateDictationCounts();
   cnt();
 }
 applyState();
+setMode("dictation");
 if(!STORE_URL)savedEl.textContent="Nur im Browser gespeichert. Dauerhaft speichert die Seite, wenn sie über den lokalen Dienst geöffnet ist; sonst zwischendurch „Speichern“.";
 async function loadStore(){
   if(!STORE_URL)return;
@@ -135,17 +306,29 @@ async function loadStore(){
     const res=await fetch(STORE_URL);
     const data=await res.json();
     if(!res.ok||!data.ok)throw new Error(data.error||("HTTP "+res.status));
-    if(data.state&&(!localAt||data.saved_at>localAt)){
-      st=data.state;localAt=data.saved_at;
-      try{localStorage.setItem(KEY,JSON.stringify(st));localStorage.setItem(TKEY,localAt);}catch(e){}
+    if((data.state||typeof data.dictation==="string")&&(!localAt||data.saved_at>localAt)){
+      if(data.state)st=data.state;
+      if(typeof data.dictation==="string")dictationText=data.dictation;
+      localAt=data.saved_at;
+      try{
+        localStorage.setItem(KEY,JSON.stringify(st));
+        localStorage.setItem(DKEY,dictationText);
+        localStorage.setItem(TKEY,localAt);
+      }catch(e){}
       applyState();
       showSaved("file",data.saved_at);
-    }else if(Object.keys(st).length){
+    }else if(Object.keys(st).length||dictationText.length){
       pushStore();
     }
   }catch(e){if(localAt)showSaved("browser",localAt);}
 }
 loadStore();
+dictTa.addEventListener("input",()=>{
+  dictationText=dictTa.value;
+  if(!dictationSource)dictationSource="text";
+  updateDictationCounts();
+  persist();
+});
 const importFile=document.getElementById("import-file");
 document.getElementById("import").onclick=()=>importFile.click();
 importFile.onchange=async()=>{
@@ -162,8 +345,12 @@ importFile.onchange=async()=>{
       if(typeof r.note==="string"&&r.note.trim()){cur.note=r.note;if(r.note_source==="voice"||r.note_source==="text")cur.note_source=r.note_source;}
       st[r.id]=cur;n++;
     }
+    if(typeof data.dictation==="string"&&data.dictation.length>0){
+      dictationText=data.dictation;
+      if(data.dictation_source==="voice"||data.dictation_source==="text")dictationSource=data.dictation_source;
+    }
     applyState();persist();
-    savedEl.textContent=n+" Antworten geladen.";
+    savedEl.textContent=n+" Antworten geladen"+(dictationText?" (inkl. Diktat)":"")+".";
   }catch(e){savedEl.textContent="Datei nicht lesbar: "+(e&&e.message?e.message:String(e));}
   importFile.value="";
 };
@@ -182,7 +369,7 @@ L.addEventListener("input",e=>{
     persist();
   }
 });
-document.getElementById("bulk").onclick=()=>{
+bulkBtn.onclick=()=>{
   rows.forEach(r=>{
     if(!st[r.id]||st[r.id].s===undefined||st[r.id].s===null){
       st[r.id]=Object.assign(st[r.id]||{},{s:8});
@@ -192,11 +379,13 @@ document.getElementById("bulk").onclick=()=>{
   });
   persist();
 };
-document.getElementById("save").onclick=()=>{
+function buildResponsePayload(){
   const out={
     schema:"byum.avatar-rating-response.v1",
     run_id:PAYLOAD.run_id,
     saved_at:new Date().toISOString(),
+    mode:currentMode,
+    dictation:dictTa.value||"",
     ratings:rows.map((r,idx)=>{
       const cur=st[r.id]||{};
       const entry={
@@ -212,9 +401,48 @@ document.getElementById("save").onclick=()=>{
       return entry;
     })
   };
+  if(dictationSource==="voice"||dictationSource==="text"){
+    out.dictation_source=dictationSource;
+  }
+  return out;
+}
+function buildTxtExport(resp){
+  const lines=[
+    "# "+(PAYLOAD.title||"Avatar-Entscheidungen bewerten"),
+    "Run-ID: "+(resp.run_id||""),
+    "Gespeichert: "+resp.saved_at,
+    "Aktiver Modus: "+resp.mode,
+    "",
+    "=== DIKTAT ===",
+    (resp.dictation&&resp.dictation.trim())?resp.dictation.trim():"(kein Diktattext)",
+    "",
+    "=== POSTEN & KARTEN-BEWERTUNGEN ==="
+  ];
+  rows.forEach((r,idx)=>{
+    const nr=r.nr??(idx+1);
+    const cur=st[r.id]||{};
+    const sc=(cur.s!==undefined&&cur.s!==null)?(cur.s+"/10"):"offen";
+    lines.push(`[#${nr}] ${r.id} (Karten-Bewertung: ${sc})`);
+    lines.push(`  Worum es ging: ${r.kontext||""}`);
+    lines.push(`  Entscheidung des Avatars: ${r.entscheidung||""}`);
+    if(cur.note&&cur.note.trim())lines.push(`  Karten-Notiz: ${cur.note.trim()}`);
+    lines.push("");
+  });
+  return lines.join("\n");
+}
+document.getElementById("save").onclick=()=>{
+  const out=buildResponsePayload();
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:"application/json"}));
   a.download=(PAYLOAD.run_id||"avatar-rating")+"-response.json";
+  a.click();
+};
+document.getElementById("save-txt").onclick=()=>{
+  const out=buildResponsePayload();
+  const txt=buildTxtExport(out);
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain;charset=utf-8"}));
+  a.download=(PAYLOAD.run_id||"avatar-rating")+"-response.txt";
   a.click();
 };
 cnt();

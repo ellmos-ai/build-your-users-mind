@@ -550,5 +550,627 @@ class RemoteSttTests(unittest.TestCase):
             self.assertFalse(stt_server.is_loopback_client(addr), addr)
 
 
+class _DomInspector:
+    """Lightweight stdlib HTMLParser collector for structural DOM assertions."""
+
+    def __init__(self, raw_html: str) -> None:
+        from html.parser import HTMLParser
+
+        outer = self
+        outer.elements: list[dict[str, object]] = []
+        outer.scripts: list[str] = []
+
+        class _P(HTMLParser):
+            def __init__(self) -> None:
+                super().__init__()
+                self._stack: list[dict[str, object]] = []
+                self._in_script = False
+                self._script_buf: list[str] = []
+
+            def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+                attr_map = {k: ("" if v is None else v) for k, v in attrs}
+                node: dict[str, object] = {
+                    "tag": tag,
+                    "attrs": attr_map,
+                    "text": [],
+                    "parent_ids": [
+                        str(p["attrs"].get("id"))  # type: ignore[index]
+                        for p in self._stack
+                        if p["attrs"].get("id")  # type: ignore[index]
+                    ],
+                }
+                outer.elements.append(node)
+                self._stack.append(node)
+                if tag == "script":
+                    self._in_script = True
+                    self._script_buf = []
+
+            def handle_endtag(self, tag: str) -> None:
+                if tag == "script" and self._in_script:
+                    outer.scripts.append("".join(self._script_buf))
+                    self._in_script = False
+                for idx in range(len(self._stack) - 1, -1, -1):
+                    if self._stack[idx]["tag"] == tag:
+                        self._stack.pop(idx)
+                        break
+
+            def handle_data(self, data: str) -> None:
+                if self._in_script:
+                    self._script_buf.append(data)
+                for ancestor in self._stack:
+                    ancestor["text"].append(data)  # type: ignore[index]
+
+        parser = _P()
+        parser.feed(raw_html)
+
+    def by_id(self, elem_id: str) -> dict[str, object]:
+        for el in self.elements:
+            if el["attrs"].get("id") == elem_id:  # type: ignore[index]
+                return el
+        raise AssertionError(f"Missing element with id={elem_id!r}")
+
+
+class DictationModeDomAndAccessibilityTests(unittest.TestCase):
+    def test_dictation_mode_is_default_with_split_screen_dom_and_zero_external_egress(self) -> None:
+        html_out = rf.render_rating_html(sample_input(), {"voice": {"enabled": False}})
+        dom = _DomInspector(html_out)
+
+        bodies = [el for el in dom.elements if el["tag"] == "body"]
+        self.assertEqual(len(bodies), 1)
+        self.assertEqual(bodies[0]["attrs"].get("data-mode"), "dictation")  # type: ignore[index]
+
+        mode_dict = dom.by_id("mode-dictation")
+        mode_cards = dom.by_id("mode-cards")
+        self.assertEqual(mode_dict["attrs"].get("aria-pressed"), "true")  # type: ignore[index]
+        self.assertEqual(mode_cards["attrs"].get("aria-pressed"), "false")  # type: ignore[index]
+
+        dict_view = dom.by_id("dictation-view")
+        cards_view = dom.by_id("list")
+        self.assertNotIn("hidden", dict_view["attrs"])  # type: ignore[index]
+        self.assertIn("hidden", cards_view["attrs"])  # type: ignore[index]
+
+        # Left column: numbered items with context + avatar decision + marker button
+        left_items = [
+            el
+            for el in dom.elements
+            if el["tag"] == "article" and "dictation-items" in el["parent_ids"]  # type: ignore[operator]
+        ]
+        self.assertEqual(len(left_items), 2)
+        first_text = "".join(left_items[0]["text"])  # type: ignore[arg-type]
+        self.assertIn("#1", first_text)
+        self.assertIn("Worum es ging:", first_text)
+        self.assertIn("An operator requested a dry-run before writing files.", first_text)
+        self.assertIn("Entscheidung des Avatars:", first_text)
+        self.assertIn("Run dry-run first and preview the output path.", first_text)
+
+        # Right column: exactly one continuous dictation textarea + status bar
+        right_textareas = [
+            el
+            for el in dom.elements
+            if el["tag"] == "textarea" and "dictation-pane" in el["parent_ids"]  # type: ignore[operator]
+        ]
+        self.assertEqual(len(right_textareas), 1)
+        self.assertEqual(right_textareas[0]["attrs"].get("id"), "dictation-text")  # type: ignore[index]
+        self.assertEqual(dom.by_id("dictation-saved")["attrs"].get("role"), "status")  # type: ignore[index]
+        self.assertIn("0 Wörter · 0 Zeichen", "".join(dom.by_id("dictation-counts")["text"]))  # type: ignore[arg-type]
+
+        # P-022 tap target (>= 44px), keyboard focus, and zero external URLs
+        self.assertIn("min-height:44px;min-width:44px", html_out)
+        self.assertIn(":focus-visible", html_out)
+        for el in dom.elements:
+            attrs = el["attrs"]  # type: ignore[assignment]
+            for url_attr in ("src", "href", "action"):
+                val = str(attrs.get(url_attr) or "")  # type: ignore[union-attr]
+                self.assertFalse(val.startswith(("http://", "https://", "//")), f"External URL found: {val}")
+
+
+class DictationModeHeadlessJsBehaviorTests(unittest.TestCase):
+    def test_mode_switch_markers_autosave_export_and_import_preserve_all_inputs(self) -> None:
+        import os
+        import shutil
+        import subprocess
+
+        node_exe = shutil.which("node")
+        if not node_exe:
+            self.skipTest("node is not installed")
+
+        html_one = rf.render_rating_html(sample_input(), {"voice": {"enabled": False}})
+        other_batch = sample_input()
+        other_batch["run_id"] = "synthetic-rating-run-2"
+        html_two = rf.render_rating_html(other_batch, {"voice": {"enabled": False}})
+
+        script_one = _DomInspector(html_one).scripts[0]
+        script_two = _DomInspector(html_two).scripts[0]
+
+        harness = r"""
+const fs = require("fs");
+const vm = require("vm");
+
+function createEnv(sharedStorage) {
+  const downloads = [];
+  const elementsById = new Map();
+  const allElements = [];
+
+  class FakeClassList {
+    constructor(owner) { this.owner = owner; this.set = new Set(); }
+    _syncFromAttr(v) { this.set = new Set(String(v || "").split(/\s+/).filter(Boolean)); }
+    _writeAttr() { this.owner.className = Array.from(this.set).join(" "); }
+    add(...names) { names.forEach(n => this.set.add(n)); this._writeAttr(); }
+    remove(...names) { names.forEach(n => this.set.delete(n)); this._writeAttr(); }
+    toggle(name, force) {
+      const on = force === undefined ? !this.set.has(name) : Boolean(force);
+      if (on) this.set.add(name); else this.set.delete(name);
+      this._writeAttr();
+      return on;
+    }
+    contains(name) { return this.set.has(name); }
+  }
+
+  class FakeElement {
+    constructor(tag, id = "") {
+      this.tagName = tag.toUpperCase();
+      this._id = "";
+      this._className = "";
+      this.classList = new FakeClassList(this);
+      this.dataset = {};
+      this.attrs = {};
+      this.children = [];
+      this.parentElement = null;
+      this.hidden = false;
+      this.checked = false;
+      this.value = "";
+      this.textContent = "";
+      this.type = "";
+      this.download = "";
+      this.href = "";
+      this.files = [];
+      this.selectionStart = 0;
+      this.selectionEnd = 0;
+      this.listeners = {};
+      this.onclick = null;
+      this.onchange = null;
+      allElements.push(this);
+      if (id) this.id = id;
+    }
+    get id() { return this._id; }
+    set id(v) {
+      this._id = String(v || "");
+      if (this._id) elementsById.set(this._id, this);
+    }
+    get className() { return this._className; }
+    set className(v) {
+      this._className = String(v || "");
+      this.classList.set = new Set(this._className.split(/\s+/).filter(Boolean));
+    }
+    setAttribute(k, v) {
+      this.attrs[k] = String(v);
+      if (k === "id") this.id = v;
+      if (k === "class") this.className = v;
+      if (k.startsWith("data-")) {
+        const camel = k.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+        this.dataset[camel] = String(v);
+      }
+    }
+    getAttribute(k) { return this.attrs[k] ?? null; }
+    removeAttribute(k) { delete this.attrs[k]; }
+    appendChild(child) { child.parentElement = this; this.children.push(child); return child; }
+    addEventListener(ev, fn) { (this.listeners[ev] ||= []).push(fn); }
+    dispatch(ev, detail = {}) {
+      const event = Object.assign({ target: this, preventDefault(){}, stopPropagation(){ event._stopped = true; } }, detail);
+      let cur = this;
+      while (cur) {
+        for (const fn of (cur.listeners[ev] || [])) fn(event);
+        if (event._stopped) break;
+        cur = cur.parentElement;
+      }
+    }
+    click() {
+      if (typeof this.onclick === "function") this.onclick({ target: this, preventDefault(){}, stopPropagation(){} });
+      if (this.tagName === "A" && this.download) {
+        downloads.push({ filename: this.download, content: this.href });
+      }
+      this.dispatch("click");
+    }
+    focus() {}
+    setSelectionRange(a, b) { this.selectionStart = a; this.selectionEnd = b; }
+    closest(sel) {
+      let cur = this;
+      while (cur) {
+        if (matches(cur, sel)) return cur;
+        cur = cur.parentElement;
+      }
+      return null;
+    }
+    set innerHTML(htmlStr) {
+      this.children = [];
+      // Parse radios, textareas, and mark buttons created by template JS
+      const radioRe = /<input type="radio" name="([^"]+)" data-id="([^"]+)" value="(\d+)">/g;
+      let m;
+      while ((m = radioRe.exec(htmlStr)) !== null) {
+        const inp = new FakeElement("input");
+        inp.type = "radio";
+        inp.name = m[1];
+        inp.dataset.id = m[2];
+        inp.value = m[3];
+        this.appendChild(inp);
+      }
+      const taRe = /<textarea[^>]*data-id="([^"]+)"[^>]*><\/textarea>/g;
+      while ((m = taRe.exec(htmlStr)) !== null) {
+        const ta = new FakeElement("textarea");
+        ta.dataset.id = m[1];
+        this.appendChild(ta);
+      }
+    }
+    querySelectorAll(sel) {
+      const out = [];
+      function walk(node) {
+        for (const ch of node.children) {
+          if (matches(ch, sel)) out.push(ch);
+          walk(ch);
+        }
+      }
+      walk(this);
+      return out;
+    }
+    querySelector(sel) { return this.querySelectorAll(sel)[0] || null; }
+  }
+
+  function matches(el, sel) {
+    if (sel === 'input[type="radio"]') return el.tagName === "INPUT" && el.type === "radio";
+    if (sel === "textarea") return el.tagName === "TEXTAREA";
+    if (sel === ".dict-item") return el.classList.contains("dict-item");
+    if (sel === "[data-insert-mark]") return Boolean(el.dataset.insertMark);
+    const radioMatch = /^input\[type="radio"\]\[data-id="([^"]+)"\]\[value="([^"]+)"\]$/.exec(sel);
+    if (radioMatch) return el.tagName === "INPUT" && el.type === "radio" && el.dataset.id === radioMatch[1] && el.value === radioMatch[2];
+    const taMatch = /^textarea\[data-id="([^"]+)"\]$/.exec(sel);
+    if (taMatch) return el.tagName === "TEXTAREA" && el.dataset.id === taMatch[1];
+    return false;
+  }
+
+  const body = new FakeElement("body");
+  body.dataset.mode = "dictation";
+  ["page-title", "page-desc", "cnt", "saved", "dictation-counts", "dictation-saved"].forEach(id => body.appendChild(new FakeElement("span", id)));
+  ["mode-dictation", "mode-cards", "save", "save-txt", "bulk", "import"].forEach(id => body.appendChild(new FakeElement("button", id)));
+  body.appendChild(new FakeElement("input", "import-file"));
+  const dictView = body.appendChild(new FakeElement("section", "dictation-view"));
+  const dictItems = dictView.appendChild(new FakeElement("div", "dictation-items"));
+  // Seed pre-rendered dictation items matching Python _render_dictation_items_html
+  for (const [nr, id] of [[1, "DEC-001"], [2, "DEC-002"]]) {
+    const art = new FakeElement("article", "dict-item-" + nr);
+    art.className = "dict-item";
+    art.dataset.id = id;
+    art.dataset.nr = String(nr);
+    const btn = new FakeElement("button");
+    btn.className = "sec mark-btn";
+    btn.dataset.insertMark = "[#" + nr + "]";
+    btn.dataset.id = id;
+    art.appendChild(btn);
+    dictItems.appendChild(art);
+  }
+  const dictPane = dictView.appendChild(new FakeElement("div", "dictation-pane"));
+  const dictTa = dictPane.appendChild(new FakeElement("textarea", "dictation-text"));
+  const list = body.appendChild(new FakeElement("div", "list"));
+  list.hidden = true;
+
+  const blobs = new Map();
+  let blobSeq = 0;
+  const sandbox = {
+    document: {
+      body,
+      getElementById: id => elementsById.get(id) || null,
+      createElement: tag => new FakeElement(tag),
+      querySelectorAll: sel => body.querySelectorAll(sel),
+    },
+    window: { getSelection: () => "" },
+    location: { protocol: "file:" },
+    localStorage: {
+      getItem: k => (sharedStorage.has(k) ? sharedStorage.get(k) : null),
+      setItem: (k, v) => sharedStorage.set(k, String(v)),
+    },
+    CSS: { escape: s => String(s) },
+    Blob: class { constructor(parts, opts) { this.text = parts.join(""); this.type = (opts && opts.type) || ""; } },
+    URL: {
+      createObjectURL: blob => { const u = "blob:" + (++blobSeq); blobs.set(u, blob.text); return u; },
+    },
+    setTimeout,
+    clearTimeout,
+    Date,
+    JSON,
+    Number,
+    String,
+    Object,
+    Array,
+    Set,
+  };
+  return { sandbox, elementsById, downloads, blobs };
+}
+
+const scriptOne = fs.readFileSync(process.argv[2], "utf8");
+const scriptTwo = fs.readFileSync(process.argv[3], "utf8");
+const storage = new Map();
+
+// 1. Open batch 1 -> default is dictation mode
+const env1 = createEnv(storage);
+vm.runInNewContext(scriptOne, env1.sandbox);
+const e1 = id => env1.elementsById.get(id);
+if (env1.sandbox.document.body.dataset.mode !== "dictation") throw new Error("Expected dictation default");
+if (e1("dictation-view").hidden || !e1("list").hidden) throw new Error("Visibility mismatch in default mode");
+
+// 2. Click [#1] marker, dictate continuous text with pauses, click [#2] marker
+const mark1 = e1("dict-item-1").children[0];
+mark1.click();
+const ta = e1("dictation-text");
+ta.value += "Erster Posten passt genau so.";
+ta.selectionStart = ta.selectionEnd = ta.value.length;
+ta.dispatch("input");
+const mark2 = e1("dict-item-2").children[0];
+mark2.click();
+ta.value += "Hier bitte vorab nachfragen.";
+ta.selectionStart = ta.selectionEnd = ta.value.length;
+ta.dispatch("input");
+
+// 3. Switch to cards mode -> score DEC-001 = 9 + card note -> switch back to dictation -> zero loss!
+e1("mode-cards").click();
+if (e1("dictation-view").hidden !== true || e1("list").hidden !== false) throw new Error("Cards mode toggle failed");
+const radio9 = e1("list").querySelector('input[type="radio"][data-id="DEC-001"][value="9"]');
+radio9.checked = true;
+radio9.dispatch("change");
+const cardTa1 = e1("list").querySelector('textarea[data-id="DEC-001"]');
+cardTa1.value = "Einzelnotiz bleibt erhalten";
+cardTa1.dispatch("input");
+
+e1("mode-dictation").click();
+if (e1("dictation-view").hidden !== false || e1("list").hidden !== true) throw new Error("Return to dictation failed");
+
+// 4. Open batch 2 in same localStorage -> must not overwrite or collide with batch 1
+const env2 = createEnv(storage);
+vm.runInNewContext(scriptTwo, env2.sandbox);
+if (env2.elementsById.get("dictation-text").value !== "") throw new Error("Storage key collision across batches");
+
+// 5. Export JSON and TXT from batch 1
+e1("save").click();
+e1("save-txt").click();
+const jsonRaw = env1.blobs.get(env1.downloads[0].content);
+const txtRaw = env1.blobs.get(env1.downloads[1].content);
+
+// 6. Re-import JSON into a clean storage session and verify full roundtrip
+const cleanStorage = new Map();
+const env3 = createEnv(cleanStorage);
+vm.runInNewContext(scriptOne, env3.sandbox);
+const imp = env3.elementsById.get("import-file");
+imp.files = [{ text: async () => jsonRaw }];
+(async () => {
+  await imp.onchange();
+  console.log(JSON.stringify({
+    exportedJson: JSON.parse(jsonRaw),
+    exportedTxt: txtRaw,
+    countsText: e1("dictation-counts").textContent,
+    activeAttr2: e1("dict-item-2").getAttribute("aria-current"),
+    reimportedDictation: env3.elementsById.get("dictation-text").value,
+    reimportedCardNote: env3.elementsById.get("list").querySelector('textarea[data-id="DEC-001"]').value,
+    reimportedScoreChecked: env3.elementsById.get("list").querySelector('input[type="radio"][data-id="DEC-001"][value="9"]').checked,
+  }));
+})();
+"""
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            s1_path = base / "s1.js"
+            s2_path = base / "s2.js"
+            h_path = base / "harness.js"
+            s1_path.write_text(script_one, encoding="utf-8")
+            s2_path.write_text(script_two, encoding="utf-8")
+            h_path.write_text(harness, encoding="utf-8")
+            creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+            proc = subprocess.run(
+                [node_exe, str(h_path), str(s1_path), str(s2_path)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                timeout=15,
+                check=True,
+                creationflags=creationflags,
+            )
+
+        res = json.loads(proc.stdout.strip())
+        exported = res["exportedJson"]
+        validated = rf.validate_response_payload(exported)
+        self.assertEqual(validated["mode"], "dictation")
+        self.assertIn("[#1] Erster Posten passt genau so.", validated["dictation"])
+        self.assertIn("[#2] Hier bitte vorab nachfragen.", validated["dictation"])
+        self.assertEqual(validated["ratings"][0]["score"], 9)
+        self.assertEqual(validated["ratings"][0]["note"], "Einzelnotiz bleibt erhalten")
+        self.assertIsNone(validated["ratings"][1]["score"])
+
+        self.assertIn("=== DIKTAT ===", res["exportedTxt"])
+        self.assertIn("[#1] Erster Posten passt genau so.", res["exportedTxt"])
+        self.assertIn("=== POSTEN & KARTEN-BEWERTUNGEN ===", res["exportedTxt"])
+        self.assertIn("Karten-Bewertung: 9/10", res["exportedTxt"])
+        self.assertIn("Karten-Notiz: Einzelnotiz bleibt erhalten", res["exportedTxt"])
+        self.assertEqual(res["activeAttr2"], "true")
+        self.assertIn("Wörter", res["countsText"])
+        self.assertEqual(res["reimportedDictation"], validated["dictation"])
+        self.assertEqual(res["reimportedCardNote"], "Einzelnotiz bleibt erhalten")
+        self.assertTrue(res["reimportedScoreChecked"])
+
+    def test_dictation_response_converts_to_feedback_markdown_and_bridge_store(self) -> None:
+        resp = sample_response()
+        resp["mode"] = "dictation"
+        resp["dictation"] = "[#1] Genau richtig entschieden.\n[#2] Bitte vorher nachfragen."
+        resp["dictation_source"] = "text"
+        md = rf.response_to_feedback_markdown(resp)
+        self.assertIn("## Dictation Feedback (2026-11-21)", md)
+        self.assertIn("[#1] Genau richtig entschieden.", md)
+        fb = sp.parse_feedback(md)
+        self.assertEqual(fb[("2026-11-21", "dec-001")], "hit")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            store_dir = Path(tmp)
+            rf.store_rating_state(store_dir, "run-dict-1", {"DEC-001": {"s": 8}}, dictation="Fortlaufender Text")
+            loaded = rf.load_rating_state(store_dir, "run-dict-1")
+            self.assertEqual(loaded["dictation"], "Fortlaufender Text")
+            self.assertEqual(loaded["state"]["DEC-001"]["s"], 8)
+
+
+class PrefilterReadbackTests(unittest.TestCase):
+    def test_prefilter_drops_empty_context_solved_done_tickets_and_resolved_decisions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            tickets_root = base / "tickets"
+            (tickets_root / "SOLVED").mkdir(parents=True)
+            (tickets_root / "DONE").mkdir(parents=True)
+            (tickets_root / "OPEN").mkdir(parents=True)
+            (tickets_root / "SOLVED" / "T-20261110-100000001_already-fixed.md").write_text("solved", encoding="utf-8")
+            (tickets_root / "DONE" / "T-20261112-200000002.txt").write_text("done", encoding="utf-8")
+            (tickets_root / "OPEN" / "T-20261125-300000003.md").write_text("open", encoding="utf-8")
+
+            decisions_dir = base / "decisions"
+            (decisions_dir / "_tools").mkdir(parents=True)
+            decisions_index_path = decisions_dir / "_tools" / "decisions.index.json"
+            decisions_index_path.write_text(
+                json.dumps(
+                    {
+                        "schema": "decisions.index/1",
+                        "entries": [
+                            {"id": "D-20261101-001", "domain": "done", "status_class": "DONE"},
+                            {"id": "D-20261125-009", "domain": "active", "status_class": "OFFEN", "decision_ready": True},
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            decided_md = decisions_dir / "DECIDED-AND-DONE.md"
+            decided_md.write_text("## D-20261105-002 — Archived policy\nSTATUS: DONE 2026-11-06\n", encoding="utf-8")
+
+            raw_entries = [
+                {
+                    "nr": 1,
+                    "id": "ITEM-EMPTY-CTX",
+                    "kontext": "   ",
+                    "entscheidung": "Some avatar choice.",
+                    "konfidenz": "🟡",
+                    "ziel": "USER",
+                },
+                {
+                    "nr": 2,
+                    "id": "ITEM-PLACEHOLDER-DEC",
+                    "kontext": "Valid operator question with full background.",
+                    "entscheidung": "TBD",
+                    "konfidenz": "🟡",
+                    "ziel": "USER",
+                },
+                {
+                    "nr": 3,
+                    "id": "T-20261110-100000001",
+                    "kontext": "Question whose ticket was already solved.",
+                    "entscheidung": "Apply default.",
+                    "konfidenz": "🟢",
+                    "ziel": "ACTIONABLE",
+                },
+                {
+                    "nr": 4,
+                    "id": "AV-034",
+                    "kontext": "Follow-up for ticket T-20261112-200000002 in batch.",
+                    "entscheidung": "Keep local-only mode.",
+                    "konfidenz": "🟡",
+                    "ziel": "ACTIONABLE",
+                },
+                {
+                    "nr": 5,
+                    "id": "D-20261101-001",
+                    "kontext": "Decision already marked DONE in decisions.index.json.",
+                    "entscheidung": "Option A.",
+                    "konfidenz": "🟢",
+                    "ziel": "USER",
+                },
+                {
+                    "nr": 6,
+                    "id": "AV-036",
+                    "kontext": "References D-20261105-002 from DECIDED-AND-DONE.md.",
+                    "entscheidung": "Option B.",
+                    "konfidenz": "🟡",
+                    "ziel": "USER",
+                },
+                {
+                    "nr": 7,
+                    "id": "MANUAL-RESOLVED-7",
+                    "kontext": "Explicitly listed in resolved_ids.",
+                    "entscheidung": "Skip.",
+                    "konfidenz": "🟢",
+                    "ziel": "ACTIONABLE",
+                },
+                {
+                    "nr": 8,
+                    "id": "D-20261125-009",
+                    "kontext": "Genuine open question referencing T-20261125-300000003 (even after D-20261101-001).",
+                    "entscheidung": "Propose safe dry-run with explicit preview.",
+                    "konfidenz": "🟡",
+                    "ziel": "USER",
+                },
+            ]
+
+            report = rf.prefilter_items(
+                raw_entries,
+                tickets_root=tickets_root,
+                decisions_index=decisions_dir,
+                resolved_ids=["MANUAL-RESOLVED-7"],
+            )
+            self.assertEqual(report["counts"], {"input": 8, "kept": 1, "filtered_out": 7})
+            self.assertEqual([x["id"] for x in report["kept"]], ["D-20261125-009"])
+            reasons = {row["id"]: row["reason"] for row in report["filtered_out"]}
+            self.assertEqual(
+                reasons,
+                {
+                    "ITEM-EMPTY-CTX": "missing_context",
+                    "ITEM-PLACEHOLDER-DEC": "missing_decision",
+                    "T-20261110-100000001": "ticket_resolved",
+                    "AV-034": "ticket_resolved",
+                    "D-20261101-001": "decision_resolved",
+                    "AV-036": "decision_resolved",
+                    "MANUAL-RESOLVED-7": "resolved_id",
+                },
+            )
+
+            # End-to-end CLI build with prefilter report
+            in_json = base / "raw_input.json"
+            out_html = base / "filtered_rating.html"
+            out_report = base / "filter_report.json"
+            in_json.write_text(
+                json.dumps(
+                    {
+                        "schema": rf.INPUT_SCHEMA,
+                        "run_id": "synthetic-prefilter-batch",
+                        "entries": raw_entries,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            rc = rf.main(
+                [
+                    "build",
+                    "--input",
+                    str(in_json),
+                    "--out",
+                    str(out_html),
+                    "--tickets-root",
+                    str(tickets_root),
+                    "--decisions-index",
+                    str(decisions_dir),
+                    "--resolved-id",
+                    "MANUAL-RESOLVED-7",
+                    "--filter-report",
+                    str(out_report),
+                ]
+            )
+            self.assertEqual(rc, 0)
+            rendered_html = out_html.read_text(encoding="utf-8")
+            self.assertIn("D-20261125-009", rendered_html)
+            self.assertNotIn("T-20261110-100000001", rendered_html)
+            self.assertNotIn("ITEM-EMPTY-CTX", rendered_html)
+            saved_report = json.loads(out_report.read_text(encoding="utf-8"))
+            self.assertEqual(saved_report["kept_ids"], ["D-20261125-009"])
+            self.assertEqual(saved_report["counts"]["filtered_out"], 7)
+
+
 if __name__ == "__main__":
     unittest.main()
