@@ -7,5 +7,12 @@
     "engine": "auto",
     "language": "de",
     "model_path": ""
+  },
+  "prefilter": {
+    "enabled": true,
+    "tickets_root": "",
+    "decisions_index": "",
+    "decided_and_done": "",
+    "resolved_ids": []
   }
 }
